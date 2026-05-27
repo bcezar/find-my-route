@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query as QueryParam
 
 from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop
 from app.services import distance, geocoding, optimizer
 
 router = APIRouter()
+
+
+@router.get("/autocomplete")
+async def autocomplete(q: str = QueryParam(..., min_length=3)):
+    suggestions = await geocoding.autocomplete_address(q)
+    return {"suggestions": suggestions}
 
 
 @router.post("/routes/optimize", response_model=RouteResponse)

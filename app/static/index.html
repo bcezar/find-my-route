@@ -22,14 +22,29 @@
 
     h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
 
-    .section { background: #fff; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
 
-    .section-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: .75rem; }
+    .section-label {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #888;
+      margin-bottom: .75rem;
+    }
+
+    .input-wrap { position: relative; flex: 1; }
 
     .input-row { display: flex; gap: .5rem; }
 
     input[type="text"] {
-      flex: 1;
+      width: 100%;
       padding: .55rem .75rem;
       border: 1px solid #ddd;
       border-radius: 6px;
@@ -40,6 +55,27 @@
     input[type="text"]:focus { border-color: #555; }
     input[type="text"]:disabled { background: #f0f0f0; color: #999; cursor: default; }
 
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.12);
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .suggestions li {
+      padding: .55rem .75rem;
+      font-size: .9rem;
+      cursor: pointer;
+      list-style: none;
+    }
+    .suggestions li:hover { background: #f5f5f5; }
+    .suggestions li + li { border-top: 1px solid #f0f0f0; }
+
     .btn {
       padding: .55rem .9rem;
       border: none;
@@ -49,10 +85,11 @@
       cursor: pointer;
       transition: background .15s;
       line-height: 1;
+      white-space: nowrap;
     }
-    .btn-add  { background: #222; color: #fff; }
+    .btn-add    { background: #222; color: #fff; }
     .btn-add:hover  { background: #444; }
-    .btn-add:disabled  { background: #ccc; cursor: default; }
+    .btn-add:disabled { background: #ccc; cursor: default; }
     .btn-remove { background: #fee2e2; color: #b91c1c; }
     .btn-remove:hover { background: #fecaca; }
 
@@ -93,7 +130,11 @@
 
     .route-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; }
     .route-list li { display: flex; gap: .75rem; align-items: baseline; }
-    .route-num { font-size: .8rem; font-weight: 700; color: #fff; background: #1d4ed8; border-radius: 50%; width: 1.4rem; height: 1.4rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .route-num {
+      font-size: .8rem; font-weight: 700; color: #fff; background: #1d4ed8;
+      border-radius: 50%; width: 1.4rem; height: 1.4rem;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
     .route-addr { font-size: .9rem; }
     .route-coords { font-size: .75rem; color: #888; }
 
@@ -110,7 +151,6 @@
     .maps-link:hover { background: #15803d; }
 
     .total { font-size: .85rem; color: #555; margin-bottom: 1rem; }
-
     .failures { font-size: .8rem; color: #b91c1c; margin-top: .75rem; }
   </style>
 </head>
@@ -123,12 +163,21 @@
   <div class="section">
     <div class="section-label">Origem (opcional)</div>
     <div class="input-row">
-      <input type="text" placeholder="Ex: Rua X, 123, Cidade/SP"
-             x-model="originInput"
-             :disabled="origin !== ''"
-             @keydown.enter="setOrigin()" />
+      <div class="input-wrap" x-ref="originWrap">
+        <input type="text" placeholder="Ex: Rua X, 123, Campinas/SP"
+               x-model="originInput"
+               :disabled="origin !== ''"
+               @input.debounce.400ms="fetchSuggestions('origin', originInput)"
+               @keydown.escape="originSuggestions = []"
+               @keydown.enter="setOrigin()" />
+        <ul class="suggestions" x-show="originSuggestions.length > 0" @click.outside="originSuggestions = []">
+          <template x-for="s in originSuggestions" :key="s">
+            <li @mousedown.prevent="originInput = s; origin = ''; originSuggestions = []" x-text="s"></li>
+          </template>
+        </ul>
+      </div>
       <button class="btn btn-add" @click="setOrigin()" :disabled="originInput.trim() === '' || origin !== ''">+</button>
-      <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''">−</button>
+      <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
     </div>
     <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
   </div>
@@ -137,12 +186,21 @@
   <div class="section">
     <div class="section-label">Destino (opcional)</div>
     <div class="input-row">
-      <input type="text" placeholder="Ex: Rua X, 123, Cidade/SP"
-             x-model="destInput"
-             :disabled="dest !== ''"
-             @keydown.enter="setDest()" />
+      <div class="input-wrap">
+        <input type="text" placeholder="Ex: Rua X, 123, Campinas/SP"
+               x-model="destInput"
+               :disabled="dest !== ''"
+               @input.debounce.400ms="fetchSuggestions('dest', destInput)"
+               @keydown.escape="destSuggestions = []"
+               @keydown.enter="setDest()" />
+        <ul class="suggestions" x-show="destSuggestions.length > 0" @click.outside="destSuggestions = []">
+          <template x-for="s in destSuggestions" :key="s">
+            <li @mousedown.prevent="destInput = s; dest = ''; destSuggestions = []" x-text="s"></li>
+          </template>
+        </ul>
+      </div>
       <button class="btn btn-add" @click="setDest()" :disabled="destInput.trim() === '' || dest !== ''">+</button>
-      <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''">−</button>
+      <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
     </div>
     <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
   </div>
@@ -151,9 +209,18 @@
   <div class="section">
     <div class="section-label">Endereços <span x-text="'(' + addresses.length + ')'"></span></div>
     <div class="input-row">
-      <input type="text" placeholder="Ex: Av. Paulista, 1000, São Paulo/SP"
-             x-model="newAddress"
-             @keydown.enter="addAddress()" />
+      <div class="input-wrap">
+        <input type="text" placeholder="Ex: Av. Paulista, 1000, São Paulo/SP"
+               x-model="newAddress"
+               @input.debounce.400ms="fetchSuggestions('address', newAddress)"
+               @keydown.escape="addressSuggestions = []"
+               @keydown.enter="addAddress()" />
+        <ul class="suggestions" x-show="addressSuggestions.length > 0" @click.outside="addressSuggestions = []">
+          <template x-for="s in addressSuggestions" :key="s">
+            <li @mousedown.prevent="newAddress = s; addressSuggestions = []" x-text="s"></li>
+          </template>
+        </ul>
+      </div>
       <button class="btn btn-add" @click="addAddress()" :disabled="newAddress.trim() === ''">+</button>
     </div>
     <ul class="address-list" x-show="addresses.length > 0">
@@ -208,25 +275,39 @@
 <script>
 function routeApp() {
   return {
-    originInput: '', origin: '',
-    destInput:   '', dest:   '',
-    newAddress:  '',
+    originInput: '', origin: '', originSuggestions: [],
+    destInput:   '', dest:   '', destSuggestions:   [],
+    newAddress:  '',             addressSuggestions: [],
     addresses:   [],
     loading:     false,
     result:      null,
     error:       '',
 
+    async fetchSuggestions(field, value) {
+      if (value.trim().length < 3) {
+        this[field + 'Suggestions'] = [];
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/autocomplete?q=' + encodeURIComponent(value));
+        const data = await res.json();
+        this[field + 'Suggestions'] = data.suggestions ?? [];
+      } catch (_) {
+        this[field + 'Suggestions'] = [];
+      }
+    },
+
     setOrigin() {
       const v = this.originInput.trim();
-      if (v) this.origin = v;
+      if (v) { this.origin = v; this.originSuggestions = []; }
     },
     setDest() {
       const v = this.destInput.trim();
-      if (v) this.dest = v;
+      if (v) { this.dest = v; this.destSuggestions = []; }
     },
     addAddress() {
       const v = this.newAddress.trim();
-      if (v) { this.addresses.push(v); this.newAddress = ''; }
+      if (v) { this.addresses.push(v); this.newAddress = ''; this.addressSuggestions = []; }
     },
 
     async optimize() {

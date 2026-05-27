@@ -138,6 +138,29 @@ async def geocode(address: str, client: httpx.AsyncClient) -> tuple[float, float
     return coords
 
 
+async def autocomplete_address(query: str) -> list[str]:
+    if not settings.google_maps_api_key:
+        return []
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(
+                "https://maps.googleapis.com/maps/api/place/autocomplete/json",
+                params={
+                    "input": query,
+                    "key": settings.google_maps_api_key,
+                    "language": "pt-BR",
+                    "components": "country:br",
+                },
+                timeout=5.0,
+            )
+            data = resp.json()
+        except (httpx.HTTPError, ValueError):
+            return []
+    if data.get("status") not in ("OK", "ZERO_RESULTS"):
+        return []
+    return [p["description"] for p in data.get("predictions", [])]
+
+
 async def geocode_all(
     addresses: list[str],
 ) -> tuple[dict[str, tuple[float, float]], list[str]]:
