@@ -1,0 +1,136 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop
+from app.services import distance, geocoding, optimizer
+
+router = APIRouter()
+
+
+@router.post("/routes/optimize", response_model=RouteResponse)
+async def optimize_route(request: RouteRequest):
+    # Collect all addresses that need geocoding (no duplicates)
+    to_geocode = list(dict.fromkeys(
+        ([request.origin] if request.origin else [])
+        + request.addresses
+        + ([request.destination] if request.destination else [])
+    ))
+    resolved, failures = await geocoding.geocode_all(to_geocode)
+
+    if request.origin and request.origin not in resolved:
+        raise HTTPException(status_code=422, detail="Origin address could not be geocoded.")
+
+    if request.destination and request.destination not in resolved:
+        raise HTTPException(status_code=422, detail="Destination address could not be geocoded.")
+
+    resolved_addresses = [a for a in request.addresses if a in resolved]
+
+    if len(resolved_addresses) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 2 addresses must be successfully geocoded to optimize a route.",
+        )
+
+    coords = [resolved[a] for a in resolved_addresses]
+
+    # Build coordinate list for the matrix:
+    # [origin?] + addresses + [destination?]
+    # When origin == destination (return to start), we duplicate the node so
+    # OR-Tools can treat start and end as distinct indices.
+    all_coords = (
+        ([resolved[request.origin]] if request.origin else [])
+        + coords
+        + ([resolved[request.destination]] if request.destination else [])
+    )
+
+    n = len(all_coords)
+    start_idx = 0 if request.origin else None
+    end_idx = n - 1 if request.destination else None
+
+    matrix = await distance.build_distance_matrix(all_coords)
+
+    full_order = optimizer.optimize_route(
+        matrix,
+        start_index=start_idx or 0,
+        end_index=end_idx,
+    )
+
+    # Slice the fixed endpoints out of the order to build the middle stops
+    first = 1 if request.origin else 0
+    last = len(full_order) - 1 if request.destination else len(full_order)
+    middle_order = full_order[first:last]
+
+    # Map matrix indices back to resolved_addresses indices
+    origin_offset = 1 if request.origin else 0
+    order = [i - origin_offset for i in middle_order]
+
+    total_km = sum(matrix[full_order[i]][full_order[i + 1]] for i in range(len(full_order) - 1))
+
+    optimized_route = [
+        RouteStop(
+            order=i + 1,
+            original_address=resolved_addresses[idx],
+            coordinates=Coordinates(lat=coords[idx][0], lng=coords[idx][1]),
+        )
+        for i, idx in enumerate(order)
+    ]
+
+    def _make_endpoint_info(address: str) -> OriginInfo:
+        lat, lng = resolved[address]
+        return OriginInfo(address=address, coordinates=Coordinates(lat=lat, lng=lng))
+
+    origin_info = _make_endpoint_info(request.origin) if request.origin else None
+    destination_info = _make_endpoint_info(request.destination) if request.destination else None
+
+    return RouteResponse(
+        optimized_route=optimized_route,
+        total_distance_km=round(total_km, 2),
+        geocoding_failures=failures,
+        origin=origin_info,
+        destination=destination_info,
+        maps_url=_build_maps_url(origin_info, destination_info, optimized_route),
+    )
+
+
+def _build_maps_url(
+    origin: "OriginInfo | None",
+    destination: "OriginInfo | None",
+    route_stops: "list[RouteStop]",
+) -> "str | None":
+    if not route_stops:
+        return None
+
+    def coord(c: Coordinates) -> str:
+        return f"{c.lat},{c.lng}"
+
+    if origin:
+        url_origin = coord(origin.coordinates)
+        if destination:
+            url_destination = coord(destination.coordinates)
+            waypoint_stops = route_stops
+        else:
+            url_destination = coord(route_stops[-1].coordinates)
+            waypoint_stops = route_stops[:-1]
+    else:
+        url_origin = coord(route_stops[0].coordinates)
+        if destination:
+            url_destination = coord(destination.coordinates)
+            waypoint_stops = route_stops[1:]
+        else:
+            url_destination = coord(route_stops[-1].coordinates)
+            waypoint_stops = route_stops[1:-1]
+
+    base = (
+        f"https://www.google.com/maps/dir/?api=1"
+        f"&origin={url_origin}"
+        f"&destination={url_destination}"
+        f"&travelmode=driving"
+    )
+
+    # Google Maps URL supports up to 23 waypoints
+    if waypoint_stops:
+        wps = waypoint_stops[:23]
+        base += "&waypoints=" + "|".join(coord(s.coordinates) for s in wps)
+
+    return base
