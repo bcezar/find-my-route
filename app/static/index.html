@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roteirizador</title>
+  <title>Roteirizador — Casa Pet Campinas</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/icon-find-my-route.png" />
+
+  <!-- SEO / WhatsApp / Open Graph -->
+  <meta name="description" content="Otimize sua rota de entregas: informe os endereços e receba a ordem mais eficiente de visita, com link direto para o Google Maps." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://rotas.casapetcampinas.com.br/" />
+  <meta property="og:title" content="Roteirizador — Casa Pet Campinas" />
+  <meta property="og:description" content="Otimize sua rota de entregas: informe os endereços e receba a ordem mais eficiente de visita, com link direto para o Google Maps." />
+  <meta property="og:image" content="https://rotas.casapetcampinas.com.br/icon-find-my-route.png" />
+
   <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -20,7 +32,9 @@
 
     .container { width: 100%; max-width: 640px; }
 
-    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: .4rem; }
+    .subtitle { font-size: .9rem; color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
+    .field-hint { font-size: .8rem; color: #999; margin-top: .5rem; line-height: 1.4; }
 
     .section {
       background: #fff;
@@ -158,6 +172,7 @@
 <div class="container" x-data="routeApp()">
 
   <h1>Roteirizador</h1>
+  <p class="subtitle">Informe os endereços que precisa visitar e calcularemos a ordem mais eficiente de visita, economizando tempo e combustível.</p>
 
   <!-- Origem -->
   <div class="section">
@@ -179,12 +194,13 @@
       <button class="btn btn-add" @click="setOrigin()" :disabled="originInput.trim() === '' || origin !== ''">+</button>
       <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
     </div>
+    <p class="field-hint">Ponto de partida da rota — ex: seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
     <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
   </div>
 
-  <!-- Destino -->
+  <!-- Destino Final -->
   <div class="section">
-    <div class="section-label">Destino (opcional)</div>
+    <div class="section-label">Destino Final (opcional)</div>
     <div class="input-row">
       <div class="input-wrap">
         <input type="text" placeholder="Ex: Rua X, 123, Campinas/SP"
@@ -202,6 +218,7 @@
       <button class="btn btn-add" @click="setDest()" :disabled="destInput.trim() === '' || dest !== ''">+</button>
       <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
     </div>
+    <p class="field-hint">Onde a rota deve terminar — ex: retornar ao depósito. Pode ser igual à origem para fechar o ciclo. Se não informado, a rota termina no último endereço otimizado.</p>
     <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
   </div>
 
@@ -223,6 +240,7 @@
       </div>
       <button class="btn btn-add" @click="addAddress()" :disabled="newAddress.trim() === ''">+</button>
     </div>
+    <p class="field-hint">Adicione pelo menos 2 endereços. A ordem em que você digita não importa — o sistema calcula a sequência mais eficiente.</p>
     <ul class="address-list" x-show="addresses.length > 0">
       <template x-for="(addr, i) in addresses" :key="i">
         <li>
