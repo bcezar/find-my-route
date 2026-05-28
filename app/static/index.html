@@ -123,6 +123,7 @@
     }
     .btn-geo:hover:not(:disabled) { background: #e5e7eb; }
     .btn-geo:disabled { opacity: .5; cursor: default; }
+    @media (max-width: 480px) { .btn-geo-text { display: none; } }
 
     .btn-copy-origin {
       margin-top: .5rem;
@@ -240,8 +241,8 @@
       <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
       <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
         <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
-        <span x-show="!geolocating">Localização</span>
-        <span x-show="geolocating">Localizando…</span>
+        <span class="btn-geo-text" x-show="!geolocating">Localização</span>
+        <span x-show="geolocating">…</span>
       </button>
     </div>
     <p class="field-hint">Ponto de partida da rota — ex: seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
@@ -479,7 +480,8 @@ function routeApp() {
             if (!res.ok) throw new Error();
             const data = await res.json();
             this.originInput = data.address;
-            this.origin = '';
+            this.origin = data.address;
+            this.originSuggestions = [];
           } catch (_) {
             this.error = 'Não foi possível obter o endereço da sua localização.';
           } finally {
@@ -493,17 +495,29 @@ function routeApp() {
       );
     },
 
-    shareRoute() {
-      const params = new URLSearchParams();
-      if (this.origin) params.set('origin', this.origin);
-      if (this.dest)   params.set('dest', this.dest);
-      for (const a of this.addresses) params.append('a', a);
-      const url = `${location.origin}${location.pathname}?${params}`;
-      const shareData = { title: 'Rota — Casa Pet Campinas', url };
+    async shareRoute() {
+      let shareUrl = location.origin;
+      try {
+        const res = await fetch('/api/v1/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            addresses: this.addresses,
+            ...(this.origin && { origin: this.origin }),
+            ...(this.dest   && { destination: this.dest }),
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          shareUrl = `${location.origin}${data.path}`;
+        }
+      } catch (_) {}
+
+      const shareData = { title: 'Rota — Casa Pet Campinas', url: shareUrl };
       if (navigator.share && navigator.canShare?.(shareData)) {
         navigator.share(shareData).catch(() => {});
       } else {
-        navigator.clipboard.writeText(url).then(() => {
+        navigator.clipboard.writeText(shareUrl).then(() => {
           this.shared = true;
           setTimeout(() => { this.shared = false; }, 2000);
         });

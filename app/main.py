@@ -1,9 +1,13 @@
-from fastapi import FastAPI
+from urllib.parse import urlencode
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
+from app import storage
 from app.config import settings
 from app.limiter import limiter
 from app.routers import routes
@@ -26,6 +30,19 @@ app.include_router(routes.router, prefix="/api/v1")
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/r/{code}")
+async def expand_route(code: str):
+    state = storage.get_route(code)
+    if not state:
+        raise HTTPException(status_code=404, detail="Link não encontrado ou expirado.")
+    parts = []
+    if state.get("origin"):      parts.append(("origin", state["origin"]))
+    if state.get("destination"): parts.append(("dest",   state["destination"]))
+    for a in state.get("addresses", []):
+        parts.append(("a", a))
+    return RedirectResponse(url=f"/?{urlencode(parts)}", status_code=302)
 
 
 # Serve the frontend — must come after API routes so /api/v1 takes precedence

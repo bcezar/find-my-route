@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
 
+from app import storage
 from app.limiter import limiter
 from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop
 from app.services import distance, geocoding, optimizer
@@ -14,6 +15,16 @@ router = APIRouter()
 async def autocomplete(request: Request, q: str = QueryParam(..., min_length=3)):
     suggestions = await geocoding.autocomplete_address(q)
     return {"suggestions": suggestions}
+
+
+@router.post("/shorten")
+@limiter.limit("20/minute")
+async def shorten_route(request: Request, body: RouteRequest = Body(...)):
+    state = {"addresses": body.addresses}
+    if body.origin:      state["origin"]      = body.origin
+    if body.destination: state["destination"] = body.destination
+    code = storage.save_route(state)
+    return {"path": f"/r/{code}"}
 
 
 @router.get("/reverse")
