@@ -149,6 +149,8 @@
       border-radius: 50%; width: 1.4rem; height: 1.4rem;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
+    .route-num-origin { background: #6b7280; }
+    .route-num-dest   { background: #16a34a; }
     .route-addr { font-size: .9rem; }
     .route-coords { font-size: .75rem; color: #888; }
 
@@ -268,12 +270,30 @@
     <p class="total" x-text="'Distância total: ' + result?.total_distance_km + ' km'"></p>
 
     <ul class="route-list">
+      <template x-if="result?.origin">
+        <li>
+          <div class="route-num route-num-origin">0</div>
+          <div>
+            <div class="route-addr" x-text="result.origin.address"></div>
+            <div class="route-coords" x-text="result.origin.coordinates.lat.toFixed(5) + ', ' + result.origin.coordinates.lng.toFixed(5)"></div>
+          </div>
+        </li>
+      </template>
       <template x-for="stop in result?.optimized_route" :key="stop.order">
         <li>
           <div class="route-num" x-text="stop.order"></div>
           <div>
             <div class="route-addr" x-text="stop.original_address"></div>
             <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
+          </div>
+        </li>
+      </template>
+      <template x-if="result?.destination">
+        <li>
+          <div class="route-num route-num-dest">F</div>
+          <div>
+            <div class="route-addr" x-text="result.destination.address"></div>
+            <div class="route-coords" x-text="result.destination.coordinates.lat.toFixed(5) + ', ' + result.destination.coordinates.lng.toFixed(5)"></div>
           </div>
         </li>
       </template>
@@ -300,6 +320,34 @@ function routeApp() {
     loading:     false,
     result:      null,
     error:       '',
+
+    init() {
+      const saved = localStorage.getItem('routeApp');
+      if (saved) {
+        try {
+          const d = JSON.parse(saved);
+          this.origin      = d.origin      ?? '';
+          this.originInput = d.originInput ?? '';
+          this.dest        = d.dest        ?? '';
+          this.destInput   = d.destInput   ?? '';
+          this.addresses   = d.addresses   ?? [];
+        } catch (_) {}
+      }
+
+      const save = () => localStorage.setItem('routeApp', JSON.stringify({
+        origin:      this.origin,
+        originInput: this.originInput,
+        dest:        this.dest,
+        destInput:   this.destInput,
+        addresses:   this.addresses,
+      }));
+
+      this.$watch('origin',      save);
+      this.$watch('originInput', save);
+      this.$watch('dest',        save);
+      this.$watch('destInput',   save);
+      this.$watch('addresses',   save);
+    },
 
     async fetchSuggestions(field, value) {
       if (value.trim().length < 3) {
@@ -348,6 +396,9 @@ function routeApp() {
           this.error = data.detail ?? `Erro ${res.status}`;
         } else {
           this.result = data;
+          this.$nextTick(() => {
+            document.querySelector('.result-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
         }
       } catch (e) {
         this.error = 'Erro de conexão com a API.';
