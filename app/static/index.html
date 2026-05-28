@@ -513,11 +513,12 @@ function routeApp() {
         }
       } catch (_) {}
 
-      const shareData = { title: 'Rota — Casa Pet Campinas', url: shareUrl };
+      const msg = 'Veja os endereços que separei para você — clique em otimizar para encontrar a melhor rota!';
+      const shareData = { title: 'Rota — Casa Pet Campinas', text: msg, url: shareUrl };
       if (navigator.share && navigator.canShare?.(shareData)) {
         navigator.share(shareData).catch(() => {});
       } else {
-        navigator.clipboard.writeText(shareUrl).then(() => {
+        navigator.clipboard.writeText(`${msg}\n${shareUrl}`).then(() => {
           this.shared = true;
           setTimeout(() => { this.shared = false; }, 2000);
         });
@@ -532,6 +533,7 @@ function routeApp() {
         lines.push(`${stop.order}. ${stop.original_address}`);
       }
       if (this.result.destination) lines.push(`F. ${this.result.destination.address} (destino)`);
+      lines.push('', 'Rota otimizada com findmyroute.com.br');
       navigator.clipboard.writeText(lines.join('\n')).then(() => {
         this.copied = true;
         setTimeout(() => { this.copied = false; }, 2000);
