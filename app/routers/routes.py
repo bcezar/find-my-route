@@ -16,6 +16,15 @@ async def autocomplete(request: Request, q: str = QueryParam(..., min_length=3))
     return {"suggestions": suggestions}
 
 
+@router.get("/reverse")
+@limiter.limit("30/minute")
+async def reverse_geocode(request: Request, lat: float = QueryParam(...), lng: float = QueryParam(...)):
+    address = await geocoding.reverse_geocode(lat, lng)
+    if address is None:
+        raise HTTPException(status_code=404, detail="Could not reverse geocode coordinates.")
+    return {"address": address}
+
+
 @router.post("/routes/optimize", response_model=RouteResponse)
 @limiter.limit("20/minute")
 async def optimize_route(request: Request, body: RouteRequest = Body(...)):
@@ -81,6 +90,8 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
             order=i + 1,
             original_address=resolved_addresses[idx],
             coordinates=Coordinates(lat=coords[idx][0], lng=coords[idx][1]),
+            leg_distance_km=round(matrix[full_order[first + i]][full_order[first + i + 1]], 2)
+                if (first + i + 1) < len(full_order) else None,
         )
         for i, idx in enumerate(order)
     ]

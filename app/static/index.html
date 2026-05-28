@@ -32,7 +32,14 @@
 
     .container { width: 100%; max-width: 640px; }
 
-    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: .4rem; }
+    .header-row { display: flex; align-items: baseline; gap: .75rem; margin-bottom: .4rem; }
+    h1 { font-size: 1.4rem; font-weight: 700; }
+    .btn-clear-all {
+      font-size: .78rem; color: #aaa; background: none; border: none;
+      cursor: pointer; padding: 0; text-decoration: underline; flex-shrink: 0;
+    }
+    .btn-clear-all:hover { color: #b91c1c; }
+
     .subtitle { font-size: .9rem; color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
     .field-hint { font-size: .8rem; color: #999; margin-top: .5rem; line-height: 1.4; }
 
@@ -53,7 +60,7 @@
       margin-bottom: .75rem;
     }
 
-    .input-wrap { position: relative; flex: 1; }
+    .input-wrap { position: relative; flex: 1; min-width: 0; }
 
     .input-row { display: flex; gap: .5rem; }
 
@@ -106,6 +113,16 @@
     .btn-add:disabled { background: #ccc; cursor: default; }
     .btn-remove { background: #fee2e2; color: #b91c1c; }
     .btn-remove:hover { background: #fecaca; }
+    .btn-geo {
+      padding: .5rem .65rem;
+      background: #f3f4f6; color: #374151;
+      border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: .85rem; cursor: pointer; line-height: 1;
+      transition: background .15s; white-space: nowrap;
+      display: flex; align-items: center; gap: .35rem;
+    }
+    .btn-geo:hover:not(:disabled) { background: #e5e7eb; }
+    .btn-geo:disabled { opacity: .5; cursor: default; }
 
     .set-label {
       display: inline-block;
@@ -119,7 +136,7 @@
 
     .address-list { list-style: none; display: flex; flex-direction: column; gap: .4rem; margin-top: .75rem; }
     .address-list li { display: flex; align-items: center; gap: .5rem; }
-    .address-list li span { flex: 1; font-size: .9rem; background: #f9f9f9; padding: .4rem .65rem; border-radius: 5px; border: 1px solid #eee; }
+    .address-list li span { flex: 1; font-size: .9rem; background: #f9f9f9; padding: .4rem .65rem; border-radius: 5px; border: 1px solid #eee; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .btn-optimize {
       width: 100%;
@@ -143,16 +160,19 @@
     .result-section h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
 
     .route-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; }
-    .route-list li { display: flex; gap: .75rem; align-items: baseline; }
+    .route-list li { display: flex; gap: .75rem; align-items: flex-start; }
     .route-num {
       font-size: .8rem; font-weight: 700; color: #fff; background: #1d4ed8;
-      border-radius: 50%; width: 1.4rem; height: 1.4rem;
+      border-radius: 50%; width: 1.4rem; height: 1.4rem; margin-top: .1rem;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .route-num-origin { background: #6b7280; }
     .route-num-dest   { background: #16a34a; }
     .route-addr { font-size: .9rem; }
-    .route-coords { font-size: .75rem; color: #888; }
+    .route-coords { font-size: .75rem; color: #888; margin-top: .1rem; }
+    .route-leg { font-size: .75rem; color: #9ca3af; margin-top: .15rem; }
+
+    .result-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
 
     .maps-link {
       display: inline-block;
@@ -163,8 +183,19 @@
       border-radius: 6px;
       font-size: .9rem;
       font-weight: 600;
+      transition: background .15s;
     }
     .maps-link:hover { background: #15803d; }
+
+    .btn-copy {
+      padding: .6rem 1rem;
+      background: #f3f4f6; color: #374151;
+      border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-copy:hover { background: #e5e7eb; }
+    .btn-copy.copied { background: #dcfce7; color: #15803d; border-color: #86efac; }
 
     .total { font-size: .85rem; color: #555; margin-bottom: 1rem; }
     .failures { font-size: .8rem; color: #b91c1c; margin-top: .75rem; }
@@ -173,7 +204,12 @@
 <body>
 <div class="container" x-data="routeApp()">
 
-  <h1>Roteirizador</h1>
+  <div class="header-row">
+    <h1>Roteirizador</h1>
+    <button class="btn-clear-all"
+            x-show="origin !== '' || dest !== '' || addresses.length > 0 || result !== null"
+            @click="clearAll()">Limpar tudo</button>
+  </div>
   <p class="subtitle">Informe os endereços que precisa visitar e calcularemos a ordem mais eficiente de visita, economizando tempo e combustível.</p>
 
   <!-- Origem -->
@@ -195,6 +231,11 @@
       </div>
       <button class="btn btn-add" @click="setOrigin()" :disabled="originInput.trim() === '' || origin !== ''">+</button>
       <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
+      <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
+        <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
+        <span x-show="!geolocating">Localização</span>
+        <span x-show="geolocating">Localizando…</span>
+      </button>
     </div>
     <p class="field-hint">Ponto de partida da rota — ex: seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
     <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
@@ -285,6 +326,7 @@
           <div>
             <div class="route-addr" x-text="stop.original_address"></div>
             <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
+            <div class="route-leg" x-show="stop.leg_distance_km != null" x-text="'↓ ' + stop.leg_distance_km + ' km'"></div>
           </div>
         </li>
       </template>
@@ -299,9 +341,15 @@
       </template>
     </ul>
 
-    <a class="maps-link" :href="result?.maps_url" target="_blank" x-show="result?.maps_url">
-      Abrir no Google Maps →
-    </a>
+    <div class="result-actions">
+      <a class="maps-link" :href="result?.maps_url" target="_blank" x-show="result?.maps_url">
+        Abrir no Google Maps →
+      </a>
+      <button class="btn-copy" :class="{ copied }" @click="copyRoute()">
+        <span x-show="!copied">Copiar rota</span>
+        <span x-show="copied">Copiado! ✓</span>
+      </button>
+    </div>
 
     <div class="failures" x-show="result?.geocoding_failures?.length > 0">
       Não encontrados: <span x-text="result?.geocoding_failures.join(', ')"></span>
@@ -318,6 +366,8 @@ function routeApp() {
     newAddress:  '',             addressSuggestions: [],
     addresses:   [],
     loading:     false,
+    geolocating: false,
+    copied:      false,
     result:      null,
     error:       '',
 
@@ -374,6 +424,59 @@ function routeApp() {
     addAddress() {
       const v = this.newAddress.trim();
       if (v) { this.addresses.push(v); this.newAddress = ''; this.addressSuggestions = []; }
+    },
+
+    clearAll() {
+      this.origin = ''; this.originInput = ''; this.originSuggestions = [];
+      this.dest   = ''; this.destInput   = ''; this.destSuggestions   = [];
+      this.newAddress = ''; this.addressSuggestions = [];
+      this.addresses = [];
+      this.result = null;
+      this.error  = '';
+      localStorage.removeItem('routeApp');
+    },
+
+    async geolocate() {
+      if (!navigator.geolocation) {
+        this.error = 'Geolocalização não suportada pelo navegador.';
+        return;
+      }
+      this.geolocating = true;
+      this.error = '';
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            const res = await fetch(`/api/v1/reverse?lat=${lat}&lng=${lng}`);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            this.originInput = data.address;
+            this.origin = '';
+          } catch (_) {
+            this.error = 'Não foi possível obter o endereço da sua localização.';
+          } finally {
+            this.geolocating = false;
+          }
+        },
+        () => {
+          this.error = 'Permissão de localização negada ou não disponível.';
+          this.geolocating = false;
+        }
+      );
+    },
+
+    copyRoute() {
+      if (!this.result) return;
+      const lines = [`Rota otimizada — ${this.result.total_distance_km} km`, ''];
+      if (this.result.origin) lines.push(`0. ${this.result.origin.address} (origem)`);
+      for (const stop of this.result.optimized_route) {
+        lines.push(`${stop.order}. ${stop.original_address}`);
+      }
+      if (this.result.destination) lines.push(`F. ${this.result.destination.address} (destino)`);
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        this.copied = true;
+        setTimeout(() => { this.copied = false; }, 2000);
+      });
     },
 
     async optimize() {

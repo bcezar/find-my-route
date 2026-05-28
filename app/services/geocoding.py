@@ -161,6 +161,36 @@ async def autocomplete_address(query: str) -> list[str]:
     return [p["description"] for p in data.get("predictions", [])]
 
 
+async def reverse_geocode(lat: float, lng: float) -> "str | None":
+    async with httpx.AsyncClient() as client:
+        if settings.google_maps_api_key:
+            try:
+                response = await client.get(
+                    "https://maps.googleapis.com/maps/api/geocode/json",
+                    params={"latlng": f"{lat},{lng}", "key": settings.google_maps_api_key, "language": "pt-BR"},
+                    timeout=10.0,
+                )
+                data = response.json()
+            except (httpx.HTTPError, ValueError):
+                return None
+            if data.get("status") == "OK" and data.get("results"):
+                return data["results"][0]["formatted_address"]
+        else:
+            try:
+                response = await client.get(
+                    f"{settings.nominatim_base_url}/reverse",
+                    params={"lat": lat, "lon": lng, "format": "json"},
+                    headers={"User-Agent": settings.nominatim_user_agent},
+                    timeout=10.0,
+                )
+                data = response.json()
+            except (httpx.HTTPError, ValueError):
+                return None
+            if "display_name" in data:
+                return data["display_name"]
+    return None
+
+
 async def geocode_all(
     addresses: list[str],
 ) -> tuple[dict[str, tuple[float, float]], list[str]]:

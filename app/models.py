@@ -27,6 +27,7 @@ class RouteStop(BaseModel):
     order: int
     original_address: str
     coordinates: Coordinates
+    leg_distance_km: Optional[float] = None
 
 
 class RouteResponse(BaseModel):
