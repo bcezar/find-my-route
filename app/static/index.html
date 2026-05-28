@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://rotas.casapetcampinas.com.br/" />
   <meta property="og:title" content="Roteirizador — Casa Pet Campinas" />
   <meta property="og:description" content="Otimize sua rota de entregas: informe os endereços e receba a ordem mais eficiente de visita, com link direto para o Google Maps." />
-  <meta property="og:image" content="https://rotas.casapetcampinas.com.br/icon-find-my-route.png" />
+  <meta property="og:image" content="https://rotas.casapetcampinas.com.br/capa.png" />
 
   <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
@@ -123,6 +123,13 @@
     }
     .btn-geo:hover:not(:disabled) { background: #e5e7eb; }
     .btn-geo:disabled { opacity: .5; cursor: default; }
+
+    .btn-copy-origin {
+      margin-top: .5rem;
+      font-size: .8rem; color: #1d4ed8; background: none; border: none;
+      cursor: pointer; padding: 0; text-decoration: underline;
+    }
+    .btn-copy-origin:hover { color: #1e40af; }
 
     .set-label {
       display: inline-block;
@@ -261,6 +268,9 @@
       <button class="btn btn-add" @click="setDest()" :disabled="destInput.trim() === '' || dest !== ''">+</button>
       <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
     </div>
+    <button class="btn-copy-origin"
+            x-show="origin !== '' && dest === ''"
+            @click="destInput = origin; setDest()">← Usar mesmo endereço da origem</button>
     <p class="field-hint">Onde a rota deve terminar — ex: retornar ao depósito. Pode ser igual à origem para fechar o ciclo. Se não informado, a rota termina no último endereço otimizado.</p>
     <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
   </div>
@@ -349,6 +359,10 @@
         <span x-show="!copied">Copiar rota</span>
         <span x-show="copied">Copiado! ✓</span>
       </button>
+      <button class="btn-copy" :class="{ copied: shared }" @click="shareRoute()">
+        <span x-show="!shared" x-text="canNativeShare ? 'Compartilhar rota' : 'Copiar link da rota'"></span>
+        <span x-show="shared">Link copiado! ✓</span>
+      </button>
     </div>
 
     <div class="failures" x-show="result?.geocoding_failures?.length > 0">
@@ -365,23 +379,37 @@ function routeApp() {
     destInput:   '', dest:   '', destSuggestions:   [],
     newAddress:  '',             addressSuggestions: [],
     addresses:   [],
-    loading:     false,
-    geolocating: false,
-    copied:      false,
-    result:      null,
-    error:       '',
+    loading:        false,
+    geolocating:    false,
+    copied:         false,
+    shared:         false,
+    canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
+    result:         null,
+    error:          '',
 
     init() {
-      const saved = localStorage.getItem('routeApp');
-      if (saved) {
-        try {
-          const d = JSON.parse(saved);
-          this.origin      = d.origin      ?? '';
-          this.originInput = d.originInput ?? '';
-          this.dest        = d.dest        ?? '';
-          this.destInput   = d.destInput   ?? '';
-          this.addresses   = d.addresses   ?? [];
-        } catch (_) {}
+      const params    = new URLSearchParams(location.search);
+      const urlOrigin = params.get('origin');
+      const urlDest   = params.get('dest');
+      const urlAddrs  = params.getAll('a');
+
+      if (urlOrigin || urlDest || urlAddrs.length) {
+        if (urlOrigin) { this.origin = urlOrigin; this.originInput = urlOrigin; }
+        if (urlDest)   { this.dest   = urlDest;   this.destInput   = urlDest; }
+        if (urlAddrs.length) this.addresses = urlAddrs;
+        history.replaceState(null, '', location.pathname);
+      } else {
+        const saved = localStorage.getItem('routeApp');
+        if (saved) {
+          try {
+            const d = JSON.parse(saved);
+            this.origin      = d.origin      ?? '';
+            this.originInput = d.originInput ?? '';
+            this.dest        = d.dest        ?? '';
+            this.destInput   = d.destInput   ?? '';
+            this.addresses   = d.addresses   ?? [];
+          } catch (_) {}
+        }
       }
 
       const save = () => localStorage.setItem('routeApp', JSON.stringify({
@@ -463,6 +491,23 @@ function routeApp() {
           this.geolocating = false;
         }
       );
+    },
+
+    shareRoute() {
+      const params = new URLSearchParams();
+      if (this.origin) params.set('origin', this.origin);
+      if (this.dest)   params.set('dest', this.dest);
+      for (const a of this.addresses) params.append('a', a);
+      const url = `${location.origin}${location.pathname}?${params}`;
+      const shareData = { title: 'Rota — Casa Pet Campinas', url };
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        navigator.share(shareData).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          this.shared = true;
+          setTimeout(() => { this.shared = false; }, 2000);
+        });
+      }
     },
 
     copyRoute() {
