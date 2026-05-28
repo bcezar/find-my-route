@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field
 
+Address = Annotated[str, Field(min_length=1, max_length=200)]
+
 
 class RouteRequest(BaseModel):
-    addresses: list[str] = Field(..., min_length=2, max_length=50)
-    origin: Optional[str] = None
-    destination: Optional[str] = None
+    addresses: list[Address] = Field(..., min_length=2, max_length=50)
+    origin: Optional[Address] = None
+    destination: Optional[Address] = None
 
 
 class Coordinates(BaseModel):

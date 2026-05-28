@@ -1,7 +1,8 @@
-from __future__ import annotations
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query as QueryParam
+from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
 
+from app.limiter import limiter
 from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop
 from app.services import distance, geocoding, optimizer
 
@@ -9,28 +10,30 @@ router = APIRouter()
 
 
 @router.get("/autocomplete")
-async def autocomplete(q: str = QueryParam(..., min_length=3)):
+@limiter.limit("120/minute")
+async def autocomplete(request: Request, q: str = QueryParam(..., min_length=3)):
     suggestions = await geocoding.autocomplete_address(q)
     return {"suggestions": suggestions}
 
 
 @router.post("/routes/optimize", response_model=RouteResponse)
-async def optimize_route(request: RouteRequest):
+@limiter.limit("20/minute")
+async def optimize_route(request: Request, body: RouteRequest = Body(...)):
     # Collect all addresses that need geocoding (no duplicates)
     to_geocode = list(dict.fromkeys(
-        ([request.origin] if request.origin else [])
-        + request.addresses
-        + ([request.destination] if request.destination else [])
+        ([body.origin] if body.origin else [])
+        + body.addresses
+        + ([body.destination] if body.destination else [])
     ))
     resolved, failures = await geocoding.geocode_all(to_geocode)
 
-    if request.origin and request.origin not in resolved:
+    if body.origin and body.origin not in resolved:
         raise HTTPException(status_code=422, detail="Origin address could not be geocoded.")
 
-    if request.destination and request.destination not in resolved:
+    if body.destination and body.destination not in resolved:
         raise HTTPException(status_code=422, detail="Destination address could not be geocoded.")
 
-    resolved_addresses = [a for a in request.addresses if a in resolved]
+    resolved_addresses = [a for a in body.addresses if a in resolved]
 
     if len(resolved_addresses) < 2:
         raise HTTPException(
@@ -45,14 +48,14 @@ async def optimize_route(request: RouteRequest):
     # When origin == destination (return to start), we duplicate the node so
     # OR-Tools can treat start and end as distinct indices.
     all_coords = (
-        ([resolved[request.origin]] if request.origin else [])
+        ([resolved[body.origin]] if body.origin else [])
         + coords
-        + ([resolved[request.destination]] if request.destination else [])
+        + ([resolved[body.destination]] if body.destination else [])
     )
 
     n = len(all_coords)
-    start_idx = 0 if request.origin else None
-    end_idx = n - 1 if request.destination else None
+    start_idx = 0 if body.origin else None
+    end_idx = n - 1 if body.destination else None
 
     matrix = await distance.build_distance_matrix(all_coords)
 
@@ -63,12 +66,12 @@ async def optimize_route(request: RouteRequest):
     )
 
     # Slice the fixed endpoints out of the order to build the middle stops
-    first = 1 if request.origin else 0
-    last = len(full_order) - 1 if request.destination else len(full_order)
+    first = 1 if body.origin else 0
+    last = len(full_order) - 1 if body.destination else len(full_order)
     middle_order = full_order[first:last]
 
     # Map matrix indices back to resolved_addresses indices
-    origin_offset = 1 if request.origin else 0
+    origin_offset = 1 if body.origin else 0
     order = [i - origin_offset for i in middle_order]
 
     total_km = sum(matrix[full_order[i]][full_order[i + 1]] for i in range(len(full_order) - 1))
@@ -86,8 +89,8 @@ async def optimize_route(request: RouteRequest):
         lat, lng = resolved[address]
         return OriginInfo(address=address, coordinates=Coordinates(lat=lat, lng=lng))
 
-    origin_info = _make_endpoint_info(request.origin) if request.origin else None
-    destination_info = _make_endpoint_info(request.destination) if request.destination else None
+    origin_info = _make_endpoint_info(body.origin) if body.origin else None
+    destination_info = _make_endpoint_info(body.destination) if body.destination else None
 
     return RouteResponse(
         optimized_route=optimized_route,
@@ -100,10 +103,10 @@ async def optimize_route(request: RouteRequest):
 
 
 def _build_maps_url(
-    origin: "OriginInfo | None",
-    destination: "OriginInfo | None",
-    route_stops: "list[RouteStop]",
-) -> "str | None":
+    origin: Optional[OriginInfo],
+    destination: Optional[OriginInfo],
+    route_stops: list,
+) -> Optional[str]:
     if not route_stops:
         return None
 
