@@ -22,85 +22,152 @@
 <body>
 <div class="container" x-data="routeApp()">
 
-  <!-- Toast de aviso (link expirado, etc.) -->
+  <!-- Toast -->
   <div class="toast" x-show="notice !== ''" x-transition>
     <span class="toast-msg" x-text="notice"></span>
     <button class="toast-close" @click="notice = ''" aria-label="Fechar">✕</button>
   </div>
 
-  <div class="header-row">
-    <h1>Roteirizador</h1>
-    <button class="btn-clear-all"
-            x-show="origin !== '' || dest !== '' || addresses.length > 0 || result !== null"
-            @click="clearAll()">Limpar tudo</button>
-  </div>
-  <p class="subtitle">Informe os endereços que precisa visitar e calcularemos a ordem mais eficiente de visita, economizando tempo e combustível.</p>
-
-  <!-- Origem -->
-  <div class="section">
-    <div class="section-label">Origem (opcional)</div>
-    <div class="input-row">
-      <div class="input-wrap" x-ref="originWrap">
-        <input type="text" placeholder="Ex: Rua X, 123, Campinas/SP"
-               x-model="originInput"
-               :disabled="origin !== ''"
-               @input.debounce.400ms="fetchSuggestions('origin', originInput)"
-               @keydown.escape="originSuggestions = []"
-               @keydown.enter="setOrigin()" />
-        <ul class="suggestions" x-show="originSuggestions.length > 0" @click.outside="originSuggestions = []">
-          <template x-for="s in originSuggestions" :key="s">
-            <li @mousedown.prevent="originInput = s; origin = ''; originSuggestions = []" x-text="s"></li>
-          </template>
-        </ul>
+  <!-- Help Modal -->
+  <div class="modal-overlay" x-show="helpOpen" x-transition @click.self="helpOpen = false">
+    <div class="modal-card">
+      <h2 class="modal-title">Como usar o Roteirizador</h2>
+      <div class="modal-steps">
+        <div class="modal-step">
+          <div class="modal-step-num">1</div>
+          <p class="modal-step-text"><strong>Ponto de partida (opcional)</strong> — informe de onde você vai sair, como seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
+        </div>
+        <div class="modal-step">
+          <div class="modal-step-num">2</div>
+          <p class="modal-step-text"><strong>Destino final (opcional)</strong> — onde a rota deve terminar. Pode ser igual à origem para fechar o ciclo. Se não informado, termina no último endereço otimizado.</p>
+        </div>
+        <div class="modal-step">
+          <div class="modal-step-num">3</div>
+          <p class="modal-step-text"><strong>Adicione as paradas</strong> — clique em "Adicionar parada" e informe os endereços que precisa visitar. A ordem não importa, o sistema calcula a sequência mais eficiente.</p>
+        </div>
+        <div class="modal-step">
+          <div class="modal-step-num">4</div>
+          <p class="modal-step-text"><strong>Início / Destino por parada</strong> — use os botões <em>Início</em> e <em>Destino</em> em cada endereço para forçar uma parada obrigatória no começo ou no fim da rota.</p>
+        </div>
       </div>
-      <button class="btn btn-add" @click="setOrigin()" :disabled="originInput.trim() === '' || origin !== ''">+</button>
-      <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
-      <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
-        <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
-        <span class="btn-geo-text" x-show="!geolocating">Localização</span>
-        <span x-show="geolocating">…</span>
-      </button>
+      <button class="btn-modal-close" @click="helpOpen = false">Entendi</button>
     </div>
-    <p class="field-hint">Ponto de partida da rota — ex: seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
-    <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
   </div>
 
-  <!-- Destino Final -->
-  <div class="section">
-    <div class="section-label">Destino Final (opcional)</div>
-    <div class="input-row">
-      <div class="input-wrap">
-        <input type="text" placeholder="Ex: Rua X, 123, Campinas/SP"
-               x-model="destInput"
-               :disabled="dest !== ''"
-               @input.debounce.400ms="fetchSuggestions('dest', destInput)"
-               @keydown.escape="destSuggestions = []"
-               @keydown.enter="setDest()" />
-        <ul class="suggestions" x-show="destSuggestions.length > 0" @click.outside="destSuggestions = []">
-          <template x-for="s in destSuggestions" :key="s">
-            <li @mousedown.prevent="destInput = s; dest = ''; destSuggestions = []" x-text="s"></li>
-          </template>
-        </ul>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="app-brand">
+      <img src="/icon-find-my-route.png" alt="FindMyRoute" class="app-logo" />
+      <div>
+        <h1 class="app-title">Find<span class="my">My</span>Route</h1>
+        <p class="app-tagline">A ordem mais inteligente para cada destino.</p>
       </div>
-      <button class="btn btn-add" @click="setDest()" :disabled="destInput.trim() === '' || dest !== ''">+</button>
-      <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
     </div>
-    <button class="btn-copy-origin"
-            x-show="origin !== '' && dest === ''"
-            @click="destInput = origin; setDest()">← Usar mesmo endereço da origem</button>
-    <p class="field-hint">Onde a rota deve terminar — ex: retornar ao depósito. Pode ser igual à origem para fechar o ciclo. Se não informado, a rota termina no último endereço otimizado.</p>
-    <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
+    <div class="header-actions">
+      <button class="btn-clear-all"
+              x-show="origin !== '' || dest !== '' || addresses.length > 0 || result !== null"
+              @click="clearAll()">Limpar</button>
+      <button class="btn-help" @click="helpOpen = true" aria-label="Ajuda">?</button>
+    </div>
+  </header>
+
+  <!-- Origin + Destination card -->
+  <div class="section">
+
+    <!-- Origin row -->
+    <div class="endpoint-row">
+      <div class="endpoint-icon icon-origin">▶</div>
+      <div class="endpoint-content">
+        <div class="endpoint-label">Ponto de partida (opcional)</div>
+        <div class="input-wrap" x-show="origin === ''" x-ref="originWrap">
+          <input type="text" placeholder="Ex.: Rua X, 123, Campinas/SP"
+                 x-model="originInput"
+                 @input.debounce.400ms="fetchSuggestions('origin', originInput)"
+                 @keydown.escape="originSuggestions = []"
+                 @keydown.enter="setOrigin()" />
+          <ul class="suggestions" x-show="originSuggestions.length > 0" @click.outside="originSuggestions = []">
+            <template x-for="s in originSuggestions" :key="s">
+              <li @mousedown.prevent="originInput = s; origin = ''; originSuggestions = []" x-text="s"></li>
+            </template>
+          </ul>
+        </div>
+        <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
+      </div>
+      <div class="endpoint-actions">
+        <button class="btn btn-add" x-show="origin === ''" @click="setOrigin()" :disabled="originInput.trim() === ''">+</button>
+        <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
+        <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
+          <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
+          <span class="btn-geo-text" x-show="!geolocating">Localização</span>
+          <span x-show="geolocating">…</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="endpoint-divider"></div>
+
+    <!-- Destination row -->
+    <div class="endpoint-row">
+      <div class="endpoint-icon icon-dest">⚑</div>
+      <div class="endpoint-content">
+        <div class="endpoint-label">Destino final (opcional)</div>
+        <div class="input-wrap" x-show="dest === ''">
+          <input type="text" placeholder="Ex.: Depósito, Rua Y, 456, Campinas/SP"
+                 x-model="destInput"
+                 @input.debounce.400ms="fetchSuggestions('dest', destInput)"
+                 @keydown.escape="destSuggestions = []"
+                 @keydown.enter="setDest()" />
+          <ul class="suggestions" x-show="destSuggestions.length > 0" @click.outside="destSuggestions = []">
+            <template x-for="s in destSuggestions" :key="s">
+              <li @mousedown.prevent="destInput = s; dest = ''; destSuggestions = []" x-text="s"></li>
+            </template>
+          </ul>
+        </div>
+        <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
+        <button class="btn-copy-origin"
+                x-show="origin !== '' && dest === ''"
+                @click="destInput = origin; setDest()">← Usar mesmo endereço da origem</button>
+      </div>
+      <div class="endpoint-actions">
+        <button class="btn btn-add" x-show="dest === ''" @click="setDest()" :disabled="destInput.trim() === ''">+</button>
+        <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Endereços -->
+  <!-- Info banner -->
+  <div class="info-banner">
+    <div class="info-banner-icon">✦</div>
+    <div>
+      <div class="info-banner-title">A ordem será calculada automaticamente</div>
+      <div class="info-banner-sub">Defina início e destino (opcional) e adicione suas paradas.</div>
+    </div>
+  </div>
+
+  <!-- Stops section -->
   <div class="section">
-    <div class="section-label">Endereços <span x-text="'(' + addresses.length + ')'"></span></div>
-    <div class="input-row">
+    <div class="stops-header">
+      <div class="stops-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/>
+          <circle cx="12" cy="8" r="2"/>
+        </svg>
+        Paradas adicionadas
+        <span class="badge-count" x-show="addresses.length > 0" x-text="addresses.length"></span>
+      </div>
+      <button class="btn-add-stop" @click="openAddInput()">＋ Adicionar parada</button>
+    </div>
+    <p class="field-hint">Adicione pelo menos 2 endereços. A ordem em que você digita não importa.</p>
+
+    <!-- Add input (toggle) -->
+    <div class="add-input-row" x-show="showAddInput" x-transition>
       <div class="input-wrap">
         <input type="text" placeholder="Ex: Av. Paulista, 1000, São Paulo/SP"
+               x-ref="addInput"
                x-model="newAddress"
                @input.debounce.400ms="fetchSuggestions('address', newAddress)"
-               @keydown.escape="addressSuggestions = []"
+               @keydown.escape="addressSuggestions = []; showAddInput = false"
                @keydown.enter="addAddress()" />
         <ul class="suggestions" x-show="addressSuggestions.length > 0" @click.outside="addressSuggestions = []">
           <template x-for="s in addressSuggestions" :key="s">
@@ -110,36 +177,71 @@
       </div>
       <button class="btn btn-add" @click="addAddress()" :disabled="newAddress.trim() === ''">+</button>
     </div>
-    <p class="field-hint">Adicione pelo menos 2 endereços. A ordem em que você digita não importa — o sistema calcula a sequência mais eficiente.</p>
+
+    <!-- Address list -->
     <ul class="address-list" x-show="addresses.length > 0">
       <template x-for="(addr, i) in addresses" :key="i">
         <li>
-          <span class="pin-badge pin-badge-first" x-show="fixedFirst === addr">1º</span>
-          <span class="pin-badge pin-badge-last"  x-show="fixedLast  === addr">Últ</span>
-          <span x-text="addr"></span>
-          <button class="btn-pin" :class="{ 'active-first': fixedFirst === addr }"
-                  @click="toggleFirst(addr)" title="Visitar primeiro">⬆</button>
-          <button class="btn-pin" :class="{ 'active-last': fixedLast === addr }"
-                  @click="toggleLast(addr)"  title="Visitar por último">⬇</button>
-          <button class="btn btn-remove"
-                  @click="if(addr===fixedFirst)fixedFirst=null; if(addr===fixedLast)fixedLast=null; addresses.splice(i,1)">−</button>
+          <div class="addr-icon">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1C4.79 1 3 2.79 3 5c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4z" fill="#9ca3af"/>
+              <circle cx="7" cy="5" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <span class="addr-text" x-text="addr"></span>
+          <button class="btn-action btn-start" :class="{ 'active': fixedFirst === addr }"
+                  @click="toggleFirst(addr)" title="Visitar primeiro">Início</button>
+          <button class="btn-action btn-end" :class="{ 'active': fixedLast === addr }"
+                  @click="toggleLast(addr)" title="Visitar por último">Destino</button>
+          <button class="btn-trash"
+                  @click="if(addr===fixedFirst)fixedFirst=null; if(addr===fixedLast)fixedLast=null; addresses.splice(i,1)"
+                  title="Remover">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
         </li>
       </template>
     </ul>
   </div>
 
-  <!-- Erro -->
+  <!-- Error -->
   <div class="error" x-show="error !== ''" x-text="error"></div>
 
-  <!-- Botão otimizar -->
+  <!-- Ready card (2+ addresses, before optimizing) -->
+  <div class="ready-card" x-show="addresses.length >= 2 && result === null && !loading">
+    <div class="ready-card-text">
+      <div class="ready-card-icon">✦</div>
+      <div class="ready-card-title">Pronto para otimizar</div>
+      <div class="ready-card-sub">Vamos encontrar a melhor ordem para economizar tempo e combustível.</div>
+    </div>
+    <div class="ready-card-illustration">
+      <svg width="70" height="62" viewBox="0 0 70 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Blue origin pin -->
+        <path d="M14 4C10.13 4 7 7.13 7 11c0 5.25 7 15 7 15s7-9.75 7-15c0-3.87-3.13-7-7-7z" fill="#1d4ed8" opacity=".9"/>
+        <circle cx="14" cy="11" r="3.5" fill="white"/>
+        <!-- Green destination pin -->
+        <path d="M56 28C52.13 28 49 31.13 49 35c0 5.25 7 15 7 15s7-9.75 7-15c0-3.87-3.13-7-7-7z" fill="#16a34a" opacity=".9"/>
+        <circle cx="56" cy="35" r="3.5" fill="white"/>
+        <!-- Dotted path -->
+        <path d="M16 24 C22 40, 44 20, 53 32" stroke="#9ca3af" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Optimize button -->
   <button class="btn-optimize"
           @click="optimize()"
           :disabled="loading || addresses.length < 2">
-    <span x-show="!loading">Otimizar Rota</span>
+    <svg x-show="!loading" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
+      <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
+    </svg>
+    <span x-show="!loading">Otimizar rota</span>
     <span x-show="loading">Calculando…</span>
   </button>
 
-  <!-- Resultado -->
+  <!-- Result -->
   <div class="result-section" x-show="result !== null" style="margin-top:1rem">
     <h2>Rota Otimizada</h2>
     <p class="total" x-text="'Distância total: ' + result?.total_distance_km + ' km'"></p>
@@ -198,6 +300,9 @@
     </div>
   </div>
 
+  <!-- Footer -->
+  <p class="footer-security">🔒 Seus dados estão seguros e não são compartilhados.</p>
+
 </div>
 
 <script>
@@ -209,6 +314,8 @@ function routeApp() {
     addresses:   [],
     fixedFirst:  null,
     fixedLast:   null,
+    showAddInput:   false,
+    helpOpen:       false,
     loading:        false,
     geolocating:    false,
     copied:         false,
@@ -224,8 +331,7 @@ function routeApp() {
       const urlOrigin = params.get('origin');
       const urlDest   = params.get('dest');
       const urlAddrs  = params.getAll('a');
-
-      const urlSaved = params.get('saved');
+      const urlSaved  = params.get('saved');
 
       if (urlSaved) {
         fetch(`/api/v1/routes/saved/${urlSaved}`)
@@ -298,6 +404,7 @@ function routeApp() {
       const v = this.destInput.trim();
       if (v) { this.dest = v; this.destSuggestions = []; }
     },
+
     toggleFirst(addr) {
       this.fixedFirst = this.fixedFirst === addr ? null : addr;
       if (this.fixedLast === addr) this.fixedLast = null;
@@ -307,9 +414,14 @@ function routeApp() {
       if (this.fixedFirst === addr) this.fixedFirst = null;
     },
 
+    openAddInput() {
+      this.showAddInput = true;
+      this.$nextTick(() => { this.$refs.addInput?.focus(); });
+    },
+
     addAddress() {
       const v = this.newAddress.trim();
-      if (v) { this.addresses.push(v); this.newAddress = ''; this.addressSuggestions = []; }
+      if (v) { this.addresses.push(v); this.newAddress = ''; this.addressSuggestions = []; this.showAddInput = false; }
     },
 
     clearAll() {
@@ -319,6 +431,7 @@ function routeApp() {
       this.addresses = [];
       this.fixedFirst = null;
       this.fixedLast  = null;
+      this.showAddInput = false;
       this.result = null;
       this.error  = '';
       localStorage.removeItem('routeApp');
