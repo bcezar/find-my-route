@@ -114,8 +114,15 @@
     <ul class="address-list" x-show="addresses.length > 0">
       <template x-for="(addr, i) in addresses" :key="i">
         <li>
+          <span class="pin-badge pin-badge-first" x-show="fixedFirst === addr">1º</span>
+          <span class="pin-badge pin-badge-last"  x-show="fixedLast  === addr">Últ</span>
           <span x-text="addr"></span>
-          <button class="btn btn-remove" @click="addresses.splice(i, 1)">−</button>
+          <button class="btn-pin" :class="{ 'active-first': fixedFirst === addr }"
+                  @click="toggleFirst(addr)" title="Visitar primeiro">⬆</button>
+          <button class="btn-pin" :class="{ 'active-last': fixedLast === addr }"
+                  @click="toggleLast(addr)"  title="Visitar por último">⬇</button>
+          <button class="btn btn-remove"
+                  @click="if(addr===fixedFirst)fixedFirst=null; if(addr===fixedLast)fixedLast=null; addresses.splice(i,1)">−</button>
         </li>
       </template>
     </ul>
@@ -200,6 +207,8 @@ function routeApp() {
     destInput:   '', dest:   '', destSuggestions:   [],
     newAddress:  '',             addressSuggestions: [],
     addresses:   [],
+    fixedFirst:  null,
+    fixedLast:   null,
     loading:        false,
     geolocating:    false,
     copied:         false,
@@ -242,6 +251,8 @@ function routeApp() {
             this.dest        = d.dest        ?? '';
             this.destInput   = d.destInput   ?? '';
             this.addresses   = d.addresses   ?? [];
+            this.fixedFirst  = d.fixedFirst  ?? null;
+            this.fixedLast   = d.fixedLast   ?? null;
           } catch (_) {}
         }
       }
@@ -252,6 +263,8 @@ function routeApp() {
         dest:        this.dest,
         destInput:   this.destInput,
         addresses:   this.addresses,
+        fixedFirst:  this.fixedFirst,
+        fixedLast:   this.fixedLast,
       }));
 
       this.$watch('origin',      save);
@@ -259,6 +272,8 @@ function routeApp() {
       this.$watch('dest',        save);
       this.$watch('destInput',   save);
       this.$watch('addresses',   save);
+      this.$watch('fixedFirst',  save);
+      this.$watch('fixedLast',   save);
     },
 
     async fetchSuggestions(field, value) {
@@ -283,6 +298,15 @@ function routeApp() {
       const v = this.destInput.trim();
       if (v) { this.dest = v; this.destSuggestions = []; }
     },
+    toggleFirst(addr) {
+      this.fixedFirst = this.fixedFirst === addr ? null : addr;
+      if (this.fixedLast === addr) this.fixedLast = null;
+    },
+    toggleLast(addr) {
+      this.fixedLast = this.fixedLast === addr ? null : addr;
+      if (this.fixedFirst === addr) this.fixedFirst = null;
+    },
+
     addAddress() {
       const v = this.newAddress.trim();
       if (v) { this.addresses.push(v); this.newAddress = ''; this.addressSuggestions = []; }
@@ -293,6 +317,8 @@ function routeApp() {
       this.dest   = ''; this.destInput   = ''; this.destSuggestions   = [];
       this.newAddress = ''; this.addressSuggestions = [];
       this.addresses = [];
+      this.fixedFirst = null;
+      this.fixedLast  = null;
       this.result = null;
       this.error  = '';
       localStorage.removeItem('routeApp');
@@ -411,8 +437,10 @@ function routeApp() {
       this.loading = true;
 
       const body = { addresses: this.addresses };
-      if (this.origin) body.origin      = this.origin;
-      if (this.dest)   body.destination = this.dest;
+      if (this.origin)     body.origin      = this.origin;
+      if (this.dest)       body.destination = this.dest;
+      if (this.fixedFirst) body.fixed_first = this.fixedFirst;
+      if (this.fixedLast)  body.fixed_last  = this.fixedLast;
 
       try {
         const res = await fetch('/api/v1/routes/optimize', {

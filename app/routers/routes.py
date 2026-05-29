@@ -80,28 +80,60 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
             detail="At least 2 addresses must be successfully geocoded to optimize a route.",
         )
 
+    fixed_first = body.fixed_first
+    fixed_last  = body.fixed_last
+
+    if fixed_first and fixed_first not in resolved:
+        raise HTTPException(status_code=422, detail="O endereço 'visitar primeiro' não pôde ser geocodificado.")
+    if fixed_last and fixed_last not in resolved:
+        raise HTTPException(status_code=422, detail="O endereço 'visitar por último' não pôde ser geocodificado.")
+
+    # Reorder resolved_addresses: fixed_first leads, fixed_last trails
+    _middle = [a for a in resolved_addresses if a != fixed_first and a != fixed_last]
+    resolved_addresses = (
+        ([fixed_first] if fixed_first else []) +
+        _middle +
+        ([fixed_last]  if fixed_last  else [])
+    )
     coords = [resolved[a] for a in resolved_addresses]
 
-    # Build coordinate list for the matrix:
-    # [origin?] + addresses + [destination?]
-    # When origin == destination (return to start), we duplicate the node so
-    # OR-Tools can treat start and end as distinct indices.
+    # Build full coordinate list for the distance matrix
+    # [origin?] + [addresses] + [destination?]
     all_coords = (
-        ([resolved[body.origin]] if body.origin else [])
-        + coords
-        + ([resolved[body.destination]] if body.destination else [])
+        ([resolved[body.origin]]      if body.origin      else []) +
+        coords +
+        ([resolved[body.destination]] if body.destination else [])
     )
-
     n = len(all_coords)
-    start_idx = 0 if body.origin else None
-    end_idx = n - 1 if body.destination else None
+    origin_offset = 1 if body.origin else 0
 
     matrix = await distance.build_distance_matrix(all_coords)
 
-    full_order = optimizer.optimize_route(
-        matrix,
-        start_index=start_idx or 0,
-        end_index=end_idx,
+    # When fixed_first + origin both exist: origin→fixed_first is a fixed prefix leg;
+    # exclude origin from the optimizer so OR-Tools doesn't freely reorder it.
+    # Symmetrically for fixed_last + destination.
+    has_fixed_prefix = bool(body.origin and fixed_first)
+    has_fixed_suffix = bool(body.destination and fixed_last)
+
+    if has_fixed_prefix and has_fixed_suffix:
+        opt_indices = list(range(origin_offset, n - 1))
+    elif has_fixed_prefix:
+        opt_indices = list(range(origin_offset, n))
+    elif has_fixed_suffix:
+        opt_indices = list(range(0, n - 1))
+    else:
+        opt_indices = list(range(n))
+
+    opt_matrix = [[matrix[i][j] for j in opt_indices] for i in opt_indices]
+    opt_end    = len(opt_indices) - 1 if (body.destination or fixed_last) else None
+
+    opt_order = optimizer.optimize_route(opt_matrix, start_index=0, end_index=opt_end)
+
+    # Reassemble full_order in all_coords indices, prepending/appending fixed legs
+    full_order = (
+        ([0] if has_fixed_prefix else []) +
+        [opt_indices[i] for i in opt_order] +
+        ([n - 1] if has_fixed_suffix else [])
     )
 
     # Slice the fixed endpoints out of the order to build the middle stops
@@ -109,8 +141,7 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
     last = len(full_order) - 1 if body.destination else len(full_order)
     middle_order = full_order[first:last]
 
-    # Map matrix indices back to resolved_addresses indices
-    origin_offset = 1 if body.origin else 0
+    # Map all_coords indices back to resolved_addresses indices
     order = [i - origin_offset for i in middle_order]
 
     total_km = sum(matrix[full_order[i]][full_order[i + 1]] for i in range(len(full_order) - 1))

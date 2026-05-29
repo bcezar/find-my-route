@@ -11,6 +11,8 @@ class RouteRequest(BaseModel):
     addresses: list[Address] = Field(..., min_length=2, max_length=50)
     origin: Optional[Address] = None
     destination: Optional[Address] = None
+    fixed_first: Optional[Address] = None
+    fixed_last: Optional[Address] = None
 
 
 class Coordinates(BaseModel):
