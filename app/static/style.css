@@ -8,6 +8,7 @@ body {
   display: flex;
   justify-content: center;
   padding: 1.5rem 1rem 3rem;
+  overscroll-behavior-y: none;
 }
 
 .container { width: 100%; max-width: 480px; }
