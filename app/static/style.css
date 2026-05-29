@@ -202,6 +202,15 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 .btn-add-stop:hover { background: #1e40af; }
 
 .add-input-row { display: flex; gap: .5rem; margin-top: .65rem; }
+.description-input {
+  width: 100%; margin-top: .4rem;
+  padding: .45rem .7rem;
+  border: 1.5px solid #e5e7eb; border-radius: 8px;
+  font-size: .85rem; outline: none; color: #111; background: #f9fafb;
+  transition: border-color .15s;
+}
+.description-input:focus { border-color: #16a34a; }
+.description-input::placeholder { color: #9ca3af; font-style: italic; }
 .field-hint { font-size: .76rem; color: #9ca3af; margin-top: .4rem; line-height: 1.4; }
 
 /* === ADDRESS LIST === */
@@ -216,10 +225,11 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   background: #e5e7eb; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
-.addr-text {
-  flex: 1; font-size: .86rem; color: #374151; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
+.addr-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .05rem; }
+.addr-desc   { font-size: .86rem; font-weight: 700; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.addr-street { font-size: .85rem; font-weight: 600; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.addr-sub    { font-size: .76rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.addr-rest   { font-size: .74rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .btn-action {
   padding: .28rem .55rem;
