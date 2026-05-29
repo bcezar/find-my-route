@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roteirizador — Casa Pet Campinas</title>
+  <title>Roteirizador — Find My Route</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/icon-find-my-route.png" />
@@ -12,7 +12,7 @@
   <meta name="description" content="Otimize sua rota de entregas: informe os endereços e receba a ordem mais eficiente de visita, com link direto para o Google Maps." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://rotas.casapetcampinas.com.br/" />
-  <meta property="og:title" content="Roteirizador — Casa Pet Campinas" />
+  <meta property="og:title" content="Roteirizador — Find My Route" />
   <meta property="og:description" content="Otimize sua rota de entregas: informe os endereços e receba a ordem mais eficiente de visita, com link direto para o Google Maps." />
   <meta property="og:image" content="https://rotas.casapetcampinas.com.br/capa.png" />
 
@@ -514,7 +514,7 @@ function routeApp() {
       } catch (_) {}
 
       const msg = 'Veja os endereços que separei para você — clique em otimizar para encontrar a melhor rota!';
-      const shareData = { title: 'Rota — Casa Pet Campinas', text: msg, url: shareUrl };
+      const shareData = { title: 'Rota — Find My Route', text: msg, url: shareUrl };
       if (navigator.share && navigator.canShare?.(shareData)) {
         navigator.share(shareData).catch(() => {});
       } else {

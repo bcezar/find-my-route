@@ -1,6 +1,6 @@
 # find-my-route
 
-API REST de roteirização de endereços. Recebe uma lista de endereços, geocodifica, calcula distâncias e retorna a ordem de visita otimizada (TSP).
+API REST de roteirização de endereços com frontend web completo. Recebe uma lista de endereços, geocodifica, calcula distâncias reais de estrada e retorna a ordem de visita otimizada (TSP).
 
 ## Stack
 
@@ -8,7 +8,10 @@ API REST de roteirização de endereços. Recebe uma lista de endereços, geocod
 - **FastAPI** + **Uvicorn**
 - **OR-Tools** (Google) — solver TSP com GLS metaheuristic
 - **httpx** — HTTP client async
-- **Geocoding:** Google Maps API quando `GOOGLE_MAPS_API_KEY` estiver no `.env`; fallback para Nominatim (OSM) caso contrário
+- **slowapi** — rate limiting por IP
+- **Alpine.js v3** — frontend reativo (CDN, sem build step)
+- **Geocoding:** Google Maps API quando `GOOGLE_MAPS_API_KEY` estiver no `.env`; fallback para Nominatim (OSM)
+- **Distâncias:** OSRM Table API quando `OSRM_BASE_URL` configurado; fallback para Haversine
 
 ## Comandos
 
@@ -20,89 +23,124 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/uvicorn app.main:app --reload
 
 # Rodar testes
-.venv/bin/pytest -v
+.venv/bin/pytest -v   # 27 testes passando
 ```
 
 ## Estrutura
 
 ```
 app/
-├── main.py               # FastAPI app; GET /health
-├── config.py             # Settings lidos do .env via pydantic-settings
-├── models.py             # Pydantic models: RouteRequest, RouteResponse, etc.
+├── main.py               # FastAPI app; GET /health + GET /r/{code} (short link redirect)
+├── config.py             # Settings via .env (pydantic-settings)
+├── limiter.py            # Instância do slowapi Limiter (separado para evitar circular import)
+├── storage.py            # Dict em memória para short links (/r/{code})
+├── models.py             # RouteRequest, RouteResponse, RouteStop (com leg_distance_km), etc.
 ├── routers/
-│   └── routes.py         # POST /api/v1/routes/optimize
+│   └── routes.py         # Todos os endpoints /api/v1/*
 └── services/
-    ├── geocoding.py      # Geocodificação: Google Maps ou Nominatim + cache em memória
-    ├── distance.py       # Haversine — matriz n×n de distâncias em km
-    └── optimizer.py      # OR-Tools TSP solver
+    ├── geocoding.py      # Google Maps / Nominatim + cache + autocomplete + reverse geocoding
+    ├── distance.py       # OSRM Table API (fallback: Haversine)
+    └── optimizer.py      # OR-Tools TSP solver (PATH_CHEAPEST_ARC + GLS)
+static/
+    ├── index.html        # Frontend Alpine.js completo
+    ├── capa.png          # Imagem OG para preview no WhatsApp
+    ├── icon-find-my-route.png
+    └── my-location.svg   # Ícone do botão de geolocalização
 tests/
-├── test_routes.py        # Testes do endpoint (mock geocoding.geocode_all)
+├── test_routes.py        # Testes dos endpoints (mock geocoding.geocode_all)
 ├── test_geocoding.py     # Testes do service de geocoding
-├── test_distance.py      # Testes Haversine
+├── test_distance.py      # Testes Haversine + OSRM mock
 └── test_optimizer.py     # Testes OR-Tools
 ```
 
-## Endpoint
-
-### `POST /api/v1/routes/optimize`
-
-**Request:**
-```json
-{
-  "origin": "Rua X, 123, Cidade/SP",      // opcional — ponto de partida fixo
-  "destination": "Rua X, 123, Cidade/SP", // opcional — ponto de chegada fixo (pode ser igual ao origin para retornar ao depósito)
-  "addresses": [                           // mínimo 2, máximo 50
-    "Rua A, 456, Cidade/SP",
-    "Av. B, 789, Outra Cidade/SP"
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "optimized_route": [
-    { "order": 1, "original_address": "...", "coordinates": { "lat": -23.5, "lng": -46.6 } }
-  ],
-  "total_distance_km": 41.4,
-  "geocoding_failures": [],
-  "origin": { "address": "...", "coordinates": { "lat": -22.9, "lng": -47.0 } },
-  "destination": { "address": "...", "coordinates": { "lat": -22.9, "lng": -47.0 } }
-}
-```
-
-**Erros:**
-| Status | Motivo |
-|--------|--------|
-| 422 | Menos de 2 endereços, ou `origin`/`destination` não geocodificado |
-| 400 | Menos de 2 endereços resolvidos após geocoding |
-
-## Variáveis de ambiente (.env)
+## Endpoints
 
 ```
-GOOGLE_MAPS_API_KEY=     # se presente, usa Google Maps; senão usa Nominatim
+GET  /health
+GET  /r/{code}                   → redirect 302 para /?origin=...&a=... (short link)
+
+GET  /api/v1/autocomplete?q=     → Google Places autocomplete (rate: 120/min)
+GET  /api/v1/reverse?lat=&lng=   → reverse geocoding para geolocalização (rate: 30/min)
+POST /api/v1/shorten             → gera short link, body=RouteRequest (rate: 20/min)
+POST /api/v1/routes/optimize     → otimiza rota, body=RouteRequest (rate: 20/min)
+```
+
+## Modelos principais
+
+### `RouteRequest`
+```python
+addresses: list[Address]       # min 2, max 50; Address = Annotated[str, max_length=200]
+origin:      Optional[Address] # ponto de partida fixo
+destination: Optional[Address] # ponto de chegada fixo (pode == origin para ciclo)
+```
+
+### `RouteStop` (dentro de `RouteResponse.optimized_route`)
+```python
+order: int
+original_address: str
+coordinates: Coordinates        # {lat, lng}
+leg_distance_km: Optional[float] # distância até a próxima parada (None na última)
+```
+
+## Frontend (`app/static/index.html`)
+
+Alpine.js v3, sem build step, single-page:
+
+- **Persistência:** localStorage salva origin, dest, addresses entre sessões
+- **Autocomplete:** Google Places, debounce 400ms, em todos os inputs
+- **Geolocalização:** botão ⊕ chama `/api/v1/reverse`, auto-confirma a origem; só ícone no mobile (≤480px)
+- **Resultado:** badges 0 (origem), 1-N (paradas), F (destino); distância por trecho ↓ X km; link Google Maps
+- **Copiar rota:** texto formatado com assinatura `findmyroute.com.br`
+- **Compartilhar rota / Copiar link:** chama `/api/v1/shorten` → URL curta `/r/CODE`; `navigator.share()` no mobile, clipboard no desktop; inclui mensagem contextual
+- **Limpar tudo:** reseta estado + localStorage
+- **Destino:** botão "← Usar mesmo endereço da origem" (aparece quando origem está definida)
+- **URL params:** `?origin=&dest=&a=` pré-preenche o formulário (usado pelo redirect de short links)
+
+## Segurança
+
+- **CORS:** restrito ao domínio de produção (`rotas.casapetcampinas.com.br` → migrar para `findmyroute.com.br`)
+- **Rate limiting:** slowapi por IP no código + Cloudflare Rate Limiting no painel (proteção dupla)
+- **Validação:** `Address` com `max_length=200`, addresses com `min_length=2, max_length=50`
+
+## Deploy
+
+- **Railway** (Python) — auto-deploy via GitHub push
+- `Procfile`: `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Cloudflare** — DNS proxy + Rate Limiting configurado no painel
+- **Domínio atual:** `rotas.casapetcampinas.com.br` → **futuro:** `findmyroute.com.br`
+
+## Variáveis de ambiente (`.env`)
+
+```
+GOOGLE_MAPS_API_KEY=     # obrigatório para autocomplete, reverse geocoding e geocoding de qualidade
 NOMINATIM_USER_AGENT=find-my-route/1.0
 NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
 TSP_TIMEOUT_SECONDS=5
 MAX_ADDRESSES=50
+OSRM_BASE_URL=           # opcional; sem isso usa Haversine
 ```
 
-> **Nunca commitar o `.env`** — ele contém a API key do Google Maps.
+> **Nunca commitar o `.env`** — contém a API key do Google Maps.
 
 ## Decisões técnicas relevantes
 
-- **Cache de geocoding** é um dict em memória (`_cache` em `geocoding.py`). Persiste durante o processo, não entre reinicializações. Para limpar, reiniciar o servidor.
-- **Rate limit Nominatim**: `asyncio.sleep(1.0)` entre cada chamada. Com Google Maps o sleep existe mas pode ser reduzido.
-- **Formato de endereço brasileiro**: `Cidade/SP` é normalizado para `Cidade, SP, Brasil` antes da query ao Nominatim. O Google Maps aceita o formato original diretamente.
-- **Nome de estabelecimento**: o serviço detecta e remove prefixos como `"Medkal Pet, 446 Rua Bolívia"` → `"Rua Bolívia, 446"` (apenas para Nominatim).
-- **OR-Tools**: usa `PATH_CHEAPEST_ARC` como solução inicial + `GUIDED_LOCAL_SEARCH` para melhoria. Timeout configurável via `TSP_TIMEOUT_SECONDS`.
-- **OR-Tools endpoint fixo**: `RoutingIndexManager(n, 1, [start], [end])` fixa início e fim. Quando `origin == destination` (retorno ao depósito), o nó é duplicado na lista de coordenadas para que OR-Tools trate como índices distintos. O loop de extração do resultado faz `while not routing.IsEnd` e adiciona o nó final somente quando `end_index is not None` (o fim virtual do OR-Tools sem endpoint fixo retornaria o depot duplicado).
-- **OSRM**: `build_distance_matrix` é `async`; usa OSRM Table API (`/table/v1/driving/{coords}?annotations=distance`) quando `OSRM_BASE_URL` está configurado; fallback para Haversine.
+- **`from __future__ import annotations` + Pydantic:** Não usar em arquivos que usem `Body(...)` como parâmetro — causa `ForwardRef` não resolvido em runtime. Em `routes.py` usar `Optional[X]` diretamente.
+- **`app/limiter.py` separado:** Evita circular import entre `main.py` e `routes.py`.
+- **Short links em memória (`storage.py`):** Links expiram no próximo deploy. Aceitável — usuário gera novo link se precisar.
+- **Geocoding paralelo:** Google Maps usa `asyncio.gather`; Nominatim é sequencial com `sleep(1s)` (usage policy).
+- **OR-Tools endpoint fixo:** Quando `origin == destination` (retorno ao depósito), o nó é duplicado nas coordenadas para que OR-Tools trate como índices distintos.
+- **`leg_distance_km`:** Calculado direto da matriz em memória — sem custo extra de I/O.
+- **Geolocalização mobile:** Botão ⊕ só com SVG em telas ≤480px (`.btn-geo-text { display: none }`).
 
-## Próximos passos sugeridos
+## Próximos passos
 
-- [x] Distâncias reais de estrada (OSRM substituiu Haversine em `distance.py`)
+- [x] Distâncias reais de estrada (OSRM)
+- [x] Frontend Alpine.js completo
+- [x] Rate limiting (slowapi + Cloudflare)
+- [x] Autocomplete Google Places
+- [x] Geolocalização com reverse geocoding
+- [x] Short links para compartilhamento (`/r/{code}`)
+- [x] Distância por trecho no resultado (`leg_distance_km`)
+- [ ] **Migração de domínio** para `findmyroute.com.br` — atualizar CORS em `main.py`, URLs OG em `index.html`, textos de assinatura
 - [ ] Cache persistente de geocoding (Redis ou SQLite)
-- [ ] Suporte a janelas de tempo por endereço (CVRPTW)
-- [ ] `GET /api/v1/routes/{id}` para consultar resultado de uma rota salva
+- [ ] `GET /api/v1/routes/{id}` para consultar resultado de rota salva
