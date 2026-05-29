@@ -364,7 +364,7 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 
 .route-content { flex: 1; min-width: 0; padding-top: .05rem; }
 .route-desc   { font-size: .86rem; font-weight: 700; color: #111; }
-.route-street { font-size: .86rem; font-weight: 600; color: #374151; }
+.route-street { font-size: .86rem; font-weight: 700; color: #111; }
 .route-rest   { font-size: .76rem; color: #9ca3af; margin-top: .05rem; }
 .route-coords { font-size: .72rem; color: #b0b7c3; margin-top: .1rem; }
 .route-desc + .route-street { font-size: .76rem; font-weight: 400; color: #6b7280; }

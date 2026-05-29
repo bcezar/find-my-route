@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
+from hashlib import md5
+from pathlib import Path
 from urllib.parse import urlencode
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
@@ -12,6 +15,12 @@ from app import storage
 from app.config import settings
 from app.limiter import limiter
 from app.routers import routes
+
+
+_STATIC = Path(__file__).parent / "static"
+_css_hash = md5(_STATIC.joinpath("style.css").read_bytes()).hexdigest()[:8]
+
+templates = Jinja2Templates(directory=str(_STATIC))
 
 
 @asynccontextmanager
@@ -58,5 +67,10 @@ async def expand_route(code: str):
     return RedirectResponse(url=f"/?{urlencode(parts)}", status_code=302)
 
 
-# Serve the frontend — must come after API routes so /api/v1 takes precedence
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "css_version": _css_hash})
+
+
+# Serve static assets (CSS, images, etc.) — must come after all routes
 app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
