@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     max_addresses: int = 50
     google_maps_api_key: Optional[str] = None
     osrm_base_url: Optional[str] = None
+    turso_database_url: Optional[str] = None
+    turso_auth_token: Optional[str] = None
 
 
 settings = Settings()

@@ -1,6 +1,7 @@
+from contextlib import asynccontextmanager
 from urllib.parse import urlencode
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -12,7 +13,14 @@ from app.config import settings
 from app.limiter import limiter
 from app.routers import routes
 
-app = FastAPI(title=settings.app_name)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await storage.init_db()
+    yield
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -34,7 +42,7 @@ async def health():
 
 @app.get("/r/{code}")
 async def expand_route(code: str):
-    state = storage.get_route(code)
+    state = await storage.get_route(code)
     if not state:
         return RedirectResponse(url="/?expired=1", status_code=302)
     parts = []

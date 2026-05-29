@@ -23,7 +23,7 @@ async def shorten_route(request: Request, body: RouteRequest = Body(...)):
     state = {"addresses": body.addresses}
     if body.origin:      state["origin"]      = body.origin
     if body.destination: state["destination"] = body.destination
-    code = storage.save_route(state)
+    code = await storage.save_route(state)
     return {"path": f"/r/{code}"}
 
 
