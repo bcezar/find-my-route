@@ -23,7 +23,9 @@ def _haversine_matrix(coords: list[tuple[float, float]]) -> list[list[float]]:
     return [[haversine_km(coords[i], coords[j]) for j in range(n)] for i in range(n)]
 
 
-async def _osrm_matrix(coords: list[tuple[float, float]]) -> list[list[float]] | None:
+async def _osrm_matrix(
+    coords: list[tuple[float, float]],
+) -> tuple[list[list[float]], list[list[float]]] | None:
     if not settings.osrm_base_url:
         return None
 
@@ -34,7 +36,7 @@ async def _osrm_matrix(coords: list[tuple[float, float]]) -> list[list[float]] |
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{settings.osrm_base_url}/table/v1/driving/{coord_str}",
-                params={"annotations": "distance"},
+                params={"annotations": "distance,duration"},
                 timeout=10.0,
             )
             response.raise_for_status()
@@ -42,15 +44,18 @@ async def _osrm_matrix(coords: list[tuple[float, float]]) -> list[list[float]] |
     except (httpx.HTTPError, ValueError):
         return None
 
-    if data.get("code") != "Ok" or "distances" not in data:
+    if data.get("code") != "Ok" or "distances" not in data or "durations" not in data:
         return None
 
-    # Convert meters → km
-    return [[d / 1000.0 for d in row] for row in data["distances"]]
+    dist_matrix = [[d / 1000.0 for d in row] for row in data["distances"]]
+    dur_matrix  = [[s / 60.0   for s in row] for row in data["durations"]]
+    return dist_matrix, dur_matrix
 
 
-async def build_distance_matrix(coords: list[tuple[float, float]]) -> list[list[float]]:
-    matrix = await _osrm_matrix(coords)
-    if matrix is not None:
-        return matrix
-    return _haversine_matrix(coords)
+async def build_distance_matrix(
+    coords: list[tuple[float, float]],
+) -> tuple[list[list[float]], list[list[float]] | None]:
+    result = await _osrm_matrix(coords)
+    if result is not None:
+        return result
+    return _haversine_matrix(coords), None

@@ -30,6 +30,7 @@ class RouteStop(BaseModel):
     original_address: str
     coordinates: Coordinates
     leg_distance_km: Optional[float] = None
+    leg_duration_min: Optional[float] = None
 
 
 class RouteResponse(BaseModel):
@@ -39,6 +40,7 @@ class RouteResponse(BaseModel):
     origin: Optional[OriginInfo] = None
     destination: Optional[OriginInfo] = None
     maps_url: Optional[str] = None
+    total_duration_min: Optional[float] = None
 
 
 class SaveRouteRequest(BaseModel):

@@ -256,53 +256,146 @@
 
   <!-- Result -->
   <div class="result-section" x-show="result !== null" style="margin-top:1rem">
-    <h2>Rota Otimizada</h2>
-    <p class="total" x-text="'Distância total: ' + result?.total_distance_km + ' km'"></p>
 
-    <ul class="route-list">
+    <!-- Header -->
+    <div class="result-header">
+      <div class="result-icon-circle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
+          <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="result-title-row">
+          <span class="result-title">Rota Otimizada</span>
+          <span class="result-badge-success">✓ Sucesso</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="result-stats">
+      <div class="result-stat">
+        <div class="result-stat-label">Distância total</div>
+        <div class="result-stat-value green" x-text="result?.total_distance_km + ' km'"></div>
+      </div>
+      <div class="result-stat" x-show="result?.total_duration_min != null">
+        <div class="result-stat-label">Tempo estimado</div>
+        <div class="result-stat-value" x-text="formatDuration(result?.total_duration_min)"></div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-label">Paradas</div>
+        <div class="result-stat-value" x-text="result?.optimized_route?.length"></div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <ul class="route-timeline">
+
+      <!-- Origin -->
       <template x-if="result?.origin">
-        <li>
-          <div class="route-num route-num-origin">0</div>
-          <div>
-            <div class="route-addr" x-text="result.origin.address"></div>
+        <li class="route-item">
+          <div class="route-num-col">
+            <div class="route-num route-num-origin">0</div>
+            <div class="route-num-line"></div>
+          </div>
+          <div class="route-content">
+            <div class="route-street" x-text="streetPart(result.origin.address)"></div>
+            <div class="route-rest" x-show="restPart(result.origin.address)" x-text="restPart(result.origin.address)"></div>
             <div class="route-coords" x-text="result.origin.coordinates.lat.toFixed(5) + ', ' + result.origin.coordinates.lng.toFixed(5)"></div>
           </div>
-        </li>
-      </template>
-      <template x-for="stop in result?.optimized_route" :key="stop.order">
-        <li>
-          <div class="route-num" x-text="stop.order"></div>
-          <div>
-            <div class="route-addr" x-text="stop.original_address"></div>
-            <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
-            <div class="route-leg" x-show="stop.leg_distance_km != null" x-text="'↓ ' + stop.leg_distance_km + ' km'"></div>
+          <div class="route-right">
+            <span class="route-badge-start">Início</span>
           </div>
         </li>
       </template>
+
+      <!-- Intermediate stops -->
+      <template x-for="stop in result?.optimized_route" :key="stop.order">
+        <li class="route-item">
+          <div class="route-num-col">
+            <div class="route-num" x-text="stop.order"></div>
+            <div class="route-num-line"></div>
+          </div>
+          <div class="route-content">
+            <div class="route-desc" x-show="getStopInfo(stop.original_address).description"
+                 x-text="getStopInfo(stop.original_address).description"></div>
+            <div :class="getStopInfo(stop.original_address).description ? 'route-rest' : 'route-street'"
+                 x-text="streetPart(stop.original_address)"></div>
+            <div class="route-rest" x-show="restPart(stop.original_address)" x-text="restPart(stop.original_address)"></div>
+            <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
+          </div>
+          <div class="route-right" x-show="stop.leg_distance_km != null">
+            <div class="route-leg-pill">
+              <span class="route-leg-km" x-text="stop.leg_distance_km + ' km'"></span>
+              <span class="route-leg-min" x-show="stop.leg_duration_min != null"
+                    x-text="formatDuration(stop.leg_duration_min) + ' 🚗'"></span>
+            </div>
+          </div>
+        </li>
+      </template>
+
+      <!-- Destination -->
       <template x-if="result?.destination">
-        <li>
-          <div class="route-num route-num-dest">F</div>
-          <div>
-            <div class="route-addr" x-text="result.destination.address"></div>
+        <li class="route-item">
+          <div class="route-num-col">
+            <div class="route-num route-num-dest">F</div>
+          </div>
+          <div class="route-content">
+            <div class="route-street" x-text="streetPart(result.destination.address)"></div>
+            <div class="route-rest" x-show="restPart(result.destination.address)" x-text="restPart(result.destination.address)"></div>
             <div class="route-coords" x-text="result.destination.coordinates.lat.toFixed(5) + ', ' + result.destination.coordinates.lng.toFixed(5)"></div>
           </div>
+          <div class="route-right">
+            <span class="route-badge-end">Fim</span>
+          </div>
         </li>
       </template>
+
     </ul>
 
+    <!-- Success banner -->
+    <div class="result-success-banner">
+      <div class="result-success-icon">✓</div>
+      <div>
+        <div class="result-success-title">Rota otimizada com sucesso!</div>
+        <div class="result-success-sub">Esta é a melhor sequência encontrada para seus destinos.</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
     <div class="result-actions">
       <a class="maps-link" :href="result?.maps_url" target="_blank" x-show="result?.maps_url">
-        Abrir no Google Maps →
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/>
+          <circle cx="12" cy="8" r="2"/>
+        </svg>
+        Abrir no Google Maps
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
       </a>
-      <button class="btn-copy" :class="{ copied }" @click="copyRoute()">
-        <span x-show="!copied">Copiar rota</span>
-        <span x-show="copied">Copiado! ✓</span>
-      </button>
-      <button class="btn-copy" :class="{ copied: shared }" @click="shareRoute()">
-        <span x-show="!shared" x-text="canNativeShare ? 'Compartilhar rota' : 'Copiar link da rota'"></span>
-        <span x-show="shared">Link copiado! ✓</span>
-      </button>
-      <button class="btn-copy" :class="{ copied: saved }" @click="saveRoute()">
+      <div class="result-actions-row">
+        <button class="btn-copy" :class="{ copied }" @click="copyRoute()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span x-show="!copied">Copiar rota</span>
+          <span x-show="copied">Copiado! ✓</span>
+        </button>
+        <button class="btn-copy" :class="{ copied: shared }" @click="shareRoute()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <span x-show="!shared" x-text="canNativeShare ? 'Compartilhar' : 'Copiar link'"></span>
+          <span x-show="shared">Link copiado! ✓</span>
+        </button>
+      </div>
+      <button class="btn-copy btn-copy-full" :class="{ copied: saved }" @click="saveRoute()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
         <span x-show="!saved">Salvar rota</span>
         <span x-show="saved">Salva! ✓</span>
       </button>

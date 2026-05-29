@@ -107,7 +107,7 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
     n = len(all_coords)
     origin_offset = 1 if body.origin else 0
 
-    matrix = await distance.build_distance_matrix(all_coords)
+    matrix, dur_matrix = await distance.build_distance_matrix(all_coords)
 
     # When fixed_first + origin both exist: origin→fixed_first is a fixed prefix leg;
     # exclude origin from the optimizer so OR-Tools doesn't freely reorder it.
@@ -145,6 +145,10 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
     order = [i - origin_offset for i in middle_order]
 
     total_km = sum(matrix[full_order[i]][full_order[i + 1]] for i in range(len(full_order) - 1))
+    total_dur = (
+        sum(dur_matrix[full_order[i]][full_order[i + 1]] for i in range(len(full_order) - 1))
+        if dur_matrix else None
+    )
 
     optimized_route = [
         RouteStop(
@@ -153,6 +157,8 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
             coordinates=Coordinates(lat=coords[idx][0], lng=coords[idx][1]),
             leg_distance_km=round(matrix[full_order[first + i]][full_order[first + i + 1]], 2)
                 if (first + i + 1) < len(full_order) else None,
+            leg_duration_min=round(dur_matrix[full_order[first + i]][full_order[first + i + 1]], 1)
+                if dur_matrix and (first + i + 1) < len(full_order) else None,
         )
         for i, idx in enumerate(order)
     ]
@@ -171,6 +177,7 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
         origin=origin_info,
         destination=destination_info,
         maps_url=_build_maps_url(origin_info, destination_info, optimized_route),
+        total_duration_min=round(total_dur, 1) if total_dur is not None else None,
     )
 
 
