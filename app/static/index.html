@@ -180,6 +180,10 @@
         <span x-show="!shared" x-text="canNativeShare ? 'Compartilhar rota' : 'Copiar link da rota'"></span>
         <span x-show="shared">Link copiado! ✓</span>
       </button>
+      <button class="btn-copy" :class="{ copied: saved }" @click="saveRoute()">
+        <span x-show="!saved">Salvar rota</span>
+        <span x-show="saved">Salva! ✓</span>
+      </button>
     </div>
 
     <div class="failures" x-show="result?.geocoding_failures?.length > 0">
@@ -200,6 +204,7 @@ function routeApp() {
     geolocating:    false,
     copied:         false,
     shared:         false,
+    saved:          false,
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
     error:          '',
@@ -211,7 +216,14 @@ function routeApp() {
       const urlDest   = params.get('dest');
       const urlAddrs  = params.getAll('a');
 
-      if (params.get('expired') === '1') {
+      const urlSaved = params.get('saved');
+
+      if (urlSaved) {
+        fetch(`/api/v1/routes/saved/${urlSaved}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (data) this.result = data; });
+        history.replaceState(null, '', location.pathname);
+      } else if (params.get('expired') === '1') {
         this.notice = 'Este link expirou. Os roteiros compartilhados ficam disponíveis apenas enquanto o servidor estiver ativo. Crie uma nova rota abaixo.';
         setTimeout(() => { this.notice = ''; }, 5000);
         history.replaceState(null, '', location.pathname);
@@ -359,6 +371,38 @@ function routeApp() {
         this.copied = true;
         setTimeout(() => { this.copied = false; }, 2000);
       });
+    },
+
+    async saveRoute() {
+      if (!this.result) return;
+      try {
+        const res = await fetch('/api/v1/routes/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            result: this.result,
+            inputs: {
+              addresses: this.addresses,
+              ...(this.origin && { origin: this.origin }),
+              ...(this.dest   && { destination: this.dest }),
+            },
+          }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const history = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
+        history.unshift({
+          code:       data.code,
+          total_km:   this.result.total_distance_km,
+          stops:      this.result.optimized_route.length,
+          created_at: new Date().toISOString(),
+        });
+        localStorage.setItem('savedRoutes', JSON.stringify(history.slice(0, 50)));
+
+        this.saved = true;
+        setTimeout(() => { this.saved = false; }, 2000);
+      } catch (_) {}
     },
 
     async optimize() {

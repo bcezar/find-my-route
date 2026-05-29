@@ -40,6 +40,11 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/s/{code}")
+async def expand_saved_route(code: str):
+    return RedirectResponse(url=f"/?saved={code}", status_code=302)
+
+
 @app.get("/r/{code}")
 async def expand_route(code: str):
     state = await storage.get_route(code)

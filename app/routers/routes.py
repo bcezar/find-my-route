@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
 
 from app import storage
 from app.limiter import limiter
-from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop
+from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest
 from app.services import distance, geocoding, optimizer
 
 router = APIRouter()
@@ -25,6 +25,25 @@ async def shorten_route(request: Request, body: RouteRequest = Body(...)):
     if body.destination: state["destination"] = body.destination
     code = await storage.save_route(state)
     return {"path": f"/r/{code}"}
+
+
+@router.post("/routes/save")
+@limiter.limit("20/minute")
+async def save_route(request: Request, body: SaveRouteRequest = Body(...)):
+    code = await storage.save_result(
+        body.name,
+        body.result.model_dump(),
+        body.inputs.model_dump(),
+    )
+    return {"code": code, "path": f"/s/{code}"}
+
+
+@router.get("/routes/saved/{code}")
+async def get_saved_route(code: str):
+    result = await storage.get_result(code)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Rota não encontrada.")
+    return result
 
 
 @router.get("/reverse")

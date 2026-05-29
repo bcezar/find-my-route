@@ -8,6 +8,7 @@ import httpx
 from app.config import settings
 
 _routes: dict[str, dict] = {}
+_saved: dict[str, dict] = {}
 
 
 def _turso_configured() -> bool:
@@ -40,6 +41,11 @@ async def init_db() -> None:
         "CREATE TABLE IF NOT EXISTS routes "
         "(code TEXT PRIMARY KEY, state TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')))"
     )
+    await _execute(
+        "CREATE TABLE IF NOT EXISTS saved_routes "
+        "(code TEXT PRIMARY KEY, name TEXT, result TEXT NOT NULL, inputs TEXT NOT NULL, "
+        "created_at TEXT DEFAULT (datetime('now')))"
+    )
 
 
 async def save_route(state: dict) -> str:
@@ -66,3 +72,47 @@ async def get_route(code: str) -> dict | None:
             return json.loads(raw)
         return None
     return _routes.get(code)
+
+
+def _cell_value(cell) -> str:
+    return cell["value"] if isinstance(cell, dict) else cell
+
+
+async def save_result(name: str | None, result_dict: dict, inputs_dict: dict) -> str:
+    code = secrets.token_urlsafe(6)
+    if _turso_configured():
+        await _execute(
+            "INSERT INTO saved_routes (code, name, result, inputs) VALUES (?, ?, ?, ?)",
+            [code, name or "", json.dumps(result_dict), json.dumps(inputs_dict)],
+        )
+    else:
+        _saved[code] = {"name": name, "result": result_dict, "inputs": inputs_dict}
+    return code
+
+
+async def get_result(code: str) -> dict | None:
+    if _turso_configured():
+        r = await _execute("SELECT result FROM saved_routes WHERE code = ?", [code])
+        rows = r.get("rows", [])
+        if rows:
+            return json.loads(_cell_value(rows[0][0]))
+        return None
+    entry = _saved.get(code)
+    return entry["result"] if entry else None
+
+
+async def list_results(limit: int = 20) -> list[dict]:
+    if _turso_configured():
+        r = await _execute(
+            "SELECT code, name, created_at FROM saved_routes ORDER BY created_at DESC LIMIT ?",
+            [str(limit)],
+        )
+        rows = r.get("rows", [])
+        return [
+            {"code": _cell_value(row[0]), "name": _cell_value(row[1]), "created_at": _cell_value(row[2])}
+            for row in rows
+        ]
+    return [
+        {"code": k, "name": v["name"], "created_at": None}
+        for k, v in list(_saved.items())[:limit]
+    ]

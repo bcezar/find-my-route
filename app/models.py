@@ -37,3 +37,9 @@ class RouteResponse(BaseModel):
     origin: Optional[OriginInfo] = None
     destination: Optional[OriginInfo] = None
     maps_url: Optional[str] = None
+
+
+class SaveRouteRequest(BaseModel):
+    name: Optional[str] = None
+    result: RouteResponse
+    inputs: RouteRequest
