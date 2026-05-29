@@ -36,7 +36,7 @@ async def health():
 async def expand_route(code: str):
     state = storage.get_route(code)
     if not state:
-        raise HTTPException(status_code=404, detail="Link não encontrado ou expirado.")
+        return RedirectResponse(url="/?expired=1", status_code=302)
     parts = []
     if state.get("origin"):      parts.append(("origin", state["origin"]))
     if state.get("destination"): parts.append(("dest",   state["destination"]))

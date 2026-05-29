@@ -162,7 +162,8 @@
     .btn-optimize:hover:not(:disabled) { background: #1e40af; }
     .btn-optimize:disabled { background: #93c5fd; cursor: default; }
 
-    .error { color: #b91c1c; background: #fee2e2; padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-bottom: 1rem; }
+    .error  { color: #b91c1c; background: #fee2e2; padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-bottom: 1rem; }
+    .notice { color: #92400e; background: #fef3c7; padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-bottom: 1rem; }
 
     .result-section { background: #fff; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     .result-section h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
@@ -219,6 +220,8 @@
             @click="clearAll()">Limpar tudo</button>
   </div>
   <p class="subtitle">Informe os endereços que precisa visitar e calcularemos a ordem mais eficiente de visita, economizando tempo e combustível.</p>
+
+  <div class="notice" x-show="notice !== ''" x-text="notice"></div>
 
   <!-- Origem -->
   <div class="section">
@@ -387,6 +390,7 @@ function routeApp() {
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
     error:          '',
+    notice:         '',
 
     init() {
       const params    = new URLSearchParams(location.search);
@@ -394,7 +398,10 @@ function routeApp() {
       const urlDest   = params.get('dest');
       const urlAddrs  = params.getAll('a');
 
-      if (urlOrigin || urlDest || urlAddrs.length) {
+      if (params.get('expired') === '1') {
+        this.notice = 'Este link expirou. Os roteiros compartilhados ficam disponíveis apenas enquanto o servidor estiver ativo. Crie uma nova rota abaixo.';
+        history.replaceState(null, '', location.pathname);
+      } else if (urlOrigin || urlDest || urlAddrs.length) {
         if (urlOrigin) { this.origin = urlOrigin; this.originInput = urlOrigin; }
         if (urlDest)   { this.dest   = urlDest;   this.destInput   = urlDest; }
         if (urlAddrs.length) this.addresses = urlAddrs;
