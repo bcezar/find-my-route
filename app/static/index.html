@@ -291,8 +291,25 @@
     <span x-show="loading">Calculando…</span>
   </button>
 
+  <!-- Mini map -->
+  <div class="mini-map-card" x-show="result !== null" x-transition style="margin-top:.75rem">
+    <svg viewBox="0 0 460 160" width="100%" class="mini-map-svg"
+         preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <polyline :points="mapPolyline()"
+                fill="none" stroke="#93c5fd" stroke-width="2.5"
+                stroke-dasharray="7 4" stroke-linecap="round" stroke-linejoin="round"/>
+      <template x-for="(pt, i) in mapPoints()" :key="i">
+        <circle :cx="pt.x" :cy="pt.y"
+                :r="pt.type !== 'stop' ? 7 : 5"
+                :fill="pt.type === 'origin' ? '#16a34a' : pt.type === 'dest' ? '#1d4ed8' : '#fff'"
+                :stroke="pt.type === 'stop' ? '#1d4ed8' : 'none'"
+                stroke-width="2"/>
+      </template>
+    </svg>
+  </div>
+
   <!-- Result -->
-  <div class="result-section" x-show="result !== null" style="margin-top:1rem">
+  <div class="result-section" x-show="result !== null" style="margin-top:.75rem">
 
     <!-- Header -->
     <div class="result-header">
@@ -617,6 +634,38 @@ function routeApp() {
       this.editingIndex = null;
     },
     cancelEdit() { this.editingIndex = null; },
+
+    _mapProject(pts) {
+      const W = 460, H = 160, PAD = 28;
+      const lats = pts.map(p => p.lat), lngs = pts.map(p => p.lng);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+      const latRange = maxLat - minLat || 0.01;
+      const lngRange = maxLng - minLng || 0.01;
+      const cosLat = Math.cos((minLat + maxLat) / 2 * Math.PI / 180);
+      const scaleX = (W - 2 * PAD) / (lngRange * cosLat);
+      const scaleY = (H - 2 * PAD) / latRange;
+      const scale  = Math.min(scaleX, scaleY);
+      const offX   = (W - 2 * PAD - lngRange * cosLat * scale) / 2;
+      const offY   = (H - 2 * PAD - latRange * scale) / 2;
+      return pts.map(p => ({
+        ...p,
+        x: PAD + offX + (p.lng - minLng) * cosLat * scale,
+        y: H - PAD - offY - (p.lat - minLat) * scale,
+      }));
+    },
+    mapPoints() {
+      if (!this.result) return [];
+      const raw = [];
+      if (this.result.origin) raw.push({ ...this.result.origin.coordinates, type: 'origin' });
+      for (const s of this.result.optimized_route)
+        raw.push({ ...s.coordinates, type: 'stop', order: s.order });
+      if (this.result.destination) raw.push({ ...this.result.destination.coordinates, type: 'dest' });
+      return this._mapProject(raw);
+    },
+    mapPolyline() {
+      return this.mapPoints().map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    },
     cancelAddAddress() {
       this.newAddress = '';
       this.newDescription = '';
