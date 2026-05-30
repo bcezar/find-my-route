@@ -12,9 +12,24 @@ router = APIRouter()
 
 @router.get("/autocomplete")
 @limiter.limit("120/minute")
-async def autocomplete(request: Request, q: str = QueryParam(..., min_length=3)):
-    suggestions = await geocoding.autocomplete_address(q)
+async def autocomplete(
+    request: Request,
+    q: str = QueryParam(..., min_length=3),
+    lat: Optional[float] = QueryParam(None),
+    lng: Optional[float] = QueryParam(None),
+):
+    suggestions = await geocoding.autocomplete_address(q, lat=lat, lng=lng)
     return {"suggestions": suggestions}
+
+
+@router.get("/geocode")
+@limiter.limit("30/minute")
+async def geocode_address(request: Request, q: str = QueryParam(..., min_length=3)):
+    coords = await geocoding.geocode(q)
+    if coords is None:
+        raise HTTPException(status_code=404, detail="Address not found.")
+    lat, lng = coords
+    return {"lat": lat, "lng": lng}
 
 
 @router.post("/shorten")

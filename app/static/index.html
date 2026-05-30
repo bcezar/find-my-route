@@ -463,6 +463,7 @@ function routeApp() {
     editingIndex:    null,
     editAddress:     '',
     editDescription: '',
+    locationHint:    null,
     loading:        false,
     geolocating:    false,
     copied:         false,
@@ -537,7 +538,12 @@ function routeApp() {
         return;
       }
       try {
-        const res = await fetch('/api/v1/autocomplete?q=' + encodeURIComponent(value));
+        const params = new URLSearchParams({ q: value });
+        if (this.locationHint) {
+          params.set('lat', this.locationHint.lat);
+          params.set('lng', this.locationHint.lng);
+        }
+        const res = await fetch('/api/v1/autocomplete?' + params.toString());
         const data = await res.json();
         this[field + 'Suggestions'] = data.suggestions ?? [];
       } catch (_) {
@@ -547,11 +553,19 @@ function routeApp() {
 
     setOrigin() {
       const v = this.originInput.trim();
-      if (v) { this.origin = v; this.originSuggestions = []; }
+      if (v) { this.origin = v; this.originSuggestions = []; this.setLocationHint(v); }
     },
     setDest() {
       const v = this.destInput.trim();
-      if (v) { this.dest = v; this.destSuggestions = []; }
+      if (v) { this.dest = v; this.destSuggestions = []; this.setLocationHint(v); }
+    },
+
+    setLocationHint(address) {
+      if (this.locationHint || !address) return;
+      fetch('/api/v1/geocode?q=' + encodeURIComponent(address))
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) this.locationHint = { lat: data.lat, lng: data.lng }; })
+        .catch(() => {});
     },
 
     toggleFirst(addr) {
@@ -572,6 +586,7 @@ function routeApp() {
       const v = this.newAddress.trim();
       if (v) {
         this.addresses.push({ address: v, description: this.newDescription.trim() });
+        this.setLocationHint(v);
         this.newAddress = '';
         this.newDescription = '';
         this.addressSuggestions = [];
@@ -628,6 +643,7 @@ function routeApp() {
       this.fixedLast  = null;
       this.showAddInput = false;
       this.newDescription = '';
+      this.locationHint = null;
       this.result = null;
       this.error  = '';
       localStorage.removeItem('routeApp');
@@ -644,6 +660,7 @@ function routeApp() {
         async (pos) => {
           try {
             const { latitude: lat, longitude: lng } = pos.coords;
+            this.locationHint = { lat, lng };
             const res = await fetch(`/api/v1/reverse?lat=${lat}&lng=${lng}`);
             if (!res.ok) throw new Error();
             const data = await res.json();
