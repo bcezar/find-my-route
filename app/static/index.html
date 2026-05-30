@@ -87,7 +87,7 @@
                  @keydown.enter="setOrigin()" />
           <ul class="suggestions" x-show="originSuggestions.length > 0" @click.outside="originSuggestions = []">
             <template x-for="s in originSuggestions" :key="s">
-              <li @mousedown.prevent="originInput = s; origin = ''; originSuggestions = []" x-text="s"></li>
+              <li @mousedown.prevent="originInput = s; originSuggestions = []; setOrigin()" x-text="s"></li>
             </template>
           </ul>
         </div>
@@ -119,7 +119,7 @@
                  @keydown.enter="setDest()" />
           <ul class="suggestions" x-show="destSuggestions.length > 0" @click.outside="destSuggestions = []">
             <template x-for="s in destSuggestions" :key="s">
-              <li @mousedown.prevent="destInput = s; dest = ''; destSuggestions = []" x-text="s"></li>
+              <li @mousedown.prevent="destInput = s; destSuggestions = []; setDest()" x-text="s"></li>
             </template>
           </ul>
         </div>
@@ -172,7 +172,7 @@
                  @keydown.enter="addAddress()" />
           <ul class="suggestions" x-show="addressSuggestions.length > 0" @click.outside="addressSuggestions = []">
             <template x-for="s in addressSuggestions" :key="s">
-              <li @mousedown.prevent="newAddress = s; addressSuggestions = []; addAddress()" x-text="s"></li>
+              <li @mousedown.prevent="newAddress = s; addressSuggestions = []" x-text="s"></li>
             </template>
           </ul>
         </div>
@@ -182,8 +182,14 @@
                class="description-input"
                placeholder="Descrição (opcional) — ex: Farmácia do João"
                x-model="newDescription"
-               @keydown.enter="addAddress()" />
-        <button class="btn btn-add" @click="addAddress()" :disabled="newAddress.trim() === ''">+</button>
+               @keydown.enter="addAddress()"
+               @keydown.escape="cancelAddAddress()" />
+      </div>
+      <div class="addr-edit-actions" style="margin-top:.5rem">
+        <button class="btn btn-add addr-edit-btn"
+                @click="addAddress()" :disabled="newAddress.trim() === ''">Salvar</button>
+        <button class="btn btn-remove addr-edit-btn"
+                @click="cancelAddAddress()">Cancelar</button>
       </div>
     </div>
 
@@ -596,6 +602,12 @@ function routeApp() {
       this.editingIndex = null;
     },
     cancelEdit() { this.editingIndex = null; },
+    cancelAddAddress() {
+      this.newAddress = '';
+      this.newDescription = '';
+      this.addressSuggestions = [];
+      this.showAddInput = false;
+    },
 
     getStopInfo(address) {
       return this.addresses.find(a => a.address === address) ?? { address, description: '' };
