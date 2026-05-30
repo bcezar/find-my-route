@@ -65,9 +65,9 @@ async def get_saved_route(code: str):
 @limiter.limit("30/minute")
 async def route_polyline(request: Request, body: PolylineRequest = Body(...)):
     pts = [(c.lat, c.lng) for c in body.points]
-    path = await directions.get_route_polyline(pts)
+    path, error_status = await directions.get_route_polyline(pts)
     if path is None:
-        raise HTTPException(status_code=503, detail="Could not retrieve road path.")
+        raise HTTPException(status_code=503, detail=f"Could not retrieve road path: {error_status}")
     return {"path": [{"lat": lat, "lng": lng} for lat, lng in path]}
 
 
