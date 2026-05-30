@@ -203,6 +203,8 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 .btn-add-stop:hover { background: #1e40af; }
 
 .add-input-row { display: flex; gap: .5rem; margin-top: .65rem; }
+.add-desc-row { display: flex; gap: .5rem; margin-top: .4rem; }
+.add-desc-row .description-input { flex: 1; margin-top: 0; }
 .description-input {
   width: 100%; margin-top: .4rem;
   padding: .45rem .7rem;
@@ -241,12 +243,21 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   flex-shrink: 0;
 }
 .btn-start { background: none; border: 1.5px solid #d1fae5; color: #15803d; }
-.btn-start:hover { background: #dcfce7; }
 .btn-start.active { background: #dcfce7; border-color: #6ee7b7; color: #15803d; }
 .btn-end { background: none; border: 1.5px solid #dbeafe; color: #1d4ed8; }
-.btn-end:hover { background: #eff6ff; }
 .btn-end.active { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+@media (hover: hover) {
+  .btn-start:hover { background: #dcfce7; }
+  .btn-end:hover   { background: #eff6ff; }
+}
 
+.btn-edit {
+  padding: .32rem;
+  background: #eff6ff; color: #1d4ed8; border: none;
+  border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s; flex-shrink: 0;
+}
 .btn-trash {
   padding: .32rem;
   background: #fee2e2; color: #b91c1c; border: none;
@@ -254,7 +265,26 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   display: flex; align-items: center; justify-content: center;
   transition: background .15s; flex-shrink: 0;
 }
-.btn-trash:hover { background: #fecaca; }
+@media (hover: hover) {
+  .btn-edit:hover  { background: #dbeafe; }
+  .btn-trash:hover { background: #fecaca; }
+}
+
+.addr-item-view {
+  display: flex; align-items: center; gap: .45rem; width: 100%;
+}
+.addr-item-edit {
+  display: flex; flex-direction: column; gap: .4rem; width: 100%;
+}
+.addr-edit-input {
+  width: 100%;
+  padding: .45rem .7rem;
+  border: 1.5px solid #93c5fd; border-radius: 8px;
+  font-size: .88rem; outline: none; color: #111;
+}
+.addr-edit-desc { margin-top: 0; }
+.addr-edit-actions { display: flex; gap: .4rem; }
+.addr-edit-btn { font-size: .8rem; padding: .38rem .7rem; }
 
 /* === READY CARD === */
 .ready-card {
