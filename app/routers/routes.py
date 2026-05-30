@@ -1,11 +1,12 @@
 from typing import Optional
 
 from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
+from fastapi.responses import Response
 
 from app import storage
 from app.limiter import limiter
-from app.models import Coordinates, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest
-from app.services import directions, distance, geocoding, optimizer
+from app.models import Coordinates, MapImageRequest, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest
+from app.services import directions, distance, geocoding, optimizer, static_maps
 
 router = APIRouter()
 
@@ -65,10 +66,26 @@ async def get_saved_route(code: str):
 @limiter.limit("30/minute")
 async def route_polyline(request: Request, body: PolylineRequest = Body(...)):
     pts = [(c.lat, c.lng) for c in body.points]
-    path, error_status = await directions.get_route_polyline(pts)
+    path, encoded, error_status = await directions.get_route_polyline(pts)
     if path is None:
         raise HTTPException(status_code=503, detail=f"Could not retrieve road path: {error_status}")
-    return {"path": [{"lat": lat, "lng": lng} for lat, lng in path]}
+    return {
+        "path": [{"lat": lat, "lng": lng} for lat, lng in path],
+        "encoded_polyline": encoded,
+    }
+
+
+@router.post("/routes/map-image")
+@limiter.limit("20/minute")
+async def route_map_image(request: Request, body: MapImageRequest = Body(...)):
+    img = await static_maps.fetch_static_map(
+        body.encoded_polyline,
+        (body.origin.lat, body.origin.lng),
+        (body.destination.lat, body.destination.lng),
+    )
+    if img is None:
+        raise HTTPException(status_code=503, detail="Could not generate map image.")
+    return Response(content=img, media_type="image/png")
 
 
 @router.get("/reverse")

@@ -342,6 +342,7 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   overflow: hidden;
 }
 .mini-map-svg { display: block; width: 100%; }
+.mini-map-img { display: block; width: 100%; height: auto; }
 
 /* === RESULT SECTION === */
 .result-section {

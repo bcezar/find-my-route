@@ -293,7 +293,10 @@
 
   <!-- Mini map -->
   <div class="mini-map-card" x-show="result !== null" x-transition style="margin-top:.75rem">
-    <svg viewBox="0 0 460 160" width="100%" class="mini-map-svg"
+    <!-- Static map image (shown after Google Static Maps API responds) -->
+    <img x-show="mapImageUrl" :src="mapImageUrl" class="mini-map-img" alt="Mapa da rota" />
+    <!-- SVG fallback: straight lines → road path while image loads -->
+    <svg x-show="!mapImageUrl" viewBox="0 0 460 160" width="100%" class="mini-map-svg"
          preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
       <polyline :points="mapPolyline()"
                 fill="none" stroke="#93c5fd" stroke-width="2.5"
@@ -489,6 +492,7 @@ function routeApp() {
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
     mapPath:        null,
+    mapImageUrl:    null,
     _mapPathGen:    0,
     error:          '',
     notice:         '',
@@ -693,7 +697,31 @@ function routeApp() {
         });
         if (!res.ok) return;
         const data = await res.json();
-        if (this._mapPathGen === gen) this.mapPath = data.path;
+        if (this._mapPathGen !== gen) return;
+        this.mapPath = data.path;
+        await this._fetchMapImage(gen, data.encoded_polyline);
+      } catch (_) {}
+    },
+    async _fetchMapImage(gen, encodedPolyline) {
+      if (!this.result) return;
+      const pins = this._stopPins();
+      if (pins.length < 2) return;
+      const first = pins[0], last = pins[pins.length - 1];
+      try {
+        const res = await fetch('/api/v1/routes/map-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            encoded_polyline: encodedPolyline ?? null,
+            origin:      { lat: first.lat, lng: first.lng },
+            destination: { lat: last.lat,  lng: last.lng  },
+          }),
+        });
+        if (!res.ok || this._mapPathGen !== gen) return;
+        const blob = await res.blob();
+        if (this._mapPathGen !== gen) return;
+        if (this.mapImageUrl) URL.revokeObjectURL(this.mapImageUrl);
+        this.mapImageUrl = URL.createObjectURL(blob);
       } catch (_) {}
     },
     cancelAddAddress() {
@@ -725,6 +753,7 @@ function routeApp() {
       this.locationHint = null;
       this.result = null;
       this.mapPath = null;
+      if (this.mapImageUrl) { URL.revokeObjectURL(this.mapImageUrl); this.mapImageUrl = null; }
       this._mapPathGen = 0;
       this.error  = '';
       localStorage.removeItem('routeApp');

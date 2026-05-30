@@ -29,12 +29,12 @@ def _decode_polyline(encoded: str) -> list[tuple[float, float]]:
 
 async def get_route_polyline(
     points: list[tuple[float, float]],
-) -> tuple[list[tuple[float, float]] | None, str | None]:
-    """Returns (path, error_status). error_status is None on success."""
+) -> tuple[list[tuple[float, float]] | None, str | None, str | None]:
+    """Returns (decoded_path, encoded_polyline, error_status). error_status is None on success."""
     if not settings.google_maps_api_key:
-        return None, "NO_API_KEY"
+        return None, None, "NO_API_KEY"
     if len(points) < 2:
-        return None, "INSUFFICIENT_POINTS"
+        return None, None, "INSUFFICIENT_POINTS"
 
     origin = f"{points[0][0]},{points[0][1]}"
     destination = f"{points[-1][0]},{points[-1][1]}"
@@ -57,13 +57,13 @@ async def get_route_polyline(
             )
             data = resp.json()
         except (httpx.HTTPError, ValueError):
-            return None, "HTTP_ERROR"
+            return None, None, "HTTP_ERROR"
 
     status = data.get("status", "UNKNOWN")
     if status != "OK" or not data.get("routes"):
-        return None, status
+        return None, None, status
 
     encoded = data["routes"][0].get("overview_polyline", {}).get("points", "")
     if not encoded:
-        return None, "EMPTY_POLYLINE"
-    return _decode_polyline(encoded), None
+        return None, None, "EMPTY_POLYLINE"
+    return _decode_polyline(encoded), encoded, None

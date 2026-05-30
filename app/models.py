@@ -47,6 +47,12 @@ class PolylineRequest(BaseModel):
     points: list[Coordinates] = Field(..., min_length=2)
 
 
+class MapImageRequest(BaseModel):
+    encoded_polyline: Optional[str] = None
+    origin: Coordinates
+    destination: Coordinates
+
+
 class SaveRouteRequest(BaseModel):
     name: Optional[str] = None
     result: RouteResponse
