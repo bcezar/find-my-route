@@ -704,7 +704,8 @@ function routeApp() {
         } else {
           this.result = data;
           this.$nextTick(() => {
-            document.querySelector('.result-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const el = document.querySelector('.result-section');
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 16, behavior: 'smooth' });
           });
         }
       } catch (e) {
