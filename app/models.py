@@ -43,6 +43,10 @@ class RouteResponse(BaseModel):
     total_duration_min: Optional[float] = None
 
 
+class PolylineRequest(BaseModel):
+    points: list[Coordinates] = Field(..., min_length=2)
+
+
 class SaveRouteRequest(BaseModel):
     name: Optional[str] = None
     result: RouteResponse

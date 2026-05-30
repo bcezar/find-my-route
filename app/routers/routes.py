@@ -4,8 +4,8 @@ from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
 
 from app import storage
 from app.limiter import limiter
-from app.models import Coordinates, OriginInfo, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest
-from app.services import distance, geocoding, optimizer
+from app.models import Coordinates, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest
+from app.services import directions, distance, geocoding, optimizer
 
 router = APIRouter()
 
@@ -59,6 +59,16 @@ async def get_saved_route(code: str):
     if result is None:
         raise HTTPException(status_code=404, detail="Rota não encontrada.")
     return result
+
+
+@router.post("/routes/polyline")
+@limiter.limit("30/minute")
+async def route_polyline(request: Request, body: PolylineRequest = Body(...)):
+    pts = [(c.lat, c.lng) for c in body.points]
+    path = await directions.get_route_polyline(pts)
+    if path is None:
+        raise HTTPException(status_code=503, detail="Could not retrieve road path.")
+    return {"path": [{"lat": lat, "lng": lng} for lat, lng in path]}
 
 
 @router.get("/reverse")

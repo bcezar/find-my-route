@@ -488,6 +488,8 @@ function routeApp() {
     saved:          false,
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
+    mapPath:        null,
+    _mapPathGen:    0,
     error:          '',
     notice:         '',
 
@@ -635,9 +637,10 @@ function routeApp() {
     },
     cancelEdit() { this.editingIndex = null; },
 
-    _mapProject(pts) {
+    _mapProject(pts, bbox) {
       const W = 460, H = 160, PAD = 28;
-      const lats = pts.map(p => p.lat), lngs = pts.map(p => p.lng);
+      const src = bbox || pts;
+      const lats = src.map(p => p.lat), lngs = src.map(p => p.lng);
       const minLat = Math.min(...lats), maxLat = Math.max(...lats);
       const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
       const latRange = maxLat - minLat || 0.01;
@@ -654,17 +657,44 @@ function routeApp() {
         y: H - PAD - offY - (p.lat - minLat) * scale,
       }));
     },
-    mapPoints() {
+    _stopPins() {
       if (!this.result) return [];
       const raw = [];
       if (this.result.origin) raw.push({ ...this.result.origin.coordinates, type: 'origin' });
       for (const s of this.result.optimized_route)
         raw.push({ ...s.coordinates, type: 'stop', order: s.order });
       if (this.result.destination) raw.push({ ...this.result.destination.coordinates, type: 'dest' });
-      return this._mapProject(raw);
+      return raw;
+    },
+    mapPoints() {
+      const pins = this._stopPins();
+      if (!pins.length) return [];
+      return this._mapProject(pins);
     },
     mapPolyline() {
-      return this.mapPoints().map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      const pins = this._stopPins();
+      if (!pins.length) return '';
+      if (this.mapPath && this.mapPath.length >= 2) {
+        const projected = this._mapProject(this.mapPath, pins);
+        return projected.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      }
+      return this._mapProject(pins).map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    },
+    async _fetchMapPath(gen) {
+      if (!this.result) return;
+      const pins = this._stopPins();
+      if (pins.length < 2) return;
+      const points = pins.map(p => ({ lat: p.lat, lng: p.lng }));
+      try {
+        const res = await fetch('/api/v1/routes/polyline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ points }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (this._mapPathGen === gen) this.mapPath = data.path;
+      } catch (_) {}
     },
     cancelAddAddress() {
       this.newAddress = '';
@@ -694,6 +724,8 @@ function routeApp() {
       this.newDescription = '';
       this.locationHint = null;
       this.result = null;
+      this.mapPath = null;
+      this._mapPathGen = 0;
       this.error  = '';
       localStorage.removeItem('routeApp');
     },
@@ -830,6 +862,9 @@ function routeApp() {
           this.error = data.detail ?? `Erro ${res.status}`;
         } else {
           this.result = data;
+          this.mapPath = null;
+          const gen = ++this._mapPathGen;
+          this._fetchMapPath(gen);
           this.$nextTick(() => {
             const el = document.querySelector('.result-section');
             if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 16, behavior: 'smooth' });
