@@ -318,35 +318,51 @@
     </div>
 
     <div class="header-user" @click.outside="userMenuOpen = false">
-      <!-- Not logged in: direct Login button -->
-      <button x-show="!user" class="btn-login" @click="loginOpen = true" aria-label="Entrar">
-        Entrar
-      </button>
-
-      <!-- Logged in: avatar with dropdown -->
-      <template x-if="user">
-        <div class="header-user-inner">
-          <button class="btn-avatar" @click="userMenuOpen = !userMenuOpen" aria-label="Perfil do usuário">
-            <img x-show="user.avatar" :src="user.avatar" class="avatar-img" alt="Avatar" />
-            <span class="avatar-initials" x-show="!user.avatar"
-                  x-text="user.email?.charAt(0)?.toUpperCase()"></span>
-          </button>
-          <div class="user-menu" x-show="userMenuOpen" x-transition>
-            <div class="user-menu-profile">
-              <div class="user-menu-name" x-text="user.email"></div>
-              <div class="user-menu-plan">Plano: Free</div>
+      <div class="header-user-inner">
+        <button class="btn-avatar" :class="{ 'btn-avatar-guest': !user }"
+                @click="userMenuOpen = !userMenuOpen"
+                :aria-label="user ? 'Perfil do usuário' : 'Conta'">
+          <img x-show="user && user.avatar" :src="user?.avatar" class="avatar-img" alt="Avatar" />
+          <span class="avatar-initials" x-show="user && !user.avatar"
+                x-text="user?.email?.charAt(0)?.toUpperCase()"></span>
+          <svg x-show="!user" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+        <div class="user-menu" x-show="userMenuOpen" x-transition>
+          <template x-if="!user">
+            <div>
+              <button class="user-menu-item" @click="loginOpen = true; userMenuOpen = false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Entrar
+              </button>
             </div>
-            <div class="user-menu-divider"></div>
-            <button class="user-menu-item user-menu-item-disabled">Perfil</button>
-            <button class="user-menu-item user-menu-item-disabled">
-              Upgrade de Plano
-              <span class="user-menu-soon">carregue até 25 endereços</span>
-            </button>
-            <div class="user-menu-divider"></div>
-            <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
-          </div>
+          </template>
+          <template x-if="user">
+            <div>
+              <div class="user-menu-profile">
+                <div class="user-menu-name" x-text="user.email"></div>
+                <div class="user-menu-plan">Plano: Free</div>
+              </div>
+              <div class="user-menu-divider"></div>
+              <button class="user-menu-item user-menu-item-disabled">Perfil</button>
+              <button class="user-menu-item user-menu-item-disabled">
+                Upgrade de Plano
+                <span class="user-menu-soon">carregue até 25 endereços</span>
+              </button>
+              <div class="user-menu-divider"></div>
+              <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
+            </div>
+          </template>
         </div>
-      </template>
+      </div>
     </div>
   </header>
 

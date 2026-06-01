@@ -46,17 +46,8 @@ body {
 .avatar-img      { width: 100%; height: 100%; object-fit: cover; }
 .avatar-initials { font-size: .8rem; font-weight: 700; color: #374151; }
 
-.btn-login {
-  padding: .38rem .75rem;
-  background: #1d4ed8; color: #fff;
-  border: none; border-radius: 8px;
-  font-size: .82rem; font-weight: 700;
-  cursor: pointer; white-space: nowrap;
-  transition: background .15s;
-}
-.btn-login:hover { background: #1e40af; }
-
 .header-user-inner { position: relative; display: flex; justify-content: flex-end; }
+.btn-avatar-guest { border-style: dashed; color: #9ca3af; }
 
 .user-menu {
   position: absolute; right: 0; top: calc(100% + 6px);
