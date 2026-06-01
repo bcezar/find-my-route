@@ -17,6 +17,7 @@
   <meta property="og:image" content="https://rotas.casapetcampinas.com.br/capa.png" />
 
   <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
+  <script defer src="/app.js?v={{ js_version }}"></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body>
@@ -54,20 +55,159 @@
     </div>
   </div>
 
+  <!-- Import Modal -->
+  <div class="modal-overlay" x-show="importOpen" x-transition @click.self="importOpen = false; importFile = null">
+    <div class="modal-card">
+      <div class="import-modal-header">
+        <h2 class="modal-title" style="margin-bottom:0">Importar endereços</h2>
+        <button class="drawer-close" @click="importOpen = false; importFile = null" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="import-tabs">
+        <button class="import-tab" :class="{ active: importType === 'csv' }" @click="importType = 'csv'; importFile = null">CSV</button>
+        <button class="import-tab" :class="{ active: importType === 'xls' }" @click="importType = 'xls'; importFile = null">XLS</button>
+      </div>
+
+      <label class="import-dropzone" :class="{ 'has-file': importFile }">
+        <input type="file" class="import-file-input"
+               :accept="importType === 'csv' ? '.csv' : '.xls,.xlsx'"
+               @change="importFile = $event.target.files[0]?.name ?? null" />
+        <template x-if="!importFile">
+          <div class="import-dropzone-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p class="import-dropzone-title">Arraste o arquivo aqui</p>
+            <p class="import-dropzone-sub">ou clique para selecionar</p>
+            <span class="import-dropzone-hint" x-text="'Formato aceito: .' + importType"></span>
+          </div>
+        </template>
+        <template x-if="importFile">
+          <div class="import-dropzone-selected">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span x-text="importFile"></span>
+            <button class="import-file-clear" @click.prevent="importFile = null" aria-label="Remover arquivo">✕</button>
+          </div>
+        </template>
+      </label>
+
+      <div class="import-template-hint">
+        <span>Não possui um arquivo?</span>
+        <button class="import-template-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar template CSV
+        </button>
+      </div>
+
+      <button class="btn-modal-close" style="margin-top:.5rem" :disabled="!importFile">Importar</button>
+    </div>
+  </div>
+
+  <!-- Drawer overlay -->
+  <div class="drawer-overlay" x-show="drawerOpen" x-transition @click="drawerOpen = false"></div>
+
+  <!-- Drawer -->
+  <nav class="drawer" :class="{ 'drawer-open': drawerOpen }" aria-label="Menu principal">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <img src="/logo-find-my-route.png" alt="FindMyRoute" class="app-logo" />
+        <span class="app-title">Find<span class="my">My</span>Route</span>
+      </div>
+      <button class="drawer-close" @click="drawerOpen = false" aria-label="Fechar menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="drawer-nav">
+      <li class="drawer-item" @click="clearAll(); drawerOpen = false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova rota
+      </li>
+      <li class="drawer-item drawer-item-disabled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/></svg>
+        Minhas rotas
+      </li>
+      <li class="drawer-item drawer-item-disabled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7m-3.5-3.5v7"/></svg>
+        Templates
+      </li>
+      <li class="drawer-item" @click="importType = 'csv'; importOpen = true; drawerOpen = false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar endereços
+      </li>
+      <li class="drawer-item drawer-item-disabled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar rota
+      </li>
+      <li class="drawer-item drawer-item-disabled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Baixar template CSV
+      </li>
+
+      <li class="drawer-divider"></li>
+
+      <li class="drawer-item drawer-item-disabled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Configurações
+      </li>
+      <li class="drawer-item drawer-item-disabled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Minha conta
+      </li>
+      <li class="drawer-item" @click="helpOpen = true; drawerOpen = false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Ajuda
+      </li>
+      <li class="drawer-item drawer-item-disabled drawer-item-danger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </li>
+    </ul>
+  </nav>
+
   <!-- Header -->
   <header class="app-header">
-    <div class="app-brand">
-      <img src="/icon-find-my-route.png" alt="FindMyRoute" class="app-logo" />
-      <div>
-        <h1 class="app-title">Find<span class="my">My</span>Route</h1>
-        <p class="app-tagline">A ordem mais inteligente para cada destino.</p>
-      </div>
+    <button class="btn-hamburger" @click="drawerOpen = true" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="3" y1="6"  x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="app-brand-center">
+      <img src="/logo-find-my-route.png" alt="FindMyRoute" class="app-logo" />
+      <h1 class="app-title">Find<span class="my">My</span>Route</h1>
     </div>
-    <div class="header-actions">
-      <button class="btn-clear-all"
-              x-show="origin !== '' || dest !== '' || addresses.length > 0 || result !== null"
-              @click="clearAll()">Limpar</button>
-      <button class="btn-help" @click="helpOpen = true" aria-label="Ajuda">?</button>
+
+    <div class="header-user" @click.outside="userMenuOpen = false">
+      <button class="btn-avatar" @click="userMenuOpen = !userMenuOpen" aria-label="Perfil do usuário">
+        <img x-show="user?.avatar" :src="user?.avatar" class="avatar-img" alt="Avatar" />
+        <span class="avatar-initials" x-show="user && !user.avatar" x-text="user?.name?.charAt(0)?.toUpperCase()"></span>
+        <svg x-show="!user" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+      <div class="user-menu" x-show="userMenuOpen" x-transition>
+        <template x-if="user">
+          <div>
+            <div class="user-menu-profile">
+              <div class="user-menu-name" x-text="user.name"></div>
+              <div class="user-menu-plan" x-text="'Plano: ' + (user.plan ?? 'Free')"></div>
+            </div>
+            <div class="user-menu-divider"></div>
+          </div>
+        </template>
+        <button class="user-menu-item">Perfil</button>
+        <button class="user-menu-item">Configurações</button>
+        <div class="user-menu-divider"></div>
+        <button class="user-menu-item user-menu-item-danger">Sair</button>
+      </div>
     </div>
   </header>
 
@@ -156,7 +296,29 @@
         Paradas adicionadas
         <span class="badge-count" x-show="addresses.length > 0" x-text="addresses.length"></span>
       </div>
-      <button class="btn-add-stop" @click="openAddInput()">＋ Adicionar parada</button>
+      <div class="stops-btn-group" @click.outside="stopActionsOpen = false">
+        <button class="btn-add-stop" @click="openAddInput()">＋ Adicionar parada</button>
+        <button class="btn-stop-more" @click="stopActionsOpen = !stopActionsOpen" aria-label="Mais opções">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+          </svg>
+        </button>
+        <div class="stops-actions-menu" x-show="stopActionsOpen" x-transition>
+          <button class="stops-actions-item" @click="importType = 'csv'; importOpen = true; stopActionsOpen = false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Importar CSV
+          </button>
+          <button class="stops-actions-item" @click="importType = 'xls'; importOpen = true; stopActionsOpen = false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
+            Importar XLS
+          </button>
+          <div class="stops-actions-divider"></div>
+          <button class="stops-actions-item" @click="importType = 'csv'; importOpen = true; stopActionsOpen = false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7m-3.5-3.5v7"/></svg>
+            Utilizar template
+          </button>
+        </div>
+      </div>
     </div>
     <p class="field-hint">Adicione pelo menos 2 endereços. A ordem em que você digita não importa.</p>
 
@@ -468,445 +630,5 @@
 
 </div>
 
-<script>
-function routeApp() {
-  return {
-    originInput: '', origin: '', originSuggestions: [],
-    destInput:   '', dest:   '', destSuggestions:   [],
-    newAddress:  '',             addressSuggestions: [],
-    addresses:   [],
-    fixedFirst:  null,
-    fixedLast:   null,
-    showAddInput:    false,
-    helpOpen:        false,
-    newDescription:  '',
-    editingIndex:    null,
-    editAddress:     '',
-    editDescription: '',
-    locationHint:    null,
-    loading:        false,
-    geolocating:    false,
-    copied:         false,
-    shared:         false,
-    saved:          false,
-    canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
-    result:         null,
-    mapPath:        null,
-    mapImageUrl:    null,
-    _mapPathGen:    0,
-    error:          '',
-    notice:         '',
-
-    init() {
-      const params    = new URLSearchParams(location.search);
-      const urlOrigin = params.get('origin');
-      const urlDest   = params.get('dest');
-      const urlAddrs  = params.getAll('a');
-      const urlSaved  = params.get('saved');
-
-      if (urlSaved) {
-        fetch(`/api/v1/routes/saved/${urlSaved}`)
-          .then(r => r.ok ? r.json() : null)
-          .then(data => { if (data) this.result = data; });
-        history.replaceState(null, '', location.pathname);
-      } else if (params.get('expired') === '1') {
-        this.notice = 'Este link expirou. Os roteiros compartilhados ficam disponíveis apenas enquanto o servidor estiver ativo. Crie uma nova rota abaixo.';
-        setTimeout(() => { this.notice = ''; }, 5000);
-        history.replaceState(null, '', location.pathname);
-      } else if (urlOrigin || urlDest || urlAddrs.length) {
-        if (urlOrigin) { this.origin = urlOrigin; this.originInput = urlOrigin; }
-        if (urlDest)   { this.dest   = urlDest;   this.destInput   = urlDest; }
-        if (urlAddrs.length) this.addresses = urlAddrs.map(a => ({ address: a, description: '' }));
-        history.replaceState(null, '', location.pathname);
-      } else {
-        const saved = localStorage.getItem('routeApp');
-        if (saved) {
-          try {
-            const d = JSON.parse(saved);
-            this.origin      = d.origin      ?? '';
-            this.originInput = d.originInput ?? '';
-            this.dest        = d.dest        ?? '';
-            this.destInput   = d.destInput   ?? '';
-            this.addresses   = (d.addresses ?? []).map(a =>
-              typeof a === 'string' ? { address: a, description: '' } : a
-            );
-            this.fixedFirst  = d.fixedFirst  ?? null;
-            this.fixedLast   = d.fixedLast   ?? null;
-          } catch (_) {}
-        }
-      }
-
-      const save = () => localStorage.setItem('routeApp', JSON.stringify({
-        origin:      this.origin,
-        originInput: this.originInput,
-        dest:        this.dest,
-        destInput:   this.destInput,
-        addresses:   this.addresses,
-        fixedFirst:  this.fixedFirst,
-        fixedLast:   this.fixedLast,
-      }));
-
-      this.$watch('origin',      save);
-      this.$watch('originInput', save);
-      this.$watch('dest',        save);
-      this.$watch('destInput',   save);
-      this.$watch('addresses',   save);
-      this.$watch('fixedFirst',  save);
-      this.$watch('fixedLast',   save);
-    },
-
-    async fetchSuggestions(field, value) {
-      if (value.trim().length < 3) {
-        this[field + 'Suggestions'] = [];
-        return;
-      }
-      try {
-        const params = new URLSearchParams({ q: value });
-        if (this.locationHint) {
-          params.set('lat', this.locationHint.lat);
-          params.set('lng', this.locationHint.lng);
-        }
-        const res = await fetch('/api/v1/autocomplete?' + params.toString());
-        const data = await res.json();
-        this[field + 'Suggestions'] = data.suggestions ?? [];
-      } catch (_) {
-        this[field + 'Suggestions'] = [];
-      }
-    },
-
-    setOrigin() {
-      const v = this.originInput.trim();
-      if (v) { this.origin = v; this.originSuggestions = []; this.setLocationHint(v); }
-    },
-    setDest() {
-      const v = this.destInput.trim();
-      if (v) { this.dest = v; this.destSuggestions = []; this.setLocationHint(v); }
-    },
-
-    setLocationHint(address) {
-      if (this.locationHint || !address) return;
-      fetch('/api/v1/geocode?q=' + encodeURIComponent(address))
-        .then(r => r.ok ? r.json() : null)
-        .then(data => { if (data) this.locationHint = { lat: data.lat, lng: data.lng }; })
-        .catch(() => {});
-    },
-
-    toggleFirst(addr) {
-      this.fixedFirst = this.fixedFirst === addr ? null : addr;
-      if (this.fixedLast === addr) this.fixedLast = null;
-    },
-    toggleLast(addr) {
-      this.fixedLast = this.fixedLast === addr ? null : addr;
-      if (this.fixedFirst === addr) this.fixedFirst = null;
-    },
-
-    openAddInput() {
-      this.showAddInput = true;
-      this.$nextTick(() => { this.$refs.addInput?.focus(); });
-    },
-
-    addAddress() {
-      const v = this.newAddress.trim();
-      if (v) {
-        this.addresses.push({ address: v, description: this.newDescription.trim() });
-        this.setLocationHint(v);
-        this.newAddress = '';
-        this.newDescription = '';
-        this.addressSuggestions = [];
-        this.showAddInput = false;
-      }
-    },
-
-    streetPart(address) {
-      const idx = address.indexOf(' - ');
-      return idx > 0 ? address.substring(0, idx).trim() : address;
-    },
-    restPart(address) {
-      const idx = address.indexOf(' - ');
-      return idx > 0 ? address.substring(idx + 3).trim() : '';
-    },
-
-    startEdit(i) {
-      this.editingIndex    = i;
-      this.editAddress     = this.addresses[i].address;
-      this.editDescription = this.addresses[i].description;
-    },
-    saveEdit(i) {
-      const v = this.editAddress.trim();
-      if (!v) return;
-      if (this.fixedFirst === this.addresses[i].address) this.fixedFirst = v;
-      if (this.fixedLast  === this.addresses[i].address) this.fixedLast  = v;
-      this.addresses[i] = { address: v, description: this.editDescription.trim() };
-      this.editingIndex = null;
-    },
-    cancelEdit() { this.editingIndex = null; },
-
-    _mapProject(pts, bbox) {
-      const W = 460, H = 160, PAD = 28;
-      const src = bbox || pts;
-      const lats = src.map(p => p.lat), lngs = src.map(p => p.lng);
-      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-      const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-      const latRange = maxLat - minLat || 0.01;
-      const lngRange = maxLng - minLng || 0.01;
-      const cosLat = Math.cos((minLat + maxLat) / 2 * Math.PI / 180);
-      const scaleX = (W - 2 * PAD) / (lngRange * cosLat);
-      const scaleY = (H - 2 * PAD) / latRange;
-      const scale  = Math.min(scaleX, scaleY);
-      const offX   = (W - 2 * PAD - lngRange * cosLat * scale) / 2;
-      const offY   = (H - 2 * PAD - latRange * scale) / 2;
-      return pts.map(p => ({
-        ...p,
-        x: PAD + offX + (p.lng - minLng) * cosLat * scale,
-        y: H - PAD - offY - (p.lat - minLat) * scale,
-      }));
-    },
-    _stopPins() {
-      if (!this.result) return [];
-      const raw = [];
-      if (this.result.origin) raw.push({ ...this.result.origin.coordinates, type: 'origin' });
-      for (const s of this.result.optimized_route)
-        raw.push({ ...s.coordinates, type: 'stop', order: s.order });
-      if (this.result.destination) raw.push({ ...this.result.destination.coordinates, type: 'dest' });
-      return raw;
-    },
-    mapPoints() {
-      const pins = this._stopPins();
-      if (!pins.length) return [];
-      return this._mapProject(pins);
-    },
-    mapPolyline() {
-      const pins = this._stopPins();
-      if (!pins.length) return '';
-      if (this.mapPath && this.mapPath.length >= 2) {
-        const projected = this._mapProject(this.mapPath, pins);
-        return projected.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-      }
-      return this._mapProject(pins).map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    },
-    async _fetchMapPath(gen) {
-      if (!this.result) return;
-      const pins = this._stopPins();
-      if (pins.length < 2) return;
-      const points = pins.map(p => ({ lat: p.lat, lng: p.lng }));
-      try {
-        const res = await fetch('/api/v1/routes/polyline', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ points }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (this._mapPathGen !== gen) return;
-        this.mapPath = data.path;
-        await this._fetchMapImage(gen, data.encoded_polyline);
-      } catch (_) {}
-    },
-    async _fetchMapImage(gen, encodedPolyline) {
-      if (!this.result) return;
-      const pins = this._stopPins();
-      if (pins.length < 2) return;
-      const first = pins[0], last = pins[pins.length - 1];
-      try {
-        const res = await fetch('/api/v1/routes/map-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            encoded_polyline: encodedPolyline ?? null,
-            origin:      { lat: first.lat, lng: first.lng },
-            destination: { lat: last.lat,  lng: last.lng  },
-          }),
-        });
-        if (!res.ok || this._mapPathGen !== gen) return;
-        const blob = await res.blob();
-        if (this._mapPathGen !== gen) return;
-        if (this.mapImageUrl) URL.revokeObjectURL(this.mapImageUrl);
-        this.mapImageUrl = URL.createObjectURL(blob);
-      } catch (_) {}
-    },
-    cancelAddAddress() {
-      this.newAddress = '';
-      this.newDescription = '';
-      this.addressSuggestions = [];
-      this.showAddInput = false;
-    },
-
-    getStopInfo(address) {
-      return this.addresses.find(a => a.address === address) ?? { address, description: '' };
-    },
-    formatDuration(min) {
-      if (!min) return null;
-      if (min < 60) return Math.round(min) + ' min';
-      const h = Math.floor(min / 60), m = Math.round(min % 60);
-      return m > 0 ? `${h}h ${m}min` : `${h}h`;
-    },
-
-    clearAll() {
-      this.origin = ''; this.originInput = ''; this.originSuggestions = [];
-      this.dest   = ''; this.destInput   = ''; this.destSuggestions   = [];
-      this.newAddress = ''; this.addressSuggestions = [];
-      this.addresses = [];
-      this.fixedFirst = null;
-      this.fixedLast  = null;
-      this.showAddInput = false;
-      this.newDescription = '';
-      this.locationHint = null;
-      this.result = null;
-      this.mapPath = null;
-      if (this.mapImageUrl) { URL.revokeObjectURL(this.mapImageUrl); this.mapImageUrl = null; }
-      this._mapPathGen = 0;
-      this.error  = '';
-      localStorage.removeItem('routeApp');
-    },
-
-    async geolocate() {
-      if (!navigator.geolocation) {
-        this.error = 'Geolocalização não suportada pelo navegador.';
-        return;
-      }
-      this.geolocating = true;
-      this.error = '';
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            const { latitude: lat, longitude: lng } = pos.coords;
-            this.locationHint = { lat, lng };
-            const res = await fetch(`/api/v1/reverse?lat=${lat}&lng=${lng}`);
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            this.originInput = data.address;
-            this.origin = data.address;
-            this.originSuggestions = [];
-          } catch (_) {
-            this.error = 'Não foi possível obter o endereço da sua localização.';
-          } finally {
-            this.geolocating = false;
-          }
-        },
-        () => {
-          this.error = 'Permissão de localização negada ou não disponível.';
-          this.geolocating = false;
-        }
-      );
-    },
-
-    async shareRoute() {
-      let shareUrl = location.origin;
-      try {
-        const res = await fetch('/api/v1/shorten', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            addresses: this.addresses.map(a => a.address),
-            ...(this.origin && { origin: this.origin }),
-            ...(this.dest   && { destination: this.dest }),
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          shareUrl = `${location.origin}${data.path}`;
-        }
-      } catch (_) {}
-
-      const msg = 'Veja os endereços que separei para você — clique em otimizar para encontrar a melhor rota!';
-      const shareData = { title: 'Rota — Find My Route', text: msg, url: shareUrl };
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        navigator.share(shareData).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(`${msg}\n${shareUrl}`).then(() => {
-          this.shared = true;
-          setTimeout(() => { this.shared = false; }, 2000);
-        });
-      }
-    },
-
-    copyRoute() {
-      if (!this.result) return;
-      const lines = [`Rota otimizada — ${this.result.total_distance_km} km`, ''];
-      if (this.result.origin) lines.push(`0. ${this.result.origin.address} (origem)`);
-      for (const stop of this.result.optimized_route) {
-        const item = this.addresses.find(a => a.address === stop.original_address);
-        const label = item?.description ? `${item.description} — ` : '';
-        lines.push(`${stop.order}. ${label}${stop.original_address}`);
-      }
-      if (this.result.destination) lines.push(`F. ${this.result.destination.address} (destino)`);
-      lines.push('', 'Rota otimizada com findmyroute.com.br');
-      navigator.clipboard.writeText(lines.join('\n')).then(() => {
-        this.copied = true;
-        setTimeout(() => { this.copied = false; }, 2000);
-      });
-    },
-
-    async saveRoute() {
-      if (!this.result) return;
-      try {
-        const res = await fetch('/api/v1/routes/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            result: this.result,
-            inputs: {
-              addresses: this.addresses.map(a => a.address),
-              ...(this.origin && { origin: this.origin }),
-              ...(this.dest   && { destination: this.dest }),
-            },
-          }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-
-        const history = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-        history.unshift({
-          code:       data.code,
-          total_km:   this.result.total_distance_km,
-          stops:      this.result.optimized_route.length,
-          created_at: new Date().toISOString(),
-        });
-        localStorage.setItem('savedRoutes', JSON.stringify(history.slice(0, 50)));
-
-        this.saved = true;
-        setTimeout(() => { this.saved = false; }, 2000);
-      } catch (_) {}
-    },
-
-    async optimize() {
-      this.error  = '';
-      this.result = null;
-      this.loading = true;
-
-      const body = { addresses: this.addresses.map(a => a.address) };
-      if (this.origin)     body.origin      = this.origin;
-      if (this.dest)       body.destination = this.dest;
-      if (this.fixedFirst) body.fixed_first = this.fixedFirst;
-      if (this.fixedLast)  body.fixed_last  = this.fixedLast;
-
-      try {
-        const res = await fetch('/api/v1/routes/optimize', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          this.error = data.detail ?? `Erro ${res.status}`;
-        } else {
-          this.result = data;
-          this.mapPath = null;
-          const gen = ++this._mapPathGen;
-          this._fetchMapPath(gen);
-          this.$nextTick(() => {
-            const el = document.querySelector('.result-section');
-            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 16, behavior: 'smooth' });
-          });
-        }
-      } catch (e) {
-        this.error = 'Erro de conexão com a API.';
-      } finally {
-        this.loading = false;
-      }
-    },
-  };
-}
-</script>
 </body>
 </html>

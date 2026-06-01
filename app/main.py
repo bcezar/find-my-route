@@ -19,6 +19,7 @@ from app.routers import routes
 
 _STATIC = Path(__file__).parent / "static"
 _css_hash = md5(_STATIC.joinpath("style.css").read_bytes()).hexdigest()[:8]
+_js_hash  = md5(_STATIC.joinpath("app.js").read_bytes()).hexdigest()[:8]
 
 templates = Jinja2Templates(directory=str(_STATIC))
 
@@ -69,7 +70,7 @@ async def expand_route(code: str):
 
 @app.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "css_version": _css_hash})
+    return templates.TemplateResponse("index.html", {"request": request, "css_version": _css_hash, "js_version": _js_hash})
 
 
 # Serve static assets (CSS, images, etc.) — must come after all routes
