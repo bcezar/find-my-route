@@ -331,6 +331,7 @@ function routeApp() {
     logout() {
       this._authToken = null;
       this.user = null;
+      this.myRoutes = [];
       localStorage.removeItem('routeSession');
       this.userMenuOpen = false;
     },

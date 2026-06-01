@@ -318,28 +318,35 @@
     </div>
 
     <div class="header-user" @click.outside="userMenuOpen = false">
-      <button class="btn-avatar" @click="userMenuOpen = !userMenuOpen" aria-label="Perfil do usuário">
-        <img x-show="user?.avatar" :src="user?.avatar" class="avatar-img" alt="Avatar" />
-        <span class="avatar-initials" x-show="user && !user.avatar" x-text="user?.name?.charAt(0)?.toUpperCase()"></span>
-        <svg x-show="!user" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
+      <!-- Not logged in: direct Login button -->
+      <button x-show="!user" class="btn-login" @click="loginOpen = true" aria-label="Entrar">
+        Entrar
       </button>
-      <div class="user-menu" x-show="userMenuOpen" x-transition>
-        <template x-if="user">
-          <div>
+
+      <!-- Logged in: avatar with dropdown -->
+      <template x-if="user">
+        <div class="header-user-inner">
+          <button class="btn-avatar" @click="userMenuOpen = !userMenuOpen" aria-label="Perfil do usuário">
+            <img x-show="user.avatar" :src="user.avatar" class="avatar-img" alt="Avatar" />
+            <span class="avatar-initials" x-show="!user.avatar"
+                  x-text="user.email?.charAt(0)?.toUpperCase()"></span>
+          </button>
+          <div class="user-menu" x-show="userMenuOpen" x-transition>
             <div class="user-menu-profile">
-              <div class="user-menu-name" x-text="user.name"></div>
-              <div class="user-menu-plan" x-text="'Plano: ' + (user.plan ?? 'Free')"></div>
+              <div class="user-menu-name" x-text="user.email"></div>
+              <div class="user-menu-plan">Plano: Free</div>
             </div>
             <div class="user-menu-divider"></div>
+            <button class="user-menu-item user-menu-item-disabled">Perfil</button>
+            <button class="user-menu-item user-menu-item-disabled">
+              Upgrade de Plano
+              <span class="user-menu-soon">carregue até 25 endereços</span>
+            </button>
+            <div class="user-menu-divider"></div>
+            <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
           </div>
-        </template>
-        <button class="user-menu-item">Perfil</button>
-        <button class="user-menu-item">Configurações</button>
-        <div class="user-menu-divider"></div>
-        <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
-      </div>
+        </div>
+      </template>
     </div>
   </header>
 

@@ -46,6 +46,18 @@ body {
 .avatar-img      { width: 100%; height: 100%; object-fit: cover; }
 .avatar-initials { font-size: .8rem; font-weight: 700; color: #374151; }
 
+.btn-login {
+  padding: .38rem .75rem;
+  background: #1d4ed8; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: .82rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s;
+}
+.btn-login:hover { background: #1e40af; }
+
+.header-user-inner { position: relative; display: flex; justify-content: flex-end; }
+
 .user-menu {
   position: absolute; right: 0; top: calc(100% + 6px);
   background: #fff; border: 1.5px solid #e5e7eb;
@@ -59,10 +71,17 @@ body {
 .user-menu-item {
   width: 100%; text-align: left; padding: .7rem 1rem;
   background: none; border: none; cursor: pointer;
-  font-size: .88rem; color: #374151; display: block;
+  font-size: .88rem; color: #374151;
+  display: flex; align-items: center; gap: .4rem;
 }
 .user-menu-item:hover { background: #f9fafb; }
-.user-menu-item-danger { color: #b91c1c; }
+.user-menu-item-danger    { color: #b91c1c; }
+.user-menu-item-disabled  { opacity: .4; cursor: default; pointer-events: none; }
+.user-menu-soon {
+  margin-left: auto;
+  font-size: .68rem; font-weight: 600; color: #9ca3af;
+  background: #f3f4f6; padding: .1rem .35rem; border-radius: 4px;
+}
 
 /* === DRAWER === */
 .drawer-overlay {
