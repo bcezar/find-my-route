@@ -1,5 +1,6 @@
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
 from fastapi.responses import Response
 
@@ -50,7 +51,8 @@ async def autocomplete(
 @router.get("/geocode")
 @limiter.limit("30/minute")
 async def geocode_address(request: Request, q: str = QueryParam(..., min_length=3)):
-    coords = await geocoding.geocode(q)
+    async with httpx.AsyncClient() as client:
+        coords = await geocoding.geocode(q, client)
     if coords is None:
         raise HTTPException(status_code=404, detail="Address not found.")
     lat, lng = coords
