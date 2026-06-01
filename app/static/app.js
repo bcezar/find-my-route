@@ -33,7 +33,14 @@ function routeApp() {
     _mapPathGen:    0,
     error:          '',
     notice:         '',
-    clearConfirmOpen: false,
+    clearConfirmOpen:   false,
+    resultActionsOpen:  false,
+    templatesOpen:      false,
+    templates: [
+      { name: 'Entrega Campinas',      count: 20 },
+      { name: 'Clientes Região Norte', count: 15 },
+      { name: 'Coleta Semanal',        count: 8  },
+    ],
 
     init() {
       const params    = new URLSearchParams(location.search);

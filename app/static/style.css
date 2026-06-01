@@ -542,7 +542,7 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   transition: background .15s;
 }
 .maps-link:hover { background: #15803d; }
-.result-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.result-actions-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: .5rem; position: relative; }
 .btn-copy {
   display: flex; align-items: center; justify-content: center; gap: .4rem;
   padding: .65rem .8rem;
@@ -555,6 +555,52 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 .btn-copy:hover { background: #f3f4f6; }
 .btn-copy.copied { background: #dcfce7; color: #15803d; border-color: #86efac; }
 .btn-copy-full { grid-column: 1 / -1; }
+
+/* Result ⋮ dropdown */
+.result-more-wrap { position: relative; }
+.btn-result-more {
+  height: 100%; padding: .65rem .75rem;
+  background: #f9fafb; color: #374151;
+  border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: 1rem; cursor: pointer; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.btn-result-more:hover { background: #f3f4f6; }
+
+.result-more-menu {
+  position: absolute; right: 0; bottom: calc(100% + 6px);
+  background: #fff; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  min-width: 175px; z-index: 200; overflow: hidden;
+}
+.result-more-item {
+  display: flex; align-items: center; gap: .5rem;
+  width: 100%; padding: .65rem .9rem;
+  background: none; border: none; cursor: pointer;
+  font-size: .88rem; color: #374151; text-align: left;
+}
+.result-more-item:hover:not(.result-more-item-disabled) { background: #f9fafb; }
+.result-more-item-disabled { opacity: .38; cursor: default; pointer-events: none; }
+.result-more-badge { margin-left: auto; font-size: .75rem; color: #16a34a; font-weight: 700; }
+
+/* Templates cards */
+.templates-list { list-style: none; display: flex; flex-direction: column; gap: .55rem; }
+.template-card {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .8rem 1rem;
+  background: #f9fafb; border: 1px solid #f0f0f0; border-radius: 12px;
+}
+.template-card-info  { flex: 1; }
+.template-card-name  { font-size: .9rem; font-weight: 700; color: #111; }
+.template-card-count { font-size: .78rem; color: #9ca3af; margin-top: .1rem; }
+.btn-template-use {
+  padding: .42rem .85rem; border-radius: 8px;
+  background: #1d4ed8; color: #fff;
+  border: none; font-size: .82rem; font-weight: 700;
+  cursor: pointer; flex-shrink: 0; transition: background .15s;
+}
+.btn-template-use:hover { background: #1e40af; }
 
 .failures { font-size: .8rem; color: #b91c1c; margin-top: .75rem; }
 
