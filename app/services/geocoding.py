@@ -89,11 +89,20 @@ async def _query_nominatim(
     return (float(results[0]["lat"]), float(results[0]["lon"]))
 
 
-async def _geocode_google(address: str, client: httpx.AsyncClient) -> tuple[float, float] | None:
+_BOUNDS_DELTA = 0.09  # ~10 km
+
+
+async def _geocode_google(
+    address: str, client: httpx.AsyncClient,
+    lat: float | None = None, lng: float | None = None,
+) -> tuple[float, float] | None:
+    params: dict = {"address": address, "key": settings.google_maps_api_key}
+    if lat is not None and lng is not None:
+        params["bounds"] = f"{lat-_BOUNDS_DELTA},{lng-_BOUNDS_DELTA}|{lat+_BOUNDS_DELTA},{lng+_BOUNDS_DELTA}"
     try:
         response = await client.get(
             "https://maps.googleapis.com/maps/api/geocode/json",
-            params={"address": address, "key": settings.google_maps_api_key},
+            params=params,
             timeout=10.0,
         )
         response.raise_for_status()
@@ -108,31 +117,44 @@ async def _geocode_google(address: str, client: httpx.AsyncClient) -> tuple[floa
     return (loc["lat"], loc["lng"])
 
 
-async def _geocode_nominatim(address: str, client: httpx.AsyncClient) -> tuple[float, float] | None:
+async def _geocode_nominatim(
+    address: str, client: httpx.AsyncClient,
+    lat: float | None = None, lng: float | None = None,
+) -> tuple[float, float] | None:
     normalized = _normalize(address)
 
-    coords = await _query_nominatim(
-        {"q": normalized, "format": "json", "limit": 1, "countrycodes": "br"},
-        client,
-    )
+    base_params: dict = {"q": normalized, "format": "json", "limit": 1, "countrycodes": "br"}
+    if lat is not None and lng is not None:
+        d = _BOUNDS_DELTA
+        base_params["viewbox"] = f"{lng-d},{lat+d},{lng+d},{lat-d}"
+        base_params["bounded"] = "1"
+
+    coords = await _query_nominatim(base_params, client)
 
     if coords is None:
         await asyncio.sleep(1.0)
         structured = _parse_structured(normalized)
         if structured:
+            if lat is not None and lng is not None:
+                d = _BOUNDS_DELTA
+                structured["viewbox"] = f"{lng-d},{lat+d},{lng+d},{lat-d}"
+                structured["bounded"] = "1"
             coords = await _query_nominatim(structured, client)
 
     return coords
 
 
-async def geocode(address: str, client: httpx.AsyncClient) -> tuple[float, float] | None:
+async def geocode(
+    address: str, client: httpx.AsyncClient,
+    lat: float | None = None, lng: float | None = None,
+) -> tuple[float, float] | None:
     if address in _cache:
         return _cache[address]
 
     if settings.google_maps_api_key:
-        coords = await _geocode_google(address, client)
+        coords = await _geocode_google(address, client, lat=lat, lng=lng)
     else:
-        coords = await _geocode_nominatim(address, client)
+        coords = await _geocode_nominatim(address, client, lat=lat, lng=lng)
 
     _cache[address] = coords
     return coords
@@ -149,7 +171,7 @@ async def autocomplete_address(query: str, lat: float | None = None, lng: float 
     }
     if lat is not None and lng is not None:
         params["location"] = f"{lat},{lng}"
-        params["radius"] = "50000"
+        params["radius"] = "10000"
     async with httpx.AsyncClient() as client:
         try:
             resp = await client.get(
