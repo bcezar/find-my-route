@@ -107,6 +107,32 @@
     </div>
   </div>
 
+  <!-- Clear Confirm Modal -->
+  <div class="modal-overlay" x-show="clearConfirmOpen" x-transition @click.self="clearConfirmOpen = false">
+    <div class="modal-card modal-card-sm">
+      <div class="clear-confirm-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h2 class="clear-confirm-title">Iniciar nova rota?</h2>
+      <p class="clear-confirm-sub">A rota atual e todos os endereços serão perdidos.</p>
+      <div class="clear-confirm-actions">
+        <template x-if="result !== null">
+          <button class="btn-clear-save" @click="saveAndClear()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+            Salvar rota antes
+          </button>
+        </template>
+        <button class="btn-clear-confirm" @click="clearAll(); clearConfirmOpen = false; drawerOpen = false">Limpar mesmo assim</button>
+        <button class="btn-clear-cancel" @click="clearConfirmOpen = false">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Drawer overlay -->
   <div class="drawer-overlay" x-show="drawerOpen" x-transition @click="drawerOpen = false"></div>
 
@@ -124,7 +150,7 @@
       </button>
     </div>
     <ul class="drawer-nav">
-      <li class="drawer-item" @click="clearAll(); drawerOpen = false">
+      <li class="drawer-item" @click="confirmClearAll(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nova rota
       </li>

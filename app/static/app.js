@@ -33,6 +33,7 @@ function routeApp() {
     _mapPathGen:    0,
     error:          '',
     notice:         '',
+    clearConfirmOpen: false,
 
     init() {
       const params    = new URLSearchParams(location.search);
@@ -276,6 +277,18 @@ function routeApp() {
       if (min < 60) return Math.round(min) + ' min';
       const h = Math.floor(min / 60), m = Math.round(min % 60);
       return m > 0 ? `${h}h ${m}min` : `${h}h`;
+    },
+
+    confirmClearAll() {
+      const hasContent = this.addresses.length > 0 || this.origin || this.dest || this.result;
+      if (!hasContent) { this.clearAll(); return; }
+      this.clearConfirmOpen = true;
+    },
+
+    async saveAndClear() {
+      await this.saveRoute();
+      this.clearConfirmOpen = false;
+      this.clearAll();
     },
 
     clearAll() {

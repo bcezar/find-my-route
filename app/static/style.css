@@ -640,5 +640,38 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   font-size: .8rem; font-weight: 600; color: #1d4ed8; text-decoration: underline; padding: 0;
 }
 
+/* === CLEAR CONFIRM MODAL === */
+.modal-card-sm { max-width: 360px; text-align: center; padding: 2rem 1.5rem; }
+.clear-confirm-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #fee2e2; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1rem;
+}
+.clear-confirm-title { font-size: 1rem; font-weight: 800; color: #111; margin-bottom: .4rem; }
+.clear-confirm-sub   { font-size: .85rem; color: #6b7280; line-height: 1.5; margin-bottom: 1.25rem; }
+.clear-confirm-actions { display: flex; flex-direction: column; gap: .5rem; }
+.btn-clear-save {
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  width: 100%; padding: .7rem; border-radius: 10px;
+  background: #f0fdf4; color: #15803d;
+  border: 1.5px solid #86efac; font-size: .9rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+}
+.btn-clear-save:hover { background: #dcfce7; }
+.btn-clear-confirm {
+  width: 100%; padding: .7rem; border-radius: 10px;
+  background: #b91c1c; color: #fff;
+  border: none; font-size: .9rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+}
+.btn-clear-confirm:hover { background: #991b1b; }
+.btn-clear-cancel {
+  width: 100%; padding: .65rem; border-radius: 10px;
+  background: none; color: #6b7280;
+  border: 1.5px solid #e5e7eb; font-size: .88rem; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.btn-clear-cancel:hover { background: #f9fafb; }
+
 /* === FOOTER === */
 .footer-security { text-align: center; font-size: .73rem; color: #b0b7c3; margin-top: 1.5rem; }
