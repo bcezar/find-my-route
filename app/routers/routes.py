@@ -223,6 +223,9 @@ async def optimize_route(request: Request, body: RouteRequest = Body(...)):
     )
 
 
+_MAPS_MAX_STOPS = 23  # Google Maps URL limit for intermediate waypoints
+
+
 def _build_maps_url(
     origin: Optional[OriginInfo],
     destination: Optional[OriginInfo],
@@ -234,33 +237,15 @@ def _build_maps_url(
     def coord(c: Coordinates) -> str:
         return f"{c.lat},{c.lng}"
 
+    # Path-based format (/dir/LAT,LNG/LAT,LNG/...) shows each stop as an
+    # individual field in Google Maps — the ?api=1&waypoints= format collapses
+    # them into "N paradas" on mobile.
+    points = []
     if origin:
-        url_origin = coord(origin.coordinates)
-        if destination:
-            url_destination = coord(destination.coordinates)
-            waypoint_stops = route_stops
-        else:
-            url_destination = coord(route_stops[-1].coordinates)
-            waypoint_stops = route_stops[:-1]
-    else:
-        url_origin = coord(route_stops[0].coordinates)
-        if destination:
-            url_destination = coord(destination.coordinates)
-            waypoint_stops = route_stops[1:]
-        else:
-            url_destination = coord(route_stops[-1].coordinates)
-            waypoint_stops = route_stops[1:-1]
+        points.append(coord(origin.coordinates))
+    for stop in route_stops[:_MAPS_MAX_STOPS]:
+        points.append(coord(stop.coordinates))
+    if destination:
+        points.append(coord(destination.coordinates))
 
-    base = (
-        f"https://www.google.com/maps/dir/?api=1"
-        f"&origin={url_origin}"
-        f"&destination={url_destination}"
-        f"&travelmode=driving"
-    )
-
-    # Google Maps URL supports up to 23 waypoints
-    if waypoint_stops:
-        wps = waypoint_stops[:23]
-        base += "&waypoints=" + "|".join(coord(s.coordinates) for s in wps)
-
-    return base
+    return "https://www.google.com/maps/dir/" + "/".join(points) + "/"
