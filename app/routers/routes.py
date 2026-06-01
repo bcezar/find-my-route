@@ -5,10 +5,34 @@ from fastapi.responses import Response
 
 from app import storage
 from app.limiter import limiter
-from app.models import Coordinates, MapImageRequest, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest
+from app.models import Coordinates, LoginRequest, LoginResponse, MapImageRequest, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest, UserResponse
 from app.services import directions, distance, geocoding, optimizer, static_maps
 
 router = APIRouter()
+
+
+async def _require_auth(request: Request) -> dict:
+    token = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Autenticação necessária.")
+    user = await storage.get_user_by_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Sessão inválida ou expirada.")
+    return user
+
+
+@router.post("/auth/login", response_model=LoginResponse)
+@limiter.limit("10/minute")
+async def login(request: Request, body: LoginRequest = Body(...)):
+    user = await storage.find_or_create_user(body.email.lower().strip())
+    token = await storage.create_session(user["id"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"]}}
+
+
+@router.get("/auth/me", response_model=UserResponse)
+async def me(request: Request):
+    user = await _require_auth(request)
+    return {"id": user["id"], "email": user["email"]}
 
 
 @router.get("/autocomplete")
@@ -46,12 +70,22 @@ async def shorten_route(request: Request, body: RouteRequest = Body(...)):
 @router.post("/routes/save")
 @limiter.limit("20/minute")
 async def save_route(request: Request, body: SaveRouteRequest = Body(...)):
+    user = await _require_auth(request)
     code = await storage.save_result(
         body.name,
         body.result.model_dump(),
         body.inputs.model_dump(),
+        user["id"],
     )
     return {"code": code, "path": f"/s/{code}"}
+
+
+@router.get("/routes/my-routes")
+@limiter.limit("30/minute")
+async def my_routes(request: Request):
+    user = await _require_auth(request)
+    routes = await storage.list_results(user["id"])
+    return {"routes": routes}
 
 
 @router.get("/routes/saved/{code}")

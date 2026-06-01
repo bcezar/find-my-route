@@ -36,6 +36,16 @@ function routeApp() {
     clearConfirmOpen:   false,
     resultActionsOpen:  false,
     templatesOpen:      false,
+    loginOpen:          false,
+    loginEmail:         '',
+    loginLoading:       false,
+    _authToken:         null,
+    _pendingSave:       false,
+    saveRouteNameOpen:  false,
+    saveRouteName:      '',
+    myRoutesOpen:       false,
+    myRoutes:           [],
+    myRoutesLoading:    false,
     templates: [
       { name: 'Entrega Campinas',      count: 20 },
       { name: 'Clientes Região Norte', count: 15 },
@@ -43,6 +53,15 @@ function routeApp() {
     ],
 
     init() {
+      const session = localStorage.getItem('routeSession');
+      if (session) {
+        try {
+          const s = JSON.parse(session);
+          this._authToken = s.token;
+          this.user = s.user;
+        } catch (_) {}
+      }
+
       const params    = new URLSearchParams(location.search);
       const urlOrigin = params.get('origin');
       const urlDest   = params.get('dest');
@@ -286,6 +305,70 @@ function routeApp() {
       return m > 0 ? `${h}h ${m}min` : `${h}h`;
     },
 
+    async login() {
+      this.loginLoading = true;
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: this.loginEmail.trim() }),
+        });
+        if (!res.ok) { this.error = 'Erro ao fazer login.'; return; }
+        const data = await res.json();
+        this._authToken = data.token;
+        this.user = data.user;
+        localStorage.setItem('routeSession', JSON.stringify({ token: data.token, user: data.user }));
+        this.loginOpen = false;
+        this.loginEmail = '';
+        if (this._pendingSave) { this._pendingSave = false; this.openSaveRouteName(); }
+      } catch (_) {
+        this.error = 'Erro ao fazer login.';
+      } finally {
+        this.loginLoading = false;
+      }
+    },
+
+    logout() {
+      this._authToken = null;
+      this.user = null;
+      localStorage.removeItem('routeSession');
+      this.userMenuOpen = false;
+    },
+
+    openSaveRouteName() {
+      if (!this.result) return;
+      if (!this.user) { this._pendingSave = true; this.loginOpen = true; return; }
+      this.saveRouteName = '';
+      this.saveRouteNameOpen = true;
+      this.resultActionsOpen = false;
+    },
+
+    async loadMyRoutes() {
+      if (!this.user) { this.loginOpen = true; return; }
+      this.myRoutesLoading = true;
+      try {
+        const res = await fetch('/api/v1/routes/my-routes', {
+          headers: { 'Authorization': `Bearer ${this._authToken}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        this.myRoutes = data.routes;
+      } catch (_) {}
+      finally { this.myRoutesLoading = false; }
+    },
+
+    loadRoute(route) {
+      const inp = route.inputs ?? {};
+      this.addresses   = (inp.addresses ?? []).map(a => ({ address: a, description: '' }));
+      this.origin      = inp.origin      ?? ''; this.originInput = this.origin;
+      this.dest        = inp.destination ?? ''; this.destInput   = this.dest;
+      this.result      = route.result    ?? null;
+      this.fixedFirst  = null; this.fixedLast = null;
+      this.myRoutesOpen = false;
+      this.notice = `Rota "${route.name}" carregada.`;
+      setTimeout(() => { this.notice = ''; }, 3000);
+    },
+
     confirmClearAll() {
       const hasContent = this.addresses.length > 0 || this.origin || this.dest || this.result;
       if (!hasContent) { this.clearAll(); return; }
@@ -395,12 +478,16 @@ function routeApp() {
     },
 
     async saveRoute() {
-      if (!this.result) return;
+      if (!this.result || !this.user) return;
       try {
         const res = await fetch('/api/v1/routes/save', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this._authToken}`,
+          },
           body: JSON.stringify({
+            name: this.saveRouteName.trim() || 'Rota sem nome',
             result: this.result,
             inputs: {
               addresses: this.addresses.map(a => a.address),
@@ -409,18 +496,12 @@ function routeApp() {
             },
           }),
         });
-        if (!res.ok) return;
-        const data = await res.json();
-
-        const history = JSON.parse(localStorage.getItem('savedRoutes') || '[]');
-        history.unshift({
-          code:       data.code,
-          total_km:   this.result.total_distance_km,
-          stops:      this.result.optimized_route.length,
-          created_at: new Date().toISOString(),
-        });
-        localStorage.setItem('savedRoutes', JSON.stringify(history.slice(0, 50)));
-
+        if (!res.ok) {
+          if (res.status === 401) { this.user = null; this._authToken = null; localStorage.removeItem('routeSession'); }
+          return;
+        }
+        this.saveRouteNameOpen = false;
+        this.saveRouteName = '';
         this.saved = true;
         setTimeout(() => { this.saved = false; }, 2000);
       } catch (_) {}

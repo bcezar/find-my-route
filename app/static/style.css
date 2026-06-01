@@ -686,6 +686,21 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   font-size: .8rem; font-weight: 600; color: #1d4ed8; text-decoration: underline; padding: 0;
 }
 
+/* === LOGIN / SAVE-NAME MODAL === */
+.login-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #eff6ff; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto .75rem;
+}
+.login-email-input {
+  width: 100%; margin-top: .75rem;
+  padding: .6rem .75rem;
+  border: 1.5px solid #e5e7eb; border-radius: 8px;
+  font-size: .95rem; outline: none; color: #111;
+  transition: border-color .15s;
+}
+.login-email-input:focus { border-color: #1d4ed8; }
+
 /* === CLEAR CONFIRM MODAL === */
 .modal-card-sm { max-width: 360px; text-align: center; padding: 2rem 1.5rem; }
 .clear-confirm-icon {

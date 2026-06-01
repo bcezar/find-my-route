@@ -54,6 +54,20 @@ class MapImageRequest(BaseModel):
 
 
 class SaveRouteRequest(BaseModel):
-    name: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=100)
     result: RouteResponse
     inputs: RouteRequest
+
+
+class LoginRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=200)
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+    user: UserResponse

@@ -107,6 +107,79 @@
     </div>
   </div>
 
+  <!-- Login Modal -->
+  <div class="modal-overlay" x-show="loginOpen" x-transition @click.self="loginOpen = false; _pendingSave = false">
+    <div class="modal-card modal-card-sm">
+      <div class="login-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <h2 class="clear-confirm-title">Entrar</h2>
+      <p class="clear-confirm-sub">Informe seu e-mail para salvar e acessar suas rotas.</p>
+      <input type="email" class="login-email-input" placeholder="seu@email.com"
+             x-model="loginEmail"
+             @keydown.enter="login()"
+             x-init="$el.focus()" />
+      <button class="btn-modal-close" style="margin-top:.75rem"
+              @click="login()" :disabled="loginLoading || loginEmail.trim().length < 3">
+        <span x-show="!loginLoading">Entrar</span>
+        <span x-show="loginLoading">Aguarde…</span>
+      </button>
+      <button class="btn-clear-cancel" style="margin-top:.4rem"
+              @click="loginOpen = false; _pendingSave = false">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Save Route Name Modal -->
+  <div class="modal-overlay" x-show="saveRouteNameOpen" x-transition @click.self="saveRouteNameOpen = false">
+    <div class="modal-card modal-card-sm">
+      <h2 class="clear-confirm-title">Salvar rota</h2>
+      <p class="clear-confirm-sub">Dê um nome para identificar esta rota depois.</p>
+      <input type="text" class="login-email-input" placeholder="Ex: Entregas Segunda-feira"
+             x-model="saveRouteName"
+             @keydown.enter="saveRoute()"
+             x-ref="saveRouteNameInput" />
+      <button class="btn-modal-close" style="margin-top:.75rem"
+              @click="saveRoute()" :disabled="saveRouteName.trim().length === 0">
+        Salvar
+      </button>
+      <button class="btn-clear-cancel" style="margin-top:.4rem"
+              @click="saveRouteNameOpen = false">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- My Routes Modal -->
+  <div class="modal-overlay" x-show="myRoutesOpen" x-transition @click.self="myRoutesOpen = false">
+    <div class="modal-card">
+      <div class="import-modal-header">
+        <h2 class="modal-title" style="margin-bottom:0">Minhas Rotas</h2>
+        <button class="drawer-close" @click="myRoutesOpen = false" aria-label="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <p class="field-hint" x-show="myRoutesLoading" style="text-align:center;padding:.75rem 0">Carregando…</p>
+      <template x-if="!myRoutesLoading && myRoutes.length === 0">
+        <p class="field-hint" style="text-align:center;padding:1.5rem 0">Nenhuma rota salva ainda.</p>
+      </template>
+      <ul class="templates-list" x-show="!myRoutesLoading && myRoutes.length > 0">
+        <template x-for="r in myRoutes" :key="r.code">
+          <li class="template-card">
+            <div class="template-card-info">
+              <div class="template-card-name" x-text="r.name"></div>
+              <div class="template-card-count"
+                   x-text="(r.result?.total_distance_km ?? '?') + ' km · ' + (r.result?.optimized_route?.length ?? '?') + ' paradas'">
+              </div>
+            </div>
+            <button class="btn-template-use" @click="loadRoute(r)">Carregar</button>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+
   <!-- Templates Modal -->
   <div class="modal-overlay" x-show="templatesOpen" x-transition @click.self="templatesOpen = false">
     <div class="modal-card">
@@ -183,7 +256,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nova rota
       </li>
-      <li class="drawer-item drawer-item-disabled">
+      <li class="drawer-item" @click="myRoutesOpen = true; loadMyRoutes(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/></svg>
         Minhas rotas
       </li>
@@ -218,9 +291,13 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Ajuda
       </li>
-      <li class="drawer-item drawer-item-disabled drawer-item-danger">
+      <li class="drawer-item drawer-item-danger" x-show="user" @click="logout(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Sair
+      </li>
+      <li class="drawer-item" x-show="!user" @click="loginOpen = true; drawerOpen = false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Entrar
       </li>
     </ul>
   </nav>
@@ -261,7 +338,7 @@
         <button class="user-menu-item">Perfil</button>
         <button class="user-menu-item">Configurações</button>
         <div class="user-menu-divider"></div>
-        <button class="user-menu-item user-menu-item-danger">Sair</button>
+        <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
       </div>
     </div>
   </header>
@@ -672,7 +749,7 @@
             </svg>
           </button>
           <div class="result-more-menu" x-show="resultActionsOpen" x-transition>
-            <button class="result-more-item" @click="saveRoute(); resultActionsOpen = false">
+            <button class="result-more-item" @click="openSaveRouteName()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
               </svg>
