@@ -388,8 +388,8 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   transition: background .15s, color .15s;
 }
 .btn-expand-list:hover { background: #f3f4f6; }
-.btn-expand-list-open { color: #fff; background: #1d4ed8; }
-.btn-expand-list-open:hover { background: #1e40af; }
+.btn-expand-list-open { color: #fff; background: #374151; }
+.btn-expand-list-open:hover { background: #1f2937; }
 .btn-expand-count { font-size: .84rem; font-weight: 700; }
 .btn-expand-sub   { font-size: .73rem; color: #9ca3af; }
 
