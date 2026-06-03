@@ -50,6 +50,12 @@ function routeApp() {
     myRoutesOpen:       false,
     myRoutes:           [],
     myRoutesLoading:    false,
+    get saveRoutePlaceholder() {
+      const days = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+      const idx = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getDay();
+      return `Ex: Entregas ${days[idx]}`;
+    },
+
     templates: [
       { name: 'Entrega Campinas',      count: 20 },
       { name: 'Clientes Região Norte', count: 15 },
@@ -360,6 +366,19 @@ function routeApp() {
         this.myRoutes = data.routes;
       } catch (_) {}
       finally { this.myRoutesLoading = false; }
+    },
+
+    async deleteRoute(code) {
+      try {
+        const res = await fetch(`/api/v1/routes/saved/${code}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${this._authToken}` },
+        });
+        if (!res.ok) return;
+        this.myRoutes = this.myRoutes.filter(r => r.code !== code);
+        this.notice = 'Rota excluída.';
+        setTimeout(() => { this.notice = ''; }, 2500);
+      } catch (_) {}
     },
 
     loadRoute(route) {

@@ -103,6 +103,14 @@ async def get_saved_route(code: str):
     return result
 
 
+@router.delete("/routes/saved/{code}")
+@limiter.limit("20/minute")
+async def delete_saved_route(request: Request, code: str):
+    user = await _require_auth(request)
+    await storage.delete_result(code, user["id"])
+    return {"ok": True}
+
+
 @router.post("/routes/polyline")
 @limiter.limit("30/minute")
 async def route_polyline(request: Request, body: PolylineRequest = Body(...)):

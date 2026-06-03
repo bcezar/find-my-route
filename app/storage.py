@@ -151,6 +151,16 @@ async def list_results(user_id: str) -> list[dict]:
     ]
 
 
+async def delete_result(code: str, user_id: str) -> None:
+    if _turso_configured():
+        await _execute(
+            "DELETE FROM saved_routes WHERE code = ? AND user_id = ?",
+            [code, user_id],
+        )
+    elif code in _saved and _saved[code].get("user_id") == user_id:
+        del _saved[code]
+
+
 # ── Users & sessions ─────────────────────────────────────────────────────────
 
 async def find_or_create_user(email: str) -> dict:

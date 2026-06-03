@@ -664,6 +664,14 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   cursor: pointer; flex-shrink: 0; transition: background .15s;
 }
 .btn-template-use:hover { background: #1e40af; }
+.btn-route-delete {
+  padding: .42rem .55rem; border-radius: 8px;
+  background: #fee2e2; color: #b91c1c;
+  border: none; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.btn-route-delete:hover { background: #fecaca; }
 
 .failures { font-size: .8rem; color: #b91c1c; margin-top: .75rem; }
 
