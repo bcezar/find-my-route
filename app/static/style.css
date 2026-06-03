@@ -332,41 +332,69 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 .addr-sub    { font-size: .76rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .addr-rest   { font-size: .74rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.btn-action {
-  padding: .28rem .55rem;
-  border-radius: 6px;
-  font-size: .73rem; font-weight: 600;
-  cursor: pointer; white-space: nowrap;
-  transition: background .15s, color .15s, border-color .15s;
-  flex-shrink: 0;
-}
-.btn-start { background: none; border: 1.5px solid #d1fae5; color: #15803d; }
-.btn-start.active { background: #dcfce7; border-color: #6ee7b7; color: #15803d; }
-.btn-end { background: none; border: 1.5px solid #dbeafe; color: #1d4ed8; }
-.btn-end.active { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
-@media (hover: hover) {
-  .btn-start:hover { background: #dcfce7; }
-  .btn-end:hover   { background: #eff6ff; }
-}
+/* addr-icon state colors */
+.addr-icon-start { background: #16a34a; color: #fff; }
+.addr-icon-end   { background: #1d4ed8; color: #fff; }
 
-.btn-edit {
-  padding: .32rem;
-  background: #eff6ff; color: #1d4ed8; border: none;
-  border-radius: 6px; cursor: pointer;
+/* State badges inside address item */
+.addr-badge {
+  display: inline-flex; align-items: center;
+  font-size: .71rem; font-weight: 700;
+  padding: .15rem .45rem; border-radius: 99px;
+  margin-top: .25rem; align-self: flex-start;
+}
+.addr-badge-start { background: #dcfce7; color: #15803d; }
+.addr-badge-end   { background: #dbeafe; color: #1d4ed8; }
+
+/* ⋮ button per address item */
+.addr-menu-wrap { position: relative; flex-shrink: 0; }
+.btn-addr-more {
+  padding: .32rem; background: none; border: none; cursor: pointer;
+  color: #9ca3af; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  transition: background .15s; flex-shrink: 0;
+  transition: background .15s, color .15s;
 }
-.btn-trash {
-  padding: .32rem;
-  background: #fee2e2; color: #b91c1c; border: none;
-  border-radius: 6px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s; flex-shrink: 0;
+.btn-addr-more:hover { background: #f3f4f6; color: #374151; }
+
+/* Per-item dropdown */
+.addr-actions-menu {
+  position: absolute; right: 0; top: calc(100% + 4px);
+  background: #fff; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  min-width: 210px; z-index: 150; overflow: hidden;
 }
-@media (hover: hover) {
-  .btn-edit:hover  { background: #dbeafe; }
-  .btn-trash:hover { background: #fecaca; }
+.addr-actions-item {
+  display: flex; align-items: center; gap: .5rem;
+  width: 100%; padding: .65rem .9rem;
+  background: none; border: none; cursor: pointer;
+  font-size: .88rem; color: #374151; text-align: left;
 }
+.addr-actions-item:hover { background: #f9fafb; }
+.addr-actions-item-danger { color: #b91c1c; }
+.addr-actions-divider { height: 1px; background: #f3f4f6; }
+
+/* Search button */
+.search-stops-row { margin-top: .5rem; }
+.btn-search-stops {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .3rem .65rem;
+  background: none; border: 1.5px solid #e5e7eb; border-radius: 99px;
+  font-size: .78rem; font-weight: 600; color: #6b7280;
+  cursor: pointer; transition: background .15s, border-color .15s;
+}
+.btn-search-stops:hover { background: #f3f4f6; border-color: #d1d5db; }
+
+/* Expand/collapse button */
+.btn-expand-list {
+  width: 100%; margin-top: .4rem;
+  padding: .55rem;
+  background: #f3f4f6; color: #6b7280;
+  border: 1px solid #e5e7eb; border-radius: 10px;
+  font-size: .82rem; font-weight: 600;
+  cursor: pointer; text-align: center;
+  transition: background .15s;
+}
+.btn-expand-list:hover { background: #e5e7eb; }
 
 .addr-item-view {
   display: flex; align-items: center; gap: .45rem; width: 100%;
