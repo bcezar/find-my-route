@@ -747,6 +747,35 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   margin-left: auto; background: none; border: none; cursor: pointer;
   color: #9ca3af; font-size: .9rem; padding: 0; line-height: 1;
 }
+/* === IMPORT PREVIEW (step 2) === */
+.import-preview {
+  background: #f9fafb; border: 1px solid #f0f0f0;
+  border-radius: 10px; padding: .75rem 1rem;
+  display: flex; flex-direction: column; gap: .4rem;
+  margin-bottom: .85rem;
+}
+.import-preview-stat {
+  display: flex; align-items: center; gap: .45rem;
+  font-size: .88rem;
+}
+.import-preview-ok   { color: #15803d; }
+.import-preview-warn { color: #92400e; }
+.import-error {
+  background: #fee2e2; color: #b91c1c;
+  border-radius: 8px; padding: .65rem .9rem;
+  font-size: .86rem; margin-bottom: .85rem;
+}
+.import-action-label {
+  font-size: .88rem; font-weight: 700; color: #111;
+  margin-bottom: .55rem;
+}
+.import-action-btns { display: flex; flex-direction: column; gap: .4rem; }
+.import-btn-replace {
+  background: #f9fafb !important; color: #374151 !important;
+  border: 1.5px solid #e5e7eb !important;
+}
+.import-btn-replace:hover { background: #f3f4f6 !important; }
+
 .import-template-hint {
   display: flex; align-items: center; justify-content: space-between;
   font-size: .8rem; color: #9ca3af; margin-bottom: .75rem;

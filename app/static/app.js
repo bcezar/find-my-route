@@ -15,7 +15,11 @@ function routeApp() {
     stopActionsOpen: false,
     importOpen:      false,
     importType:      'csv',
-    importFile:      null,
+    importFile:      null,   // File object
+    importStep:      'select',  // 'select' | 'preview'
+    importedRows:    [],
+    importedSkipped: 0,
+    importError:     '',
     newDescription:  '',
     editingIndex:    null,
     editAddress:     '',
@@ -529,6 +533,160 @@ function routeApp() {
         this.saved = true;
         setTimeout(() => { this.saved = false; }, 2000);
       } catch (_) {}
+    },
+
+    _csvEscape(value) {
+      const s = String(value ?? '');
+      return (s.includes(',') || s.includes('"') || s.includes('\n'))
+        ? '"' + s.replace(/"/g, '""') + '"'
+        : s;
+    },
+
+    _triggerDownload(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
+    _parseCSVText(text) {
+      const clean = text.replace(/^﻿/, '');
+      const lines = clean.split(/\r?\n/);
+      if (!lines.length || !lines[0].trim()) return { error: 'Arquivo vazio.' };
+
+      const first = lines[0];
+      const semi  = (first.match(/;/g) || []).length;
+      const comma = (first.match(/,/g) || []).length;
+      const delim = semi > comma ? ';' : ',';
+
+      const parseRow = (line) => {
+        const fields = [];
+        let cur = '', inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (inQuote) {
+            if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+            else if (ch === '"') { inQuote = false; }
+            else { cur += ch; }
+          } else {
+            if (ch === '"') { inQuote = true; }
+            else if (ch === delim) { fields.push(cur.trim()); cur = ''; }
+            else { cur += ch; }
+          }
+        }
+        fields.push(cur.trim());
+        return fields;
+      };
+
+      const headers = parseRow(lines[0]).map(h => h.toLowerCase().replace(/\s+/g, ''));
+      const endIdx  = headers.indexOf('endereco');
+      const descIdx = headers.indexOf('descricao');
+
+      if (endIdx === -1) return { error: "A coluna 'endereco' não foi encontrada. Verifique o arquivo." };
+
+      let rows = [], skipped = 0;
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const fields = parseRow(lines[i]);
+        const address = (fields[endIdx] ?? '').trim();
+        if (!address) { skipped++; continue; }
+        rows.push({ address, description: descIdx >= 0 ? (fields[descIdx] ?? '').trim() : '' });
+      }
+      return { rows, skipped };
+    },
+
+    async _parseXLSXFile(file) {
+      if (!window.XLSX) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const buf = await file.arrayBuffer();
+      const wb  = window.XLSX.read(buf, { type: 'array' });
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      const raw = window.XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
+      if (!raw.length) return { error: 'Planilha vazia.' };
+
+      const normalize = (k) => k.toLowerCase().replace(/\s+/g, '');
+      const keys = Object.keys(raw[0]).map(normalize);
+      const endKey  = Object.keys(raw[0]).find(k => normalize(k) === 'endereco');
+      const descKey = Object.keys(raw[0]).find(k => normalize(k) === 'descricao');
+
+      if (!endKey) return { error: "A coluna 'endereco' não foi encontrada. Verifique o arquivo." };
+
+      let rows = [], skipped = 0;
+      for (const obj of raw) {
+        const address = (obj[endKey] ?? '').trim();
+        if (!address) { skipped++; continue; }
+        rows.push({ address, description: descKey ? (obj[descKey] ?? '').trim() : '' });
+      }
+      return { rows, skipped };
+    },
+
+    async importAddresses() {
+      if (!this.importFile) return;
+      this.importError = '';
+      let parsed;
+      try {
+        if (this.importType === 'csv') {
+          const text = await this.importFile.text();
+          parsed = this._parseCSVText(text);
+        } else {
+          parsed = await this._parseXLSXFile(this.importFile);
+        }
+      } catch (_) {
+        this.importError = 'Erro ao ler o arquivo. Tente novamente.';
+        return;
+      }
+      if (parsed.error) { this.importError = parsed.error; return; }
+      if (!parsed.rows.length) { this.importError = 'Nenhum endereço válido encontrado no arquivo.'; return; }
+      this.importedRows    = parsed.rows;
+      this.importedSkipped = parsed.skipped;
+      this.importStep      = 'preview';
+    },
+
+    applyImport(mode) {
+      const incoming = this.importedRows;
+      const current  = mode === 'replace' ? [] : this.addresses;
+      const combined = [...current, ...incoming];
+      if (combined.length > 50) {
+        this.importError = `Limite de 50 paradas excedido (${combined.length} no total). Reduza a quantidade e tente novamente.`;
+        return;
+      }
+      this.addresses   = combined;
+      const count      = incoming.length;
+      const action     = mode === 'replace' ? 'Substituídas' : 'Adicionadas';
+      this.notice      = `${action} ${count} parada${count !== 1 ? 's' : ''}.`;
+      setTimeout(() => { this.notice = ''; }, 3000);
+      this.importOpen    = false;
+      this.importFile    = null;
+      this.importStep    = 'select';
+      this.importedRows  = [];
+      this.importedSkipped = 0;
+      this.importError   = '';
+    },
+
+    downloadTemplate() {
+      const content = [
+        'endereco,descricao',
+        '"Rua das Flores, 123, São Paulo/SP","Farmácia João"',
+        '"Av. Paulista, 1000, São Paulo/SP",""',
+      ].join('\r\n');
+      this._triggerDownload(content, 'template-enderecos.csv', 'text/csv;charset=utf-8;');
+    },
+
+    exportAddresses() {
+      if (!this.addresses.length) { this.notice = 'Nenhuma parada para exportar.'; setTimeout(() => { this.notice = ''; }, 2500); return; }
+      const lines = ['endereco,descricao'];
+      for (const a of this.addresses) lines.push(`${this._csvEscape(a.address)},${this._csvEscape(a.description)}`);
+      this._triggerDownload(lines.join('\r\n'), 'enderecos.csv', 'text/csv;charset=utf-8;');
     },
 
     async optimize() {

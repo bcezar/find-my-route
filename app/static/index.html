@@ -56,54 +56,86 @@
   </div>
 
   <!-- Import Modal -->
-  <div class="modal-overlay" x-show="importOpen" x-transition @click.self="importOpen = false; importFile = null">
+  <div class="modal-overlay" x-show="importOpen" x-transition @click.self="importOpen = false; importFile = null; importStep = 'select'; importError = ''">
     <div class="modal-card">
       <div class="import-modal-header">
         <h2 class="modal-title" style="margin-bottom:0">Importar endereços</h2>
-        <button class="drawer-close" @click="importOpen = false; importFile = null" aria-label="Fechar">
+        <button class="drawer-close" @click="importOpen = false; importFile = null; importStep = 'select'; importError = ''" aria-label="Fechar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
 
-      <div class="import-tabs">
-        <button class="import-tab" :class="{ active: importType === 'csv' }" @click="importType = 'csv'; importFile = null">CSV</button>
-        <button class="import-tab" :class="{ active: importType === 'xls' }" @click="importType = 'xls'; importFile = null">XLS</button>
+      <!-- Step: select -->
+      <div x-show="importStep === 'select'">
+        <div class="import-tabs">
+          <button class="import-tab" :class="{ active: importType === 'csv' }" @click="importType = 'csv'; importFile = null">CSV</button>
+          <button class="import-tab" :class="{ active: importType === 'xls' }" @click="importType = 'xls'; importFile = null">XLS</button>
+        </div>
+
+        <label class="import-dropzone" :class="{ 'has-file': importFile }">
+          <input type="file" class="import-file-input"
+                 :accept="importType === 'csv' ? '.csv' : '.xls,.xlsx'"
+                 @change="importFile = $event.target.files[0] ?? null; importError = ''" />
+          <template x-if="!importFile">
+            <div class="import-dropzone-empty">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p class="import-dropzone-title">Arraste o arquivo aqui</p>
+              <p class="import-dropzone-sub">ou clique para selecionar</p>
+              <span class="import-dropzone-hint" x-text="'Formato aceito: .' + importType"></span>
+            </div>
+          </template>
+          <template x-if="importFile">
+            <div class="import-dropzone-selected">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span x-text="importFile?.name"></span>
+              <button class="import-file-clear" @click.prevent="importFile = null; importError = ''" aria-label="Remover arquivo">✕</button>
+            </div>
+          </template>
+        </label>
+
+        <template x-if="importError">
+          <p class="import-error" x-text="importError"></p>
+        </template>
+
+        <div class="import-template-hint">
+          <span>Não possui um arquivo?</span>
+          <button class="import-template-btn" @click="downloadTemplate()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Baixar template CSV
+          </button>
+        </div>
+
+        <button class="btn-modal-close" style="margin-top:.5rem" :disabled="!importFile" @click="importAddresses()">Importar</button>
       </div>
 
-      <label class="import-dropzone" :class="{ 'has-file': importFile }">
-        <input type="file" class="import-file-input"
-               :accept="importType === 'csv' ? '.csv' : '.xls,.xlsx'"
-               @change="importFile = $event.target.files[0]?.name ?? null" />
-        <template x-if="!importFile">
-          <div class="import-dropzone-empty">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <p class="import-dropzone-title">Arraste o arquivo aqui</p>
-            <p class="import-dropzone-sub">ou clique para selecionar</p>
-            <span class="import-dropzone-hint" x-text="'Formato aceito: .' + importType"></span>
+      <!-- Step: preview -->
+      <div x-show="importStep === 'preview'">
+        <div class="import-preview">
+          <div class="import-preview-stat import-preview-ok">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span><strong x-text="importedRows.length"></strong> endereços encontrados</span>
           </div>
-        </template>
-        <template x-if="importFile">
-          <div class="import-dropzone-selected">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span x-text="importFile"></span>
-            <button class="import-file-clear" @click.prevent="importFile = null" aria-label="Remover arquivo">✕</button>
+          <div class="import-preview-stat import-preview-warn" x-show="importedSkipped > 0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span><strong x-text="importedSkipped"></strong> linhas ignoradas (sem endereço)</span>
           </div>
-        </template>
-      </label>
+        </div>
 
-      <div class="import-template-hint">
-        <span>Não possui um arquivo?</span>
-        <button class="import-template-btn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Baixar template CSV
-        </button>
+        <template x-if="importError">
+          <p class="import-error" x-text="importError"></p>
+        </template>
+
+        <p class="import-action-label">O que deseja fazer?</p>
+        <div class="import-action-btns">
+          <button class="btn-modal-close" @click="applyImport('add')">Adicionar às paradas atuais</button>
+          <button class="btn-modal-close import-btn-replace" @click="applyImport('replace')">Substituir lista atual</button>
+          <button class="btn-clear-cancel" style="margin-top:.4rem" @click="importStep = 'select'; importError = ''">← Voltar</button>
+        </div>
       </div>
-
-      <button class="btn-modal-close" style="margin-top:.5rem" :disabled="!importFile">Importar</button>
     </div>
   </div>
 
@@ -275,15 +307,15 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7m-3.5-3.5v7"/></svg>
         Templates
       </li>
-      <li class="drawer-item" @click="importType = 'csv'; importOpen = true; drawerOpen = false">
+      <li class="drawer-item" @click="importType = 'csv'; importFile = null; importStep = 'select'; importError = ''; importOpen = true; drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Importar endereços
       </li>
-      <li class="drawer-item drawer-item-disabled">
+      <li class="drawer-item" @click="exportAddresses(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar rota
+        Exportar paradas
       </li>
-      <li class="drawer-item drawer-item-disabled">
+      <li class="drawer-item" @click="downloadTemplate(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Baixar template CSV
       </li>
@@ -479,11 +511,11 @@
             <span x-text="showSearch ? 'Fechar busca' : 'Buscar parada'"></span>
           </button>
           <div class="stops-actions-divider"></div>
-          <button class="stops-actions-item" @click="importType = 'csv'; importOpen = true; stopActionsOpen = false">
+          <button class="stops-actions-item" @click="importType = 'csv'; importFile = null; importStep = 'select'; importError = ''; importOpen = true; stopActionsOpen = false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             Importar CSV
           </button>
-          <button class="stops-actions-item" @click="importType = 'xls'; importOpen = true; stopActionsOpen = false">
+          <button class="stops-actions-item" @click="importType = 'xls'; importFile = null; importStep = 'select'; importError = ''; importOpen = true; stopActionsOpen = false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
             Importar XLS
           </button>
