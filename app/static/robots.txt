@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /r/
+Disallow: /s/
+
+Sitemap: https://findmyroute.com.br/sitemap.xml
