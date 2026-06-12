@@ -551,13 +551,13 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   font-size: .75rem; font-weight: 600; text-decoration: none;
   transition: background .15s;
 }
-.btn-stop-nav-gmaps { background: #1d4ed8; color: #fff; }
-.btn-stop-nav-gmaps:hover { background: #1e40af; }
+.btn-stop-nav-gmaps { background: #fff; color: #1a1a1a; border: 1.5px solid #dadce0; }
+.btn-stop-nav-gmaps:hover { background: #f8f9fa; }
 .btn-stop-nav-waze {
-  background: #f0fdf4; color: #15803d;
-  border: 1.5px solid #86efac;
+  background: #33ccff; color: #0d1b2a;
+  border: none;
 }
-.btn-stop-nav-waze:hover { background: #dcfce7; }
+.btn-stop-nav-waze:hover { background: #1ab8f0; }
 .route-num-col {
   display: flex; flex-direction: column; align-items: center;
   flex-shrink: 0; width: 28px;
