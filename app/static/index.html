@@ -50,6 +50,7 @@
   <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
   <script defer src="/app.js?v={{ js_version }}"></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  {% if google_maps_key %}<script>window.GOOGLE_MAPS_KEY = "{{ google_maps_key }}";</script>{% endif %}
 </head>
 <body>
 <div class="container" x-data="routeApp()">
@@ -842,22 +843,7 @@
 
   <!-- Mini map -->
   <div class="mini-map-card" x-show="result !== null" x-transition style="margin-top:.75rem">
-    <!-- Static map image (shown after Google Static Maps API responds) -->
-    <img x-show="mapImageUrl" :src="mapImageUrl" class="mini-map-img" alt="Mapa da rota" />
-    <!-- SVG fallback: straight lines → road path while image loads -->
-    <svg x-show="!mapImageUrl" viewBox="0 0 460 160" width="100%" class="mini-map-svg"
-         preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-      <polyline :points="mapPolyline()"
-                fill="none" stroke="#93c5fd" stroke-width="2.5"
-                stroke-dasharray="7 4" stroke-linecap="round" stroke-linejoin="round"/>
-      <template x-for="(pt, i) in mapPoints()" :key="i">
-        <circle :cx="pt.x" :cy="pt.y"
-                :r="pt.type !== 'stop' ? 7 : 5"
-                :fill="pt.type === 'origin' ? '#16a34a' : pt.type === 'dest' ? '#1d4ed8' : '#fff'"
-                :stroke="pt.type === 'stop' ? '#1d4ed8' : 'none'"
-                stroke-width="2"/>
-      </template>
-    </svg>
+    <div id="route-map" class="mini-map-container"></div>
   </div>
 
   <!-- Result -->

@@ -70,7 +70,12 @@ async def expand_route(code: str):
 
 @app.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "css_version": _css_hash, "js_version": _js_hash})
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "css_version": _css_hash,
+        "js_version": _js_hash,
+        "google_maps_key": settings.google_maps_api_key or "",
+    })
 
 
 # Serve static assets (CSS, images, etc.) — must come after all routes

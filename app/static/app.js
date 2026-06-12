@@ -36,9 +36,7 @@ function routeApp() {
     saved:          false,
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
-    mapPath:        null,
-    mapImageUrl:    null,
-    _mapPathGen:    0,
+    _mapInstance:   null,
     error:          '',
     notice:         '',
     clearConfirmOpen:   false,
@@ -219,10 +217,93 @@ function routeApp() {
     },
     cancelEdit() { this.editingIndex = null; },
 
-    _mapProject(pts, bbox) {
-      const W = 460, H = 160, PAD = 28;
-      const src = bbox || pts;
-      const lats = src.map(p => p.lat), lngs = src.map(p => p.lng);
+    _buildPins() {
+      if (!this.result) return [];
+      const pins = [];
+      if (this.result.origin) pins.push({ ...this.result.origin.coordinates, type: 'origin' });
+      for (const s of this.result.optimized_route)
+        pins.push({ ...s.coordinates, type: 'stop', order: s.order });
+      if (this.result.destination) pins.push({ ...this.result.destination.coordinates, type: 'dest' });
+      return pins;
+    },
+
+    async _renderMap() {
+      if (!this.result) return;
+      if (!window.GOOGLE_MAPS_KEY) { this._renderSvgMap(); return; }
+
+      if (!window.google?.maps) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_KEY}`;
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      const pins = this._buildPins();
+      if (pins.length < 2) return;
+
+      const mapEl = document.getElementById('route-map');
+      if (!mapEl) return;
+
+      const map = new google.maps.Map(mapEl, {
+        zoom: 12,
+        center: { lat: pins[0].lat, lng: pins[0].lng },
+        disableDefaultUI: true,
+        gestureHandling: 'cooperative',
+        styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
+      });
+      this._mapInstance = map;
+
+      const bounds = new google.maps.LatLngBounds();
+      for (const p of pins) bounds.extend({ lat: p.lat, lng: p.lng });
+      map.fitBounds(bounds, { top: 32, bottom: 32, left: 32, right: 32 });
+
+      for (const p of pins) {
+        if (p.type === 'stop') {
+          new google.maps.Marker({
+            position: { lat: p.lat, lng: p.lng }, map,
+            label: { text: String(p.order), color: '#fff', fontSize: '11px', fontWeight: 'bold' },
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 11, fillColor: '#1d4ed8', fillOpacity: 1,
+              strokeWeight: 2, strokeColor: '#fff',
+            },
+          });
+        } else {
+          new google.maps.Marker({
+            position: { lat: p.lat, lng: p.lng }, map,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 9,
+              fillColor: p.type === 'origin' ? '#16a34a' : '#1d4ed8',
+              fillOpacity: 1, strokeWeight: 2, strokeColor: '#fff',
+            },
+          });
+        }
+      }
+
+      try {
+        const res = await fetch('/api/v1/routes/polyline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ points: pins.map(p => ({ lat: p.lat, lng: p.lng })) }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          new google.maps.Polyline({
+            path: data.path.map(p => ({ lat: p.lat, lng: p.lng })),
+            map, strokeColor: '#3b82f6', strokeOpacity: 0.85, strokeWeight: 3,
+          });
+        }
+      } catch (_) {}
+    },
+
+    _renderSvgMap() {
+      const pins = this._buildPins();
+      if (pins.length < 2) return;
+      const W = 460, H = 220, PAD = 32;
+      const lats = pins.map(p => p.lat), lngs = pins.map(p => p.lng);
       const minLat = Math.min(...lats), maxLat = Math.max(...lats);
       const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
       const latRange = maxLat - minLat || 0.01;
@@ -233,74 +314,34 @@ function routeApp() {
       const scale  = Math.min(scaleX, scaleY);
       const offX   = (W - 2 * PAD - lngRange * cosLat * scale) / 2;
       const offY   = (H - 2 * PAD - latRange * scale) / 2;
-      return pts.map(p => ({
-        ...p,
+      const project = p => ({
         x: PAD + offX + (p.lng - minLng) * cosLat * scale,
         y: H - PAD - offY - (p.lat - minLat) * scale,
-      }));
-    },
-    _stopPins() {
-      if (!this.result) return [];
-      const raw = [];
-      if (this.result.origin) raw.push({ ...this.result.origin.coordinates, type: 'origin' });
-      for (const s of this.result.optimized_route)
-        raw.push({ ...s.coordinates, type: 'stop', order: s.order });
-      if (this.result.destination) raw.push({ ...this.result.destination.coordinates, type: 'dest' });
-      return raw;
-    },
-    mapPoints() {
-      const pins = this._stopPins();
-      if (!pins.length) return [];
-      return this._mapProject(pins);
-    },
-    mapPolyline() {
-      const pins = this._stopPins();
-      if (!pins.length) return '';
-      if (this.mapPath && this.mapPath.length >= 2) {
-        const projected = this._mapProject(this.mapPath, pins);
-        return projected.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-      }
-      return this._mapProject(pins).map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    },
-    async _fetchMapPath(gen) {
-      if (!this.result) return;
-      const pins = this._stopPins();
-      if (pins.length < 2) return;
-      const points = pins.map(p => ({ lat: p.lat, lng: p.lng }));
-      try {
-        const res = await fetch('/api/v1/routes/polyline', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ points }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (this._mapPathGen !== gen) return;
-        this.mapPath = data.path;
-        await this._fetchMapImage(gen, data.encoded_polyline);
-      } catch (_) {}
-    },
-    async _fetchMapImage(gen, encodedPolyline) {
-      if (!this.result) return;
-      const pins = this._stopPins();
-      if (pins.length < 2) return;
-      const first = pins[0], last = pins[pins.length - 1];
-      try {
-        const res = await fetch('/api/v1/routes/map-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            encoded_polyline: encodedPolyline ?? null,
-            origin:      { lat: first.lat, lng: first.lng },
-            destination: { lat: last.lat,  lng: last.lng  },
-          }),
-        });
-        if (!res.ok || this._mapPathGen !== gen) return;
-        const blob = await res.blob();
-        if (this._mapPathGen !== gen) return;
-        if (this.mapImageUrl) URL.revokeObjectURL(this.mapImageUrl);
-        this.mapImageUrl = URL.createObjectURL(blob);
-      } catch (_) {}
+      });
+
+      const pts = pins.map(p => ({ ...p, ...project(p) }));
+      const polyline = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+      const el = document.getElementById('route-map');
+      if (!el) return;
+
+      const markers = pts.map(p => {
+        if (p.type === 'stop') {
+          return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="9" fill="#1d4ed8"/>
+                  <text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="middle"
+                        dominant-baseline="central" fill="white" font-size="8"
+                        font-weight="bold" font-family="sans-serif">${p.order}</text>`;
+        }
+        const fill = p.type === 'origin' ? '#16a34a' : '#1d4ed8';
+        return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="${fill}" stroke="white" stroke-width="2"/>`;
+      }).join('');
+
+      el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%"
+          style="background:#f0f4ff;display:block" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="${polyline}" fill="none" stroke="#93c5fd" stroke-width="2.5"
+                  stroke-dasharray="7 4" stroke-linecap="round" stroke-linejoin="round"/>
+        ${markers}
+      </svg>`;
     },
     cancelAddAddress() {
       this.newAddress = '';
@@ -420,9 +461,7 @@ function routeApp() {
       this.newDescription = '';
       this.locationHint = null;
       this.result = null;
-      this.mapPath = null;
-      if (this.mapImageUrl) { URL.revokeObjectURL(this.mapImageUrl); this.mapImageUrl = null; }
-      this._mapPathGen = 0;
+      this._mapInstance = null;
       this.error  = '';
       localStorage.removeItem('routeApp');
     },
@@ -711,9 +750,7 @@ function routeApp() {
           this.error = data.detail ?? `Erro ${res.status}`;
         } else {
           this.result = data;
-          this.mapPath = null;
-          const gen = ++this._mapPathGen;
-          this._fetchMapPath(gen);
+          this.$nextTick(() => { this._renderMap(); });
           this.$nextTick(() => {
             const el = document.querySelector('.result-section');
             if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 16, behavior: 'smooth' });

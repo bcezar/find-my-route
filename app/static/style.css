@@ -487,13 +487,10 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 
 /* === MINI MAP === */
 .mini-map-card {
-  background: #f0f4ff;
-  border: 1px solid #dde6ff;
   border-radius: 14px;
   overflow: hidden;
 }
-.mini-map-svg { display: block; width: 100%; }
-.mini-map-img { display: block; width: 100%; height: auto; }
+.mini-map-container { width: 100%; height: 220px; }
 
 /* === RESULT SECTION === */
 .result-section {
