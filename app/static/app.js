@@ -36,7 +36,9 @@ function routeApp() {
     saved:          false,
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
+    selectedStop:   null,
     _mapInstance:   null,
+    _mapMarkers:    [],
     error:          '',
     notice:         '',
     clearConfirmOpen:   false,
@@ -254,6 +256,7 @@ function routeApp() {
         styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
       });
       this._mapInstance = map;
+      this._mapMarkers = [];
 
       const bounds = new google.maps.LatLngBounds();
       for (const p of pins) bounds.extend({ lat: p.lat, lng: p.lng });
@@ -261,7 +264,7 @@ function routeApp() {
 
       for (const p of pins) {
         if (p.type === 'stop') {
-          new google.maps.Marker({
+          const marker = new google.maps.Marker({
             position: { lat: p.lat, lng: p.lng }, map,
             label: { text: String(p.order), color: '#fff', fontSize: '11px', fontWeight: 'bold' },
             icon: {
@@ -270,6 +273,14 @@ function routeApp() {
               strokeWeight: 2, strokeColor: '#fff',
             },
           });
+          marker._stopOrder = p.order;
+          marker.addListener('click', () => {
+            const next = this.selectedStop === p.order ? null : p.order;
+            this.selectedStop = next;
+            this._updateMarkerIcons();
+            if (next !== null) this._scrollToStop(next);
+          });
+          this._mapMarkers.push(marker);
         } else {
           new google.maps.Marker({
             position: { lat: p.lat, lng: p.lng }, map,
@@ -343,6 +354,37 @@ function routeApp() {
         ${markers}
       </svg>`;
     },
+
+    _updateMarkerIcons() {
+      for (const m of this._mapMarkers) {
+        const active = m._stopOrder === this.selectedStop;
+        m.setIcon({
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: active ? 13 : 11,
+          fillColor: active ? '#1e40af' : '#1d4ed8',
+          fillOpacity: 1,
+          strokeWeight: active ? 3 : 2,
+          strokeColor: '#fff',
+        });
+        if (m.getLabel) {
+          m.setLabel({ text: String(m._stopOrder), color: '#fff', fontSize: active ? '12px' : '11px', fontWeight: 'bold' });
+        }
+      }
+    },
+
+    _scrollToStop(order) {
+      this.$nextTick(() => {
+        const el = document.querySelector(`[data-stop="${order}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    },
+
+    stopNavUrl(stop, provider) {
+      const { lat, lng } = stop.coordinates;
+      if (provider === 'waze') return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+      return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    },
+
     cancelAddAddress() {
       this.newAddress = '';
       this.newDescription = '';
@@ -461,7 +503,9 @@ function routeApp() {
       this.newDescription = '';
       this.locationHint = null;
       this.result = null;
+      this.selectedStop = null;
       this._mapInstance = null;
+      this._mapMarkers = [];
       this.error  = '';
       localStorage.removeItem('routeApp');
     },

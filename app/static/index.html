@@ -904,7 +904,10 @@
 
       <!-- Intermediate stops -->
       <template x-for="stop in result?.optimized_route" :key="stop.order">
-        <li class="route-item">
+        <li class="route-item"
+            :class="{ 'route-item-selected': selectedStop === stop.order }"
+            :data-stop="stop.order"
+            @click="selectedStop = selectedStop === stop.order ? null : stop.order; _updateMarkerIcons()">
           <div class="route-num-col">
             <div class="route-num" x-text="stop.order"></div>
             <div class="route-num-line"></div>
@@ -916,6 +919,22 @@
                  x-text="streetPart(stop.original_address)"></div>
             <div class="route-rest" x-show="restPart(stop.original_address)" x-text="restPart(stop.original_address)"></div>
             <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
+            <div class="stop-nav-btns" x-show="selectedStop === stop.order" x-transition>
+              <a class="btn-stop-nav btn-stop-nav-gmaps"
+                 :href="stopNavUrl(stop, 'gmaps')" target="_blank" @click.stop>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                Google Maps
+              </a>
+              <a class="btn-stop-nav btn-stop-nav-waze"
+                 :href="stopNavUrl(stop, 'waze')" target="_blank" @click.stop>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 8 16 12 12 16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                Waze
+              </a>
+            </div>
           </div>
           <div class="route-right" x-show="stop.leg_distance_km != null">
             <div class="route-leg-pill">
