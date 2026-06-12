@@ -834,5 +834,71 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 }
 .btn-clear-cancel:hover { background: #f9fafb; }
 
+/* === HOW-TO CARD === */
+.how-to-card {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 0.85rem;
+}
+.how-to-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #15803d;
+  margin-bottom: 1rem;
+}
+.how-to-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+.how-to-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #166534;
+  line-height: 1.35;
+}
+.how-to-num {
+  background: #16a34a;
+  color: #fff;
+  border-radius: 50%;
+  width: 1.55rem;
+  height: 1.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.how-to-icon {
+  display: block;
+}
+.how-to-connector {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 2px;
+  background: #bbf7d0;
+  margin-top: 0.75rem;
+  flex-shrink: 0;
+}
+@media (max-width: 480px) {
+  .how-to-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .how-to-connector { display: none; }
+}
+
 /* === FOOTER === */
 .footer-security { text-align: center; font-size: .73rem; color: #b0b7c3; margin-top: 1.5rem; }

@@ -30,20 +30,27 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 ```
 app/
-├── main.py               # FastAPI app; GET /health + GET /r/{code} (short link redirect)
+├── main.py               # FastAPI app; monta static, templates Jinja2, GET /r/{code}, /s/{code}
 ├── config.py             # Settings via .env (pydantic-settings)
 ├── limiter.py            # Instância do slowapi Limiter (separado para evitar circular import)
-├── storage.py            # Dict em memória para short links (/r/{code})
-├── models.py             # RouteRequest, RouteResponse, RouteStop (com leg_distance_km), etc.
+├── storage.py            # Turso (libSQL) via HTTP + fallback em memória; short links, rotas salvas, users, sessions
+├── models.py             # RouteRequest, RouteResponse, RouteStop, SaveRouteRequest, etc.
 ├── routers/
 │   └── routes.py         # Todos os endpoints /api/v1/*
 └── services/
     ├── geocoding.py      # Google Maps / Nominatim + cache + autocomplete + reverse geocoding
     ├── distance.py       # OSRM Table API (fallback: Haversine)
+    ├── directions.py     # Polyline de rota real (OSRM/Directions)
+    ├── static_maps.py    # Google Static Maps API — imagem do mini-mapa
     └── optimizer.py      # OR-Tools TSP solver (PATH_CHEAPEST_ARC + GLS)
 static/
-    ├── index.html        # Frontend Alpine.js completo
-    ├── capa.png          # Imagem OG para preview no WhatsApp
+    ├── index.html        # Frontend Alpine.js completo (~940 linhas)
+    ├── app.js            # Lógica Alpine.js (~700 linhas)
+    ├── style.css         # Estilos (~840 linhas)
+    ├── robots.txt        # Bloqueia /api/, /r/, /s/; aponta para sitemap
+    ├── sitemap.xml       # Homepage canônica (findmyroute.com.br)
+    ├── capa.png          # Imagem OG/WhatsApp (og:image, twitter:image)
+    ├── logo-find-my-route.png
     ├── icon-find-my-route.png
     └── my-location.svg   # Ícone do botão de geolocalização
 tests/
@@ -57,12 +64,29 @@ tests/
 
 ```
 GET  /health
-GET  /r/{code}                   → redirect 302 para /?origin=...&a=... (short link)
+GET  /r/{code}                      → redirect 302 para /?origin=...&a=... (short link compartilhamento)
+GET  /s/{code}                      → redirect 302 para /?saved={code} (rota salva)
 
-GET  /api/v1/autocomplete?q=     → Google Places autocomplete (rate: 120/min)
-GET  /api/v1/reverse?lat=&lng=   → reverse geocoding para geolocalização (rate: 30/min)
-POST /api/v1/shorten             → gera short link, body=RouteRequest (rate: 20/min)
-POST /api/v1/routes/optimize     → otimiza rota, body=RouteRequest (rate: 20/min)
+# Geocoding
+GET  /api/v1/autocomplete?q=        → Google Places autocomplete (rate: 120/min)
+GET  /api/v1/geocode?q=             → geocodifica endereço único; retorna {lat, lng} (rate: 30/min)
+GET  /api/v1/reverse?lat=&lng=      → reverse geocoding para geolocalização (rate: 30/min)
+
+# Rota
+POST /api/v1/shorten                → gera short link, body=RouteRequest (rate: 20/min)
+POST /api/v1/routes/optimize        → otimiza rota, body=RouteRequest (rate: 20/min)
+POST /api/v1/routes/polyline        → retorna polyline de estrada real entre os pontos (rate: 30/min)
+POST /api/v1/routes/map-image       → retorna PNG do Google Static Maps (rate: 20/min)
+
+# Rotas salvas (requer autenticação Bearer)
+POST /api/v1/routes/save            → salva rota com nome; retorna {code, path} (rate: 20/min)
+GET  /api/v1/routes/my-routes       → lista rotas salvas do usuário autenticado (rate: 30/min)
+GET  /api/v1/routes/saved/{code}    → retorna resultado de rota salva (público, sem auth)
+DELETE /api/v1/routes/saved/{code}  → exclui rota salva (requer auth; valida user_id) (rate: 20/min)
+
+# Auth (magic link / token simples)
+POST /api/v1/auth/login             → find_or_create_user por e-mail; retorna {token, user} (rate: 10/min)
+GET  /api/v1/auth/me                → retorna usuário autenticado
 ```
 
 ## Modelos principais
@@ -82,32 +106,39 @@ coordinates: Coordinates        # {lat, lng}
 leg_distance_km: Optional[float] # distância até a próxima parada (None na última)
 ```
 
-## Frontend (`app/static/index.html`)
+## Frontend (`app/static/index.html` + `app.js`)
 
-Alpine.js v3, sem build step, single-page:
+Alpine.js v3, sem build step, single-page. Lógica em `app.js`, markup em `index.html`, estilos em `style.css`.
 
-- **Persistência:** localStorage salva origin, dest, addresses entre sessões
-- **Autocomplete:** Google Places, debounce 400ms, em todos os inputs
-- **Geolocalização:** botão ⊕ chama `/api/v1/reverse`, auto-confirma a origem; só ícone no mobile (≤480px)
-- **Resultado:** badges 0 (origem), 1-N (paradas), F (destino); distância por trecho ↓ X km; link Google Maps
+- **Persistência:** localStorage salva origin, dest, addresses, fixedFirst, fixedLast entre sessões
+- **Autocomplete:** Google Places, debounce 400ms, em todos os inputs; `locationHint` (lat/lng) para boas sugestões
+- **Geolocalização:** botão chama `/api/v1/reverse`, auto-confirma a origem; texto oculto no mobile (≤480px)
+- **Paradas:** lista com accordion (5 visíveis, expand/collapse com animação `max-height`); busca inline; por parada: editar, excluir, definir como primeiro/último destino
+- **Importar endereços:** modal 2 passos — (1) dropzone CSV/XLSX, (2) preview com contagem + botões "Adicionar" / "Substituir"; parser CSV vanilla (auto-detect `,`/`;`); XLSX via SheetJS lazy-loaded do CDN
+- **Exportar paradas:** baixa `enderecos.csv` com colunas `endereco,descricao`; template também disponível
+- **Resultado:** mini-mapa SVG (fallback) + imagem Google Static Maps; timeline com badges 0/1-N/F; distância e tempo por trecho; link Google Maps
+- **Ações do resultado:** Abrir no Google Maps, Copiar rota (texto formatado), Compartilhar/Copiar link, Salvar rota, Exportar CSV/PDF (desabilitados)
 - **Copiar rota:** texto formatado com assinatura `findmyroute.com.br`
-- **Compartilhar rota / Copiar link:** chama `/api/v1/shorten` → URL curta `/r/CODE`; `navigator.share()` no mobile, clipboard no desktop; inclui mensagem contextual
-- **Limpar tudo:** reseta estado + localStorage
-- **Destino:** botão "← Usar mesmo endereço da origem" (aparece quando origem está definida)
-- **URL params:** `?origin=&dest=&a=` pré-preenche o formulário (usado pelo redirect de short links)
+- **Compartilhar:** chama `/api/v1/shorten` → URL curta `/r/CODE`; `navigator.share()` no mobile, clipboard no desktop
+- **Auth:** login por e-mail (magic token); sessão em localStorage (`routeSession`); avatar/iniciais no header; menu de usuário
+- **Rotas salvas:** modal "Minhas Rotas" — lista, carrega, exclui; modal com input de nome para salvar
+- **Drawer:** Nova rota (confirma se há conteúdo), Minhas rotas, Templates, Importar, Exportar, Template CSV, Ajuda, Entrar/Sair
+- **Limpar tudo:** modal de confirmação com opção de salvar antes; reseta estado + localStorage
+- **URL params:** `?origin=&dest=&a=` pré-preenche o formulário; `?saved=CODE` carrega rota salva; `?expired=1` exibe toast
 
 ## Segurança
 
-- **CORS:** restrito ao domínio de produção (`rotas.casapetcampinas.com.br` → migrar para `findmyroute.com.br`)
+- **CORS:** ainda restrito a `rotas.casapetcampinas.com.br` em `main.py` — **pendente migrar para `findmyroute.com.br`**
 - **Rate limiting:** slowapi por IP no código + Cloudflare Rate Limiting no painel (proteção dupla)
 - **Validação:** `Address` com `max_length=200`, addresses com `min_length=2, max_length=50`
+- **Auth:** token Bearer gerado por `secrets.token_urlsafe(32)`, armazenado no Turso; sem expiração por enquanto
 
 ## Deploy
 
 - **Railway** (Python) — auto-deploy via GitHub push
 - `Procfile`: `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Cloudflare** — DNS proxy + Rate Limiting configurado no painel
-- **Domínio atual:** `rotas.casapetcampinas.com.br` → **futuro:** `findmyroute.com.br`
+- **Cloudflare** — DNS proxy + Rate Limiting; domínio `findmyroute.com.br` já apontando via Cloudflare
+- **Domínio:** `findmyroute.com.br` (SEO e meta tags já atualizados); CORS no código ainda usa o domínio antigo
 
 ## Variáveis de ambiente (`.env`)
 
@@ -118,19 +149,24 @@ NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
 TSP_TIMEOUT_SECONDS=5
 MAX_ADDRESSES=50
 OSRM_BASE_URL=           # opcional; sem isso usa Haversine
+TURSO_DATABASE_URL=      # libsql://... — persistência de rotas salvas, users, sessions
+TURSO_AUTH_TOKEN=        # token de autenticação do Turso
 ```
 
-> **Nunca commitar o `.env`** — contém a API key do Google Maps.
+> **Nunca commitar o `.env`** — contém a API key do Google Maps e credenciais do Turso.
 
 ## Decisões técnicas relevantes
 
 - **`from __future__ import annotations` + Pydantic:** Não usar em arquivos que usem `Body(...)` como parâmetro — causa `ForwardRef` não resolvido em runtime. Em `routes.py` usar `Optional[X]` diretamente.
 - **`app/limiter.py` separado:** Evita circular import entre `main.py` e `routes.py`.
-- **Short links em memória (`storage.py`):** Links expiram no próximo deploy. Aceitável — usuário gera novo link se precisar.
+- **Short links em memória (`storage.py`):** Links `/r/{code}` expiram no próximo deploy. Rotas salvas (`/s/{code}`) são persistidas no Turso.
+- **Turso via HTTP:** `storage.py` usa a HTTP API do Turso (`/v2/pipeline`) com `httpx` — sem libsql-client. Tabelas: `routes`, `saved_routes`, `users`, `sessions`.
 - **Geocoding paralelo:** Google Maps usa `asyncio.gather`; Nominatim é sequencial com `sleep(1s)` (usage policy).
 - **OR-Tools endpoint fixo:** Quando `origin == destination` (retorno ao depósito), o nó é duplicado nas coordenadas para que OR-Tools trate como índices distintos.
 - **`leg_distance_km`:** Calculado direto da matriz em memória — sem custo extra de I/O.
-- **Geolocalização mobile:** Botão ⊕ só com SVG em telas ≤480px (`.btn-geo-text { display: none }`).
+- **Geolocalização mobile:** Texto do botão oculto em telas ≤480px (`.btn-geo-text { display: none }`).
+- **Import CSV/XLSX no frontend:** Parser CSV vanilla com detecção de delimitador (`,` vs `;`) e suporte RFC 4180. XLSX via SheetJS injetado lazily do CDN (`cdn.sheetjs.com`) apenas quando necessário.
+- **Accordion de paradas:** `x-show` com `x-transition` hooks de classe (`addr-enter/leave`) usando `max-height` para animação natural.
 
 ## Próximos passos
 
@@ -141,6 +177,11 @@ OSRM_BASE_URL=           # opcional; sem isso usa Haversine
 - [x] Geolocalização com reverse geocoding
 - [x] Short links para compartilhamento (`/r/{code}`)
 - [x] Distância por trecho no resultado (`leg_distance_km`)
-- [ ] **Migração de domínio** para `findmyroute.com.br` — atualizar CORS em `main.py`, URLs OG em `index.html`, textos de assinatura
+- [x] Auth + rotas salvas (Turso) — login por e-mail, salvar/carregar/excluir rotas
+- [x] Mini-mapa + imagem Google Static Maps
+- [x] Importar/exportar paradas (CSV/XLSX)
+- [x] SEO — canonical, robots.txt, sitemap.xml, Open Graph, Twitter Cards, JSON-LD, novo título
+- [x] Google Search Console — verificado via Cloudflare DNS; sitemap enviado
+- [ ] **Migração de domínio (CORS)** — atualizar `allow_origins` em `main.py` para `findmyroute.com.br`
 - [ ] Cache persistente de geocoding (Redis ou SQLite)
-- [ ] `GET /api/v1/routes/{id}` para consultar resultado de rota salva
+- [ ] Exportar rota otimizada como CSV/PDF

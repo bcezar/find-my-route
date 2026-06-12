@@ -440,77 +440,47 @@
     </div>
   </header>
 
-  <!-- Origin + Destination card -->
-  <div class="section">
-
-    <!-- Origin row -->
-    <div class="endpoint-row">
-      <div class="endpoint-icon icon-origin">▶</div>
-      <div class="endpoint-content">
-        <div class="endpoint-label">Ponto de partida (opcional)</div>
-        <div class="input-wrap" x-show="origin === ''" x-ref="originWrap">
-          <input type="text" placeholder="Ex.: Rua X, 123, Campinas/SP"
-                 x-model="originInput"
-                 @input.debounce.400ms="fetchSuggestions('origin', originInput)"
-                 @keydown.escape="originSuggestions = []"
-                 @keydown.enter="setOrigin()" />
-          <ul class="suggestions" x-show="originSuggestions.length > 0" @click.outside="originSuggestions = []">
-            <template x-for="s in originSuggestions" :key="s">
-              <li @mousedown.prevent="originInput = s; originSuggestions = []; setOrigin()" x-text="s"></li>
-            </template>
-          </ul>
-        </div>
-        <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
-      </div>
-      <div class="endpoint-actions">
-        <button class="btn btn-add" x-show="origin === ''" @click="setOrigin()" :disabled="originInput.trim() === ''">+</button>
-        <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
-        <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
-          <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
-          <span class="btn-geo-text" x-show="!geolocating">Localização</span>
-          <span x-show="geolocating">…</span>
-        </button>
-      </div>
+  <!-- How-to card -->
+  <div class="how-to-card">
+    <div class="how-to-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      Como usar o FindMyRoute
     </div>
-
-    <div class="endpoint-divider"></div>
-
-    <!-- Destination row -->
-    <div class="endpoint-row">
-      <div class="endpoint-icon icon-dest">⚑</div>
-      <div class="endpoint-content">
-        <div class="endpoint-label">Destino final (opcional)</div>
-        <div class="input-wrap" x-show="dest === ''">
-          <input type="text" placeholder="Ex.: Depósito, Rua Y, 456, Campinas/SP"
-                 x-model="destInput"
-                 @input.debounce.400ms="fetchSuggestions('dest', destInput)"
-                 @keydown.escape="destSuggestions = []"
-                 @keydown.enter="setDest()" />
-          <ul class="suggestions" x-show="destSuggestions.length > 0" @click.outside="destSuggestions = []">
-            <template x-for="s in destSuggestions" :key="s">
-              <li @mousedown.prevent="destInput = s; destSuggestions = []; setDest()" x-text="s"></li>
-            </template>
-          </ul>
-        </div>
-        <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
-        <button class="btn-copy-origin"
-                x-show="origin !== '' && dest === ''"
-                @click="destInput = origin; setDest()">← Usar mesmo endereço da origem</button>
+    <div class="how-to-steps">
+      <div class="how-to-step">
+        <span class="how-to-num">1</span>
+        <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/><circle cx="12" cy="8" r="2"/>
+        </svg>
+        <span>Adicione seus endereços</span>
       </div>
-      <div class="endpoint-actions">
-        <button class="btn btn-add" x-show="dest === ''" @click="setDest()" :disabled="destInput.trim() === ''">+</button>
-        <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
+      <div class="how-to-connector"></div>
+      <div class="how-to-step">
+        <span class="how-to-num">2</span>
+        <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+        <span>Escolha início e destino (opcional)</span>
       </div>
-    </div>
-
-  </div>
-
-  <!-- Info banner -->
-  <div class="info-banner">
-    <div class="info-banner-icon">✦</div>
-    <div>
-      <div class="info-banner-title">A ordem será calculada automaticamente</div>
-      <div class="info-banner-sub">Defina início e destino (opcional) e adicione suas paradas.</div>
+      <div class="how-to-connector"></div>
+      <div class="how-to-step">
+        <span class="how-to-num">3</span>
+        <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
+          <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
+        </svg>
+        <span>Clique em "Otimizar rota"</span>
+      </div>
+      <div class="how-to-connector"></div>
+      <div class="how-to-step">
+        <span class="how-to-num">4</span>
+        <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+        <span>Abra a rota no Google Maps</span>
+      </div>
     </div>
   </div>
 
@@ -754,6 +724,81 @@
       </template>
     </button>
   </div>
+
+    <!-- Info banner -->
+  <div class="info-banner">
+    <div class="info-banner-icon">✦</div>
+    <div>
+      <div class="info-banner-title">A ordem será calculada automaticamente</div>
+      <div class="info-banner-sub">Defina início e destino (opcional) e adicione suas paradas.</div>
+    </div>
+  </div>
+
+  <!-- Origin + Destination card -->
+  <div class="section">
+
+    <!-- Origin row -->
+    <div class="endpoint-row">
+      <div class="endpoint-icon icon-origin">▶</div>
+      <div class="endpoint-content">
+        <div class="endpoint-label">Ponto de partida (opcional)</div>
+        <div class="input-wrap" x-show="origin === ''" x-ref="originWrap">
+          <input type="text" placeholder="Ex.: Rua X, 123, Campinas/SP"
+                 x-model="originInput"
+                 @input.debounce.400ms="fetchSuggestions('origin', originInput)"
+                 @keydown.escape="originSuggestions = []"
+                 @keydown.enter="setOrigin()" />
+          <ul class="suggestions" x-show="originSuggestions.length > 0" @click.outside="originSuggestions = []">
+            <template x-for="s in originSuggestions" :key="s">
+              <li @mousedown.prevent="originInput = s; originSuggestions = []; setOrigin()" x-text="s"></li>
+            </template>
+          </ul>
+        </div>
+        <span class="set-label" x-show="origin !== ''" x-text="origin"></span>
+      </div>
+      <div class="endpoint-actions">
+        <button class="btn btn-add" x-show="origin === ''" @click="setOrigin()" :disabled="originInput.trim() === ''">+</button>
+        <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
+        <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
+          <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
+          <span class="btn-geo-text" x-show="!geolocating">Localização</span>
+          <span x-show="geolocating">…</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="endpoint-divider"></div>
+
+    <!-- Destination row -->
+    <div class="endpoint-row">
+      <div class="endpoint-icon icon-dest">⚑</div>
+      <div class="endpoint-content">
+        <div class="endpoint-label">Destino final (opcional)</div>
+        <div class="input-wrap" x-show="dest === ''">
+          <input type="text" placeholder="Ex.: Depósito, Rua Y, 456, Campinas/SP"
+                 x-model="destInput"
+                 @input.debounce.400ms="fetchSuggestions('dest', destInput)"
+                 @keydown.escape="destSuggestions = []"
+                 @keydown.enter="setDest()" />
+          <ul class="suggestions" x-show="destSuggestions.length > 0" @click.outside="destSuggestions = []">
+            <template x-for="s in destSuggestions" :key="s">
+              <li @mousedown.prevent="destInput = s; destSuggestions = []; setDest()" x-text="s"></li>
+            </template>
+          </ul>
+        </div>
+        <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
+        <button class="btn-copy-origin"
+                x-show="origin !== '' && dest === ''"
+                @click="destInput = origin; setDest()">← Usar mesmo endereço da origem</button>
+      </div>
+      <div class="endpoint-actions">
+        <button class="btn btn-add" x-show="dest === ''" @click="setDest()" :disabled="destInput.trim() === ''">+</button>
+        <button class="btn btn-remove" x-show="dest !== ''" @click="dest = ''; destInput = ''; destSuggestions = []">−</button>
+      </div>
+    </div>
+
+  </div>
+
 
   <!-- Error -->
   <div class="error" x-show="error !== ''" x-text="error"></div>
