@@ -185,3 +185,8 @@ TURSO_AUTH_TOKEN=        # token de autenticação do Turso
 - [ ] **Migração de domínio (CORS)** — atualizar `allow_origins` em `main.py` para `findmyroute.com.br`
 - [ ] Cache persistente de geocoding (Redis ou SQLite)
 - [ ] Exportar rota otimizada como CSV/PDF
+- [ ] **Upgrade de plano (freemium)** — modelo: 5 paradas grátis, 50 no plano Pro:
+  - Backend: validar `len(addresses) <= 5` para usuários sem plano Pro em `routes.py` (retornar 402 com mensagem de upgrade)
+  - Frontend: bloquear botão "Otimizar" com CTA de upgrade quando `addresses.length > 5 && !user?.isPro` — ver `app/static/app.js` linha ~937 (TODO marcado)
+  - Auth: adicionar campo `is_pro: bool` no modelo de usuário (`storage.py`, tabela `users`)
+  - Billing: integrar Stripe (cartão) ou Pix recorrente para ativação do plano Pro

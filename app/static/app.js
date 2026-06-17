@@ -934,6 +934,7 @@ function routeApp() {
       const incoming = this.importedRows;
       const current  = mode === 'replace' ? [] : this.addresses;
       const combined = [...current, ...incoming];
+      // TODO: enforce free plan limit (5 stops) — block here when user.isPro is false
       if (combined.length > 50) {
         this.importError = `Limite de 50 paradas excedido (${combined.length} no total). Reduza a quantidade e tente novamente.`;
         return;

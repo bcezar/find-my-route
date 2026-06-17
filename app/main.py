@@ -96,7 +96,7 @@ _SEO_PAGES: dict[str, dict[str, str]] = {
     },
     "roteirizador-gratuito": {
         "title": "Roteirizador Gratuito com Múltiplos Endereços — FindMyRoute",
-        "description": "O melhor roteirizador gratuito do Brasil. Sem cadastro, sem limite de uso. Otimize rotas com até 50 endereços e abra direto no Maps.",
+        "description": "O melhor roteirizador do Brasil. Grátis até 5 paradas, até 50 no plano Pro. Sem cadastro, sem complicação. Abra direto no Maps.",
         "template": "roteirizador-gratuito.html",
     },
     "google-maps-multiplos-enderecos": {
