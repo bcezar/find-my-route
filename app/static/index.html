@@ -59,6 +59,15 @@
   <script defer src="/app.js?v={{ js_version }}"></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
   {% if google_maps_key %}<script>window.GOOGLE_MAPS_KEY = "{{ google_maps_key }}";</script>{% endif %}
+  {% if ga_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ ga_measurement_id }}');
+  </script>
+  {% endif %}
 </head>
 <body>
 <div class="container" x-data="routeApp()">
@@ -1212,7 +1221,7 @@
 
     <!-- Actions -->
     <div class="result-actions">
-      <a class="maps-link" :href="result?.maps_url" target="_blank" x-show="result?.maps_url">
+      <a class="maps-link" :href="result?.maps_url" target="_blank" x-show="result?.maps_url" @click="_track('open_google_maps')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/>
           <circle cx="12" cy="8" r="2"/>

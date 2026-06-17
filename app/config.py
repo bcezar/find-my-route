@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     osrm_base_url: Optional[str] = None
     turso_database_url: Optional[str] = None
     turso_auth_token: Optional[str] = None
+    ga_measurement_id: Optional[str] = None
 
 
 settings = Settings()

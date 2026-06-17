@@ -212,6 +212,7 @@ function routeApp() {
       const v = this.newAddress.trim();
       if (v) {
         this.addresses.push({ address: v, description: this.newDescription.trim() });
+        this._track('stop_added', { total_stops: this.addresses.length });
         this.setLocationHint(v);
         this.newAddress = '';
         this.newDescription = '';
@@ -243,6 +244,10 @@ function routeApp() {
       this.editingIndex = null;
     },
     cancelEdit() { this.editingIndex = null; },
+
+    _track(eventName, params = {}) {
+      if (typeof gtag === 'function') gtag('event', eventName, params);
+    },
 
     _buildPins() {
       if (!this.result) return [];
@@ -465,6 +470,7 @@ function routeApp() {
         this.navPreference = provider;
         localStorage.setItem('navPreference', provider);
       }
+      this._track(provider === 'gmaps' ? 'open_google_maps' : 'open_waze');
       window.open(this.stopNavUrl(this.execStop, provider), '_blank');
       this.execNavOpen = false;
     },
@@ -940,6 +946,7 @@ function routeApp() {
         return;
       }
       this.addresses   = combined;
+      this._track('csv_imported', { count: incoming.length, mode });
       const count      = incoming.length;
       const action     = mode === 'replace' ? 'Substituídas' : 'Adicionadas';
       this.notice      = `${action} ${count} parada${count !== 1 ? 's' : ''}.`;
@@ -965,6 +972,7 @@ function routeApp() {
       if (!this.addresses.length) { this.notice = 'Nenhuma parada para exportar.'; setTimeout(() => { this.notice = ''; }, 2500); return; }
       const lines = ['endereco,descricao'];
       for (const a of this.addresses) lines.push(`${this._csvEscape(a.address)},${this._csvEscape(a.description)}`);
+      this._track('csv_exported', { stop_count: this.addresses.length });
       this._triggerDownload(lines.join('\r\n'), 'enderecos.csv', 'text/csv;charset=utf-8;');
     },
 
@@ -979,6 +987,8 @@ function routeApp() {
       if (this.fixedFirst) body.fixed_first = this.fixedFirst;
       if (this.fixedLast)  body.fixed_last  = this.fixedLast;
 
+      this._track('route_optimization_started', { stop_count: this.addresses.length });
+
       try {
         const res = await fetch('/api/v1/routes/optimize', {
           method:  'POST',
@@ -990,6 +1000,10 @@ function routeApp() {
           this.error = data.detail ?? `Erro ${res.status}`;
         } else {
           this.result = data;
+          this._track('route_optimization_success', {
+            stops: data.optimized_route?.length ?? 0,
+            distance_km: data.total_distance_km ?? 0,
+          });
           this.$nextTick(() => { this._renderMap(); });
           this.$nextTick(() => {
             const el = document.querySelector('.result-section');

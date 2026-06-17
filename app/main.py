@@ -75,6 +75,7 @@ async def index(request: Request):
         "css_version": _css_hash,
         "js_version": _js_hash,
         "google_maps_key": settings.google_maps_api_key or "",
+        "ga_measurement_id": settings.ga_measurement_id or "",
     })
 
 
@@ -136,6 +137,7 @@ async def seo_page(request: Request, slug: str):
         "title": page["title"],
         "description": page["description"],
         "canonical": f"{_BASE_URL}/{slug}",
+        "ga_measurement_id": settings.ga_measurement_id or "",
     })
 
 
