@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>{{ title }}</title>
+  <link rel="icon" type="image/png" href="/icon-find-my-route.png" />
+  <link rel="apple-touch-icon" href="/icon-find-my-route.png" />
+  <meta name="description" content="{{ description }}" />
+  <link rel="canonical" href="{{ canonical }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ canonical }}" />
+  <meta property="og:title" content="{{ title }}" />
+  <meta property="og:description" content="{{ description }}" />
+  <meta property="og:image" content="https://findmyroute.com.br/capa.png" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="Find My Route" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ title }}" />
+  <meta name="twitter:description" content="{{ description }}" />
+  <meta name="twitter:image" content="https://findmyroute.com.br/capa.png" />
+  <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="seo-page">
+
+  <header class="seo-header">
+    <a href="/" style="display:flex;align-items:center;gap:.5rem;text-decoration:none">
+      <img src="/logo-find-my-route.png" alt="FindMyRoute" class="seo-header-logo" />
+      <span class="seo-header-title">Find<span>My</span>Route</span>
+    </a>
+    <a href="/" class="seo-header-cta">Otimizar rota →</a>
+  </header>
+
+  <main class="seo-container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="seo-footer">
+    <p>© 2025 FindMyRoute · <a href="/">Otimizador de Rotas Gratuito</a> · <a href="/perguntas-frequentes">FAQ</a> · <a href="/como-funciona">Como funciona</a></p>
+  </footer>
+
+  {% block schema %}{% endblock %}
+</body>
+</html>

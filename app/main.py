@@ -3,9 +3,9 @@ from hashlib import md5
 from pathlib import Path
 from urllib.parse import urlencode
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
@@ -75,6 +75,67 @@ async def index(request: Request):
         "css_version": _css_hash,
         "js_version": _js_hash,
         "google_maps_key": settings.google_maps_api_key or "",
+    })
+
+
+_SEO_PAGES: dict[str, dict[str, str]] = {
+    "como-funciona": {
+        "title": "Como Funciona o FindMyRoute — Otimização de Rota com TSP",
+        "description": "Entenda como o FindMyRoute calcula a ordem ideal de visitas usando o algoritmo TSP. Economize tempo e combustível nas suas entregas.",
+        "template": "como-funciona.html",
+    },
+    "importar-enderecos-csv": {
+        "title": "Importar Endereços via CSV — FindMyRoute",
+        "description": "Aprenda a importar uma lista de endereços por arquivo CSV ou Excel no FindMyRoute. Roteirize dezenas de paradas em segundos.",
+        "template": "importar-enderecos-csv.html",
+    },
+    "otimizar-rota-entregas": {
+        "title": "Otimizar Rota de Entregas Gratuitamente — FindMyRoute",
+        "description": "Calcule a melhor ordem de entregas com múltiplos endereços. Reduza km rodados, economize combustível e faça mais entregas por dia.",
+        "template": "otimizar-rota-entregas.html",
+    },
+    "roteirizador-gratuito": {
+        "title": "Roteirizador Gratuito com Múltiplos Endereços — FindMyRoute",
+        "description": "O melhor roteirizador gratuito do Brasil. Sem cadastro, sem limite de uso. Otimize rotas com até 50 endereços e abra direto no Maps.",
+        "template": "roteirizador-gratuito.html",
+    },
+    "google-maps-multiplos-enderecos": {
+        "title": "Google Maps com Múltiplos Endereços Otimizados — FindMyRoute",
+        "description": "Supere o limite do Google Maps e otimize a ordem de visitas. O FindMyRoute calcula a rota ideal e abre automaticamente no Google Maps.",
+        "template": "google-maps-multiplos-enderecos.html",
+    },
+    "waze-multiplos-destinos": {
+        "title": "Waze com Múltiplos Destinos Otimizados — FindMyRoute",
+        "description": "Use o Waze com vários destinos em ordem otimizada. O FindMyRoute organiza suas paradas e abre cada uma diretamente no Waze.",
+        "template": "waze-multiplos-destinos.html",
+    },
+    "perguntas-frequentes": {
+        "title": "Perguntas Frequentes — FindMyRoute",
+        "description": "Tire suas dúvidas sobre o FindMyRoute: como otimizar rotas, importar endereços, usar com Google Maps e Waze, e muito mais.",
+        "template": "perguntas-frequentes.html",
+    },
+}
+
+_BASE_URL = "https://findmyroute.com.br"
+
+
+@app.get("/{slug}")
+async def seo_page(request: Request, slug: str):
+    # Serve known static files that need to bypass the SEO handler
+    if "." in slug:
+        static_file = _STATIC / slug
+        if static_file.exists() and static_file.is_file():
+            return FileResponse(str(static_file))
+        raise HTTPException(status_code=404)
+    page = _SEO_PAGES.get(slug)
+    if not page:
+        raise HTTPException(status_code=404)
+    return templates.TemplateResponse(page["template"], {
+        "request": request,
+        "css_version": _css_hash,
+        "title": page["title"],
+        "description": page["description"],
+        "canonical": f"{_BASE_URL}/{slug}",
     })
 
 

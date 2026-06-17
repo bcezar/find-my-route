@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Waze com Múltiplos Destinos Organizados</h1>
+  <p>O Waze é excelente para evitar trânsito, mas não suporta múltiplos destinos em uma única rota. O FindMyRoute preenche essa lacuna: calcula a sequência ideal e abre cada parada individualmente no Waze com um toque.</p>
+</div>
+
+<div class="seo-section">
+  <h2>O que o Waze não faz (e o FindMyRoute resolve)</h2>
+  <ul>
+    <li>O Waze <strong>não aceita múltiplas paradas</strong> em uma única rota</li>
+    <li>Não há como importar uma lista de endereços no Waze</li>
+    <li>Não existe otimização automática de sequência</li>
+    <li>Não há controle de quais endereços já foram visitados</li>
+  </ul>
+  <p>Com o FindMyRoute, você organiza tudo antes de sair e usa o Waze apenas para navegar, que é o que ele faz de melhor.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Como usar o Waze com o FindMyRoute</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Adicione seus destinos</strong> no FindMyRoute — até 50 endereços, um a um ou importando CSV.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Calcule a rota otimizada</strong> — a ordem que minimiza distância total é calculada em segundos.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Ative o Modo Execução</strong> — veja uma parada por vez com o endereço completo, distância e tempo estimado.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Toque em "Abrir no Waze"</strong> — o Waze abre direto com o endereço da parada atual. Após chegar, volte ao FindMyRoute e avance para a próxima.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Lembrar meu app favorito</h2>
+  <p>Se você prefere sempre o Waze, o FindMyRoute tem uma opção <em>"Lembrar minha escolha"</em>. Depois da primeira seleção, o botão passa a abrir o Waze diretamente, sem perguntar toda vez.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Por que usar o Waze para entregas?</h2>
+  <ul>
+    <li>Alertas de trânsito, radar e acidentes em tempo real</li>
+    <li>Roteamento dinâmico que recalcula ao longo da entrega</li>
+    <li>Comunidade ativa que reporta eventos nas vias</li>
+    <li>Gratuito, como o FindMyRoute</li>
+  </ul>
+</div>
+
+<a href="/" class="seo-cta">Criar rota e abrir no Waze →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FindMyRoute — Waze com Múltiplos Destinos",
+  "url": "https://findmyroute.com.br/waze-multiplos-destinos",
+  "description": "Organize múltiplos destinos e abra cada parada no Waze em ordem otimizada.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "pt-BR",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "BRL"}
+}
+</script>
+{% endblock %}

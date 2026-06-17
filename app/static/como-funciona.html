@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Como o FindMyRoute Otimiza sua Rota</h1>
+  <p>O FindMyRoute usa inteligência computacional para calcular a sequência de visitas que minimiza a distância total percorrida. Veja como funciona por baixo dos panos.</p>
+</div>
+
+<div class="seo-section">
+  <h2>O problema do Caixeiro Viajante (TSP)</h2>
+  <p>O desafio de visitar múltiplos endereços na ordem mais eficiente é chamado de <strong>Problema do Caixeiro Viajante</strong> (Travelling Salesman Problem, ou TSP). É um dos problemas mais estudados da ciência da computação.</p>
+  <p>Para 10 endereços, existem mais de 180.000 sequências possíveis. Para 20 endereços, esse número ultrapassa 1,2 quintilhão. Testar todas as combinações manualmente é impossível.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Como o FindMyRoute resolve isso</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Geocodificação</strong> — Cada endereço digitado é convertido em coordenadas geográficas (latitude e longitude) via Google Maps ou OpenStreetMap.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Matriz de distâncias</strong> — Calculamos a distância real de estrada entre todos os pares de endereços usando a API OSRM (Open Source Routing Machine).</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Otimização com OR-Tools</strong> — O algoritmo TSP do Google OR-Tools encontra a sequência de menor custo em segundos, usando metaheurística GLS (Guided Local Search).</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Resultado prático</strong> — Você recebe a lista ordenada com distância e tempo estimado por trecho, e um link direto para o Google Maps ou Waze já com a rota montada.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Ponto de partida e destino final</h2>
+  <p>Você pode (opcionalmente) definir um <strong>ponto de partida</strong> — como seu depósito ou endereço de trabalho — e um <strong>destino final</strong> fixo. O algoritmo respeita essas restrições e otimiza apenas as paradas intermediárias.</p>
+  <p>Também é possível marcar qualquer parada da lista como "primeiro destino" ou "último destino", forçando sua posição na rota sem remover as demais.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Quantos endereços posso usar?</h2>
+  <p>O FindMyRoute suporta até <strong>50 endereços por rota</strong>, o suficiente para a grande maioria das rotas de entrega e visitas comerciais. O tempo de cálculo é de aproximadamente 2 a 5 segundos para 50 paradas.</p>
+</div>
+
+<div class="seo-section">
+  <h2>É gratuito?</h2>
+  <p>Sim. O FindMyRoute é <strong>100% gratuito</strong>, sem cadastro obrigatório, sem limite de uso diário e sem propaganda intrusiva. Você pode otimizar quantas rotas quiser.</p>
+</div>
+
+<a href="/" class="seo-cta seo-cta-green">Otimizar minha rota agora →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Como otimizar uma rota com múltiplos endereços no FindMyRoute",
+  "description": "Passo a passo para calcular a melhor ordem de visitas ou entregas usando o FindMyRoute.",
+  "step": [
+    {"@type": "HowToStep", "name": "Adicione os endereços", "text": "Informe os endereços que precisa visitar no campo de paradas."},
+    {"@type": "HowToStep", "name": "Defina início e destino (opcional)", "text": "Informe de onde você parte e onde quer terminar, se necessário."},
+    {"@type": "HowToStep", "name": "Clique em Otimizar rota", "text": "O sistema calcula a sequência mais eficiente em segundos."},
+    {"@type": "HowToStep", "name": "Abra no Google Maps ou Waze", "text": "Com um clique, abra a rota otimizada diretamente no aplicativo de navegação."}
+  ]
+}
+</script>
+{% endblock %}

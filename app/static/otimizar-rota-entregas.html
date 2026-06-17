@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Otimize sua Rota de Entregas</h1>
+  <p>Entregadores, motoboys, representantes comerciais e equipes de campo: o FindMyRoute calcula a sequência ideal de visitas para você percorrer menos distância, gastar menos combustível e atender mais clientes no mesmo período.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Por que a ordem das entregas importa?</h2>
+  <p>Uma rota mal ordenada pode fazer você cruzar a cidade de um lado para o outro várias vezes. Estudos mostram que otimizar a sequência de entregas pode reduzir a distância total percorrida em <strong>20% a 40%</strong>.</p>
+  <p>Isso significa:</p>
+  <ul>
+    <li>Menos combustível gasto por rota</li>
+    <li>Menos desgaste no veículo</li>
+    <li>Mais entregas concluídas no mesmo horário</li>
+    <li>Menos horas extras de trabalho</li>
+    <li>Clientes atendidos em menor tempo de espera</li>
+  </ul>
+</div>
+
+<div class="seo-section">
+  <h2>Como usar para rotas de entrega</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Importe sua lista</strong> — Cole os endereços um a um ou importe direto de uma planilha CSV. Suporta até 50 endereços por rota.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Defina o ponto de partida</strong> — Informe o depósito, garagem ou endereço de saída. Você pode também definir onde terminar a rota.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Otimize com um clique</strong> — O algoritmo calcula a melhor sequência em segundos, com distância e tempo estimado por trecho.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Execute com o Modo Entrega</strong> — Navegue parada a parada, marque como entregue ou pule endereços fechados, tudo sem sair do celular.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Funciona no celular?</h2>
+  <p>Sim. O FindMyRoute é otimizado para uso mobile. Durante a rota, você pode usar o <strong>Modo Execução</strong> — uma tela dedicada que mostra uma parada por vez, com botões para navegar via Google Maps ou Waze, marcar como entregue ou pular endereços não encontrados.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Quem usa o FindMyRoute?</h2>
+  <ul>
+    <li>Entregadores de e-commerce e marketplace</li>
+    <li>Motoboys e motoristas de aplicativo</li>
+    <li>Representantes comerciais com visitas a clientes</li>
+    <li>Técnicos de campo e prestadores de serviço</li>
+    <li>Equipes de coleta e distribuição</li>
+    <li>Pequenos comércios com entrega própria</li>
+  </ul>
+</div>
+
+<a href="/" class="seo-cta seo-cta-green">Criar minha rota de entregas →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FindMyRoute — Otimizador de Rotas de Entrega",
+  "url": "https://findmyroute.com.br/otimizar-rota-entregas",
+  "description": "Otimize rotas de entrega com múltiplos endereços. Reduza distância percorrida e economize combustível.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "pt-BR",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "BRL"}
+}
+</script>
+{% endblock %}

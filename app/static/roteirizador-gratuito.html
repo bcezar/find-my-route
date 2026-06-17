@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Roteirizador Gratuito de Múltiplos Endereços</h1>
+  <p>O FindMyRoute é um roteirizador <strong>100% gratuito</strong>, sem cadastro, sem limite de rotas e sem anúncios. Digite seus endereços e receba a ordem ideal de visitas com um clique.</p>
+</div>
+
+<div class="seo-section">
+  <h2>O que você tem de graça</h2>
+  <ul>
+    <li><span class="seo-badge">Grátis</span> Otimização de até 50 endereços por rota</li>
+    <li><span class="seo-badge">Grátis</span> Importação de listas CSV e Excel</li>
+    <li><span class="seo-badge">Grátis</span> Integração com Google Maps e Waze</li>
+    <li><span class="seo-badge">Grátis</span> Mapa da rota com marcadores numerados</li>
+    <li><span class="seo-badge">Grátis</span> Modo Execução parada a parada</li>
+    <li><span class="seo-badge">Grátis</span> Compartilhamento de rota via link</li>
+    <li><span class="seo-badge">Grátis</span> Funciona no celular sem instalar app</li>
+  </ul>
+</div>
+
+<div class="seo-section">
+  <h2>Por que outras ferramentas cobram?</h2>
+  <p>Ferramentas como RouteXL, Circuit e OptimoRoute cobram mensalmente porque adicionam funcionalidades empresariais como rastreamento em tempo real, assinatura do entregador e integração com sistemas de gestão.</p>
+  <p>Para a grande maioria das necessidades — motoristas autônomos, pequenos comércios, representantes comerciais e equipes de até 50 paradas diárias — o FindMyRoute oferece tudo que é necessário, sem custo.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Preciso criar uma conta?</h2>
+  <p>Não. Você pode usar o FindMyRoute imediatamente, sem e-mail, sem senha e sem cartão de crédito. O histórico de endereços fica salvo automaticamente no seu navegador.</p>
+  <p>Se quiser <strong>salvar rotas</strong> para acessar de outro dispositivo, basta criar uma conta gratuita com seu e-mail.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Funciona offline?</h2>
+  <p>O FindMyRoute precisa de conexão com a internet para geocodificar endereços e calcular distâncias reais. Mas durante a execução da rota, após abrir o Google Maps ou Waze, esses apps podem funcionar offline dependendo dos mapas baixados.</p>
+</div>
+
+<a href="/" class="seo-cta seo-cta-green">Usar o roteirizador gratuito →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FindMyRoute — Roteirizador Gratuito",
+  "url": "https://findmyroute.com.br/roteirizador-gratuito",
+  "description": "Roteirizador gratuito com múltiplos endereços. Sem cadastro, sem limite, integrado com Google Maps e Waze.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "pt-BR",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "BRL"}
+}
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Google Maps com Múltiplos Endereços — sem o limite de 10 paradas</h1>
+  <p>O Google Maps aceita no máximo 10 paradas e não otimiza a ordem automaticamente. O FindMyRoute resolve os dois problemas: suporta até 50 endereços e calcula a sequência ideal antes de abrir no Maps.</p>
+</div>
+
+<div class="seo-section">
+  <h2>As limitações do Google Maps para múltiplas paradas</h2>
+  <ul>
+    <li><strong>Máximo de 10 paradas</strong> por rota no app mobile</li>
+    <li><strong>Sem otimização automática</strong> — a ordem é a que você inseriu</li>
+    <li><strong>Sem importação em massa</strong> — cada endereço é digitado manualmente</li>
+    <li><strong>Sem controle de progresso</strong> — não há como marcar paradas como concluídas</li>
+  </ul>
+</div>
+
+<div class="seo-section">
+  <h2>Como o FindMyRoute complementa o Google Maps</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Adicione até 50 endereços</strong> no FindMyRoute — manualmente ou importando uma planilha CSV.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Otimize a rota</strong> — o algoritmo TSP calcula a melhor sequência, economizando distância e tempo.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Abra no Google Maps</strong> — clique em "Abrir no Google Maps" e a rota é carregada automaticamente com todos os pontos em ordem otimizada.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Navegue normalmente</strong> — o Google Maps guia você de parada em parada com voz, evitando trânsito em tempo real.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>E o limite de 10 paradas do Maps?</h2>
+  <p>O link gerado pelo FindMyRoute usa o formato de URL do Google Maps que suporta múltiplos waypoints. Na prática, rotas com mais de 10 paradas podem ser abertas no browser desktop sem problemas. No app mobile, o Google Maps pode dividir automaticamente em segmentos.</p>
+  <p>Para a execução parada a parada no celular, recomendamos usar o <strong>Modo Execução</strong> do próprio FindMyRoute, que navega individualmente para cada parada via Google Maps ou Waze.</div>
+</div>
+
+<div class="seo-section">
+  <h2>Funciona com Google Maps offline?</h2>
+  <p>Sim. Se você tiver os mapas da região baixados no Google Maps, a navegação funciona mesmo sem internet. O FindMyRoute só precisa de conexão para o cálculo inicial da rota.</p>
+</div>
+
+<a href="/" class="seo-cta">Otimizar e abrir no Google Maps →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "FindMyRoute — Google Maps com Múltiplos Endereços",
+  "url": "https://findmyroute.com.br/google-maps-multiplos-enderecos",
+  "description": "Otimize rotas com mais de 10 endereços e abra direto no Google Maps com a ordem correta.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "pt-BR",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "BRL"}
+}
+</script>
+{% endblock %}

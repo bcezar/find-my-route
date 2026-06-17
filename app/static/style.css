@@ -1207,3 +1207,71 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 
 /* === FOOTER === */
 .footer-security { text-align: center; font-size: .73rem; color: #b0b7c3; margin-top: 1.5rem; }
+
+/* === SEO PAGES === */
+.seo-page {
+  display: block;
+  justify-content: unset;
+  padding: 0;
+  background: #f0f2f5;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111;
+}
+.seo-header {
+  background: #fff; border-bottom: 1px solid #e5e7eb;
+  padding: .85rem 1rem; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.seo-header-logo { width: 28px; height: 28px; border-radius: 7px; object-fit: cover; }
+.seo-header-title { font-size: 1rem; font-weight: 800; color: #111; letter-spacing: -.01em; text-decoration: none; }
+.seo-header-title span { color: #16a34a; }
+.seo-header-cta {
+  font-size: .8rem; font-weight: 700; color: #1d4ed8;
+  text-decoration: none; background: #eff6ff; border-radius: 8px;
+  padding: .3rem .65rem; transition: background .15s;
+}
+.seo-header-cta:hover { background: #dbeafe; }
+.seo-container { max-width: 700px; margin: 0 auto; padding: 1.75rem 1rem 3rem; }
+.seo-hero { margin-bottom: 1.75rem; }
+.seo-hero h1 { font-size: 1.55rem; font-weight: 900; color: #111; line-height: 1.25; margin-bottom: .65rem; }
+.seo-hero p  { font-size: .95rem; color: #6b7280; line-height: 1.65; }
+.seo-section { background: #fff; border-radius: 14px; padding: 1.25rem; margin-bottom: .85rem; }
+.seo-section h2 { font-size: 1.05rem; font-weight: 800; color: #111; margin-bottom: .6rem; }
+.seo-section h3 { font-size: .92rem; font-weight: 700; color: #374151; margin: .8rem 0 .3rem; }
+.seo-section p  { font-size: .88rem; color: #374151; line-height: 1.65; margin-bottom: .5rem; }
+.seo-section p:last-child { margin-bottom: 0; }
+.seo-section ul { padding-left: 1.2rem; display: flex; flex-direction: column; gap: .3rem; margin-bottom: .5rem; }
+.seo-section li { font-size: .88rem; color: #374151; line-height: 1.6; }
+.seo-steps { display: flex; flex-direction: column; gap: .6rem; }
+.seo-step { display: flex; align-items: flex-start; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid #f3f4f6; }
+.seo-step:last-child { border-bottom: none; }
+.seo-step-num {
+  width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #1d4ed8; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; flex-shrink: 0; margin-top: .05rem;
+}
+.seo-step-text { font-size: .88rem; color: #374151; line-height: 1.55; }
+.seo-step-text strong { color: #111; }
+.seo-cta {
+  display: block; text-align: center;
+  background: #1d4ed8; color: #fff; border-radius: 12px;
+  padding: .9rem 1.5rem; font-size: .95rem; font-weight: 700;
+  text-decoration: none; margin: 1.5rem 0;
+  transition: background .15s;
+}
+.seo-cta:hover { background: #1e40af; }
+.seo-cta-green { background: #16a34a; }
+.seo-cta-green:hover { background: #15803d; }
+.seo-faq-item { border-bottom: 1px solid #f3f4f6; padding: .8rem 0; }
+.seo-faq-item:last-child { border-bottom: none; }
+.seo-faq-q { font-size: .9rem; font-weight: 700; color: #111; margin-bottom: .35rem; }
+.seo-faq-a { font-size: .85rem; color: #6b7280; line-height: 1.6; }
+.seo-badge {
+  display: inline-block; background: #f0fdf4; color: #15803d;
+  border: 1px solid #bbf7d0; border-radius: 6px;
+  font-size: .72rem; font-weight: 700; padding: .15rem .45rem; margin-right: .3rem;
+}
+.seo-footer { text-align: center; padding: 1.5rem 1rem; font-size: .78rem; color: #9ca3af; }
+.seo-footer a { color: #6b7280; text-decoration: none; }
+.seo-footer a:hover { text-decoration: underline; }

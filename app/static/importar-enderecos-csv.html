@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Importe seus Endereços via CSV ou Excel</h1>
+  <p>Tem uma planilha com endereços de clientes ou pontos de entrega? O FindMyRoute aceita arquivos CSV e Excel (.xlsx) e importa todas as paradas de uma vez, sem digitação manual.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Formato aceito</h2>
+  <p>O arquivo precisa ter pelo menos uma coluna chamada <code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">endereco</code>. Você pode incluir também uma coluna <code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">descricao</code> com o nome do cliente, ponto de referência ou qualquer anotação.</p>
+  <p>Exemplo de CSV:</p>
+  <pre style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;font-size:.8rem;overflow-x:auto;margin:.5rem 0">endereco,descricao
+"Av. Paulista, 1000, São Paulo/SP","Cliente A"
+"Rua das Flores, 25, Campinas/SP","Farmácia João"
+"Praça da Sé, São Paulo/SP",""</pre>
+</div>
+
+<div class="seo-section">
+  <h2>Passo a passo para importar</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Abra o menu</strong> — Clique no ícone de menu (☰) no canto superior esquerdo ou clique em "⋮" (Mais opções) na seção de paradas.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Selecione "Importar CSV" ou "Importar XLS"</strong> — Escolha o formato do seu arquivo.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Selecione o arquivo</strong> — Arraste o arquivo para a área indicada ou clique para selecionar do seu dispositivo.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Confirme a importação</strong> — Você verá quantos endereços foram encontrados. Escolha entre "Adicionar" (manter paradas existentes) ou "Substituir" (recomeçar).</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Não tem um arquivo pronto?</h2>
+  <p>Você pode baixar um <strong>template CSV</strong> diretamente no app. Ele já vem com as colunas corretas e exemplos preenchidos. Basta substituir pelos seus endereços e reimportar.</p>
+  <p>O template está disponível no menu lateral em <em>"Baixar template CSV"</em> ou no modal de importação.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Delimitadores suportados</h2>
+  <p>O FindMyRoute detecta automaticamente se o CSV usa vírgula (<code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">,</code>) ou ponto e vírgula (<code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">;</code>) como separador, que é o padrão do Excel brasileiro. Não é necessário configurar nada.</p>
+</div>
+
+<a href="/" class="seo-cta">Importar minha lista de endereços →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Como importar endereços via CSV no FindMyRoute",
+  "description": "Guia passo a passo para importar uma lista de endereços em CSV ou Excel no roteirizador FindMyRoute.",
+  "step": [
+    {"@type": "HowToStep", "name": "Prepare o CSV", "text": "Crie um arquivo CSV com as colunas 'endereco' e 'descricao' (opcional)."},
+    {"@type": "HowToStep", "name": "Abra o menu de importação", "text": "Clique em Mais opções (⋮) na seção de paradas e selecione Importar CSV."},
+    {"@type": "HowToStep", "name": "Selecione o arquivo", "text": "Arraste o arquivo para a dropzone ou clique para selecionar."},
+    {"@type": "HowToStep", "name": "Confirme a importação", "text": "Revise a contagem e clique em Adicionar ou Substituir."}
+  ]
+}
+</script>
+{% endblock %}

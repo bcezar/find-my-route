@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Perguntas Frequentes</h1>
+  <p>Tire suas dúvidas sobre como usar o FindMyRoute para otimizar rotas de entrega, visitas comerciais e qualquer deslocamento com múltiplos endereços.</p>
+</div>
+
+<div class="seo-section">
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">O FindMyRoute é realmente gratuito?</div>
+    <div class="seo-faq-a">Sim, 100% gratuito. Sem cadastro obrigatório, sem plano pago, sem limite de uso diário. Você pode otimizar quantas rotas quiser, com até 50 endereços cada.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Quantos endereços posso adicionar por rota?</div>
+    <div class="seo-faq-a">Até 50 endereços por rota. Para a maioria das rotas de entrega e visitas comerciais do dia a dia, isso é mais do que suficiente.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Preciso instalar algum aplicativo?</div>
+    <div class="seo-faq-a">Não. O FindMyRoute funciona diretamente no navegador do celular ou computador, sem necessidade de instalação. Acesse em findmyroute.com.br.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Como a rota é aberta no Google Maps?</div>
+    <div class="seo-faq-a">Após otimizar, clique em "Abrir no Google Maps". O app abre automaticamente com todos os pontos já inseridos na ordem calculada. No celular, você pode usar o Modo Execução para navegar parada a parada.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Funciona com o Waze?</div>
+    <div class="seo-faq-a">Sim. No Modo Execução, cada parada tem um botão "Abrir no Waze" que leva diretamente ao endereço atual. O FindMyRoute lembra sua preferência para não perguntar toda vez.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Posso importar uma planilha de endereços?</div>
+    <div class="seo-faq-a">Sim. O FindMyRoute aceita arquivos CSV e Excel (.xlsx). O arquivo precisa ter uma coluna "endereco" e, opcionalmente, uma coluna "descricao". Você pode baixar um template de exemplo direto no app.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">A rota é calculada com distâncias reais de estrada ou em linha reta?</div>
+    <div class="seo-faq-a">Com distâncias reais de estrada, usando a API OSRM (Open Source Routing Machine). Isso garante que o algoritmo considere vias disponíveis, não apenas a distância geográfica em linha reta.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Posso definir de onde quero partir e onde terminar?</div>
+    <div class="seo-faq-a">Sim. Você pode definir um "Ponto de partida" (ex: seu depósito) e um "Destino final" (ex: retornar ao depósito). O algoritmo respeitará esses pontos fixos e otimizará apenas as paradas intermediárias.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Posso compartilhar a rota com outra pessoa?</div>
+    <div class="seo-faq-a">Sim. Após otimizar, clique em "Compartilhar" ou "Copiar link". Um link curto é gerado e pode ser enviado por WhatsApp, e-mail ou qualquer mensageiro. Quem receber verá a mesma lista de endereços.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">O que é o Modo Execução?</div>
+    <div class="seo-faq-a">É uma tela focada para uso em campo. Mostra uma parada por vez com o endereço completo, distância e tempo estimado, botões de navegação (Maps ou Waze), e opções para marcar como visitado, pular ou adicionar uma observação. Você avança para a próxima parada com o botão "Próxima →".</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Posso salvar rotas para usar no futuro?</div>
+    <div class="seo-faq-a">Sim. Crie uma conta gratuita com seu e-mail e você poderá salvar rotas com um nome e acessá-las de qualquer dispositivo em "Minhas Rotas".</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">O FindMyRoute funciona no interior / cidades pequenas?</div>
+    <div class="seo-faq-a">Sim. O sistema usa o Google Maps para geocodificar endereços e o OpenStreetMap como alternativa. A cobertura é boa em praticamente todo o Brasil, incluindo cidades menores.</div>
+  </div>
+</div>
+
+<a href="/" class="seo-cta seo-cta-green">Otimizar minha rota agora →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "O FindMyRoute é realmente gratuito?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Sim, 100% gratuito. Sem cadastro obrigatório, sem plano pago, sem limite de uso diário."}
+    },
+    {
+      "@type": "Question",
+      "name": "Quantos endereços posso adicionar por rota?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Até 50 endereços por rota."}
+    },
+    {
+      "@type": "Question",
+      "name": "Preciso instalar algum aplicativo?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Não. O FindMyRoute funciona diretamente no navegador, sem instalação."}
+    },
+    {
+      "@type": "Question",
+      "name": "Como a rota é aberta no Google Maps?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Após otimizar, clique em 'Abrir no Google Maps'. O app abre com todos os pontos já na ordem calculada."}
+    },
+    {
+      "@type": "Question",
+      "name": "Funciona com o Waze?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Sim. No Modo Execução, cada parada tem um botão que abre diretamente no Waze."}
+    },
+    {
+      "@type": "Question",
+      "name": "Posso importar uma planilha de endereços?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Sim. Aceita arquivos CSV e Excel com uma coluna 'endereco' e opcionalmente 'descricao'."}
+    },
+    {
+      "@type": "Question",
+      "name": "A rota usa distâncias reais de estrada?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Sim, usando a API OSRM com distâncias reais de estrada."}
+    },
+    {
+      "@type": "Question",
+      "name": "O que é o Modo Execução?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Tela focada para uso em campo. Mostra uma parada por vez com navegação, marcação de visitado e controle de progresso."}
+    }
+  ]
+}
+</script>
+{% endblock %}
