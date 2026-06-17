@@ -55,6 +55,188 @@
 <body>
 <div class="container" x-data="routeApp()">
 
+  <!-- MODO EXECUÇÃO -->
+  <div class="exec-overlay" x-show="execMode" x-transition style="display:none">
+
+    <!-- Header -->
+    <div class="exec-header">
+      <button class="exec-back" @click="exitExecMode()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Voltar
+      </button>
+      <span class="exec-title">Modo Execução</span>
+      <span class="exec-progress" x-text="(execStopIndex + 1) + ' / ' + execTotal"></span>
+    </div>
+
+    <!-- Corpo rolável -->
+    <div class="exec-body">
+
+      <!-- Card da parada -->
+      <div class="exec-stop-card" x-show="execStop">
+
+        <!-- Badge numérico -->
+        <div class="exec-stop-badge"
+             :class="{ 'exec-badge-visited': visitedStops[execStop?.order], 'exec-badge-skipped': skippedStops[execStop?.order] }"
+             x-text="visitedStops[execStop?.order] ? '✓' : skippedStops[execStop?.order] ? '—' : (execStopIndex + 1)">
+        </div>
+
+        <!-- Endereço -->
+        <div class="exec-stop-desc" x-show="getStopInfo(execStop?.original_address).description"
+             x-text="getStopInfo(execStop?.original_address).description"></div>
+        <div class="exec-stop-street" x-text="streetPart(execStop?.original_address ?? '')"></div>
+        <div class="exec-stop-rest" x-show="restPart(execStop?.original_address ?? '')"
+             x-text="restPart(execStop?.original_address ?? '')"></div>
+
+        <!-- Stats -->
+        <div class="exec-stats" x-show="execStop?.leg_distance_km != null">
+          <div class="exec-stat">
+            <div class="exec-stat-label">Distância até aqui</div>
+            <div class="exec-stat-value" x-text="execStop?.leg_distance_km + ' km'"></div>
+          </div>
+          <div class="exec-stat" x-show="execStop?.leg_duration_min != null">
+            <div class="exec-stat-label">Tempo estimado</div>
+            <div class="exec-stat-value" x-text="formatDuration(execStop?.leg_duration_min)"></div>
+          </div>
+        </div>
+
+        <!-- Observação salva -->
+        <div class="exec-obs-saved" x-show="stopObservations[execStop?.order]"
+             x-text="'📝 ' + stopObservations[execStop?.order]"></div>
+
+        <!-- Botão Iniciar Rota -->
+        <button class="btn-exec-nav" @click="openExecNav()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+          <span x-text="navPreference ? (navPreference === 'gmaps' ? 'Abrir no Google Maps' : 'Abrir no Waze') : 'Iniciar Rota'"></span>
+        </button>
+
+        <!-- Link para trocar preferência se ela já estiver salva -->
+        <button class="btn-exec-change-nav" x-show="navPreference" @click="forgetNavPreference()">
+          Trocar app de navegação
+        </button>
+
+        <!-- Mais Ações -->
+        <!-- Ações inline (grid 2×2) -->
+        <div class="exec-actions-grid">
+          <button class="exec-action-btn"
+                  :class="{ 'exec-action-btn-green': visitedStops[execStop?.order] }"
+                  @click="toggleVisited(execStop.order, $event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span x-text="visitedStops[execStop?.order] ? 'Visitado ✓' : 'Marcar visitado'"></span>
+          </button>
+          <button class="exec-action-btn"
+                  :class="{ 'exec-action-btn-gray': skippedStops[execStop?.order] }"
+                  @click="toggleSkipped(execStop.order, $event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/>
+            </svg>
+            <span x-text="skippedStops[execStop?.order] ? 'Pulado →' : 'Pular parada'"></span>
+          </button>
+          <button class="exec-action-btn" @click="copyStopAddress()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>Copiar endereço</span>
+          </button>
+          <button class="exec-action-btn"
+                  :class="{ 'exec-action-btn-active': execObsOpen }"
+                  @click="execObsInput = stopObservations[execStop?.order] ?? ''; execObsOpen = !execObsOpen">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            <span>Observação</span>
+          </button>
+        </div>
+
+        <!-- Input de observação -->
+        <div class="exec-obs-input-wrap" x-show="execObsOpen" x-transition>
+          <textarea class="exec-obs-input" placeholder="Ex: portão azul, ligar antes…"
+                    x-model="execObsInput" rows="2"></textarea>
+          <div class="exec-obs-actions">
+            <button class="btn-exec-obs-save" @click="saveExecObs()">Salvar</button>
+            <button class="btn-exec-obs-cancel" @click="execObsOpen = false">Cancelar</button>
+          </div>
+        </div>
+
+      </div><!-- /exec-stop-card -->
+
+      <!-- Tip card laranja -->
+      <div class="exec-tip-card">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.05rem">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>Dica: marque como visitado ao chegar para avançar para a próxima parada.</span>
+      </div>
+
+    </div><!-- /exec-body -->
+
+    <!-- Bottom-sheet: escolha do app de navegação -->
+    <div class="exec-nav-sheet-overlay" x-show="execNavOpen" x-transition @click.self="execNavOpen = false">
+      <div class="exec-nav-sheet">
+        <div class="exec-nav-sheet-handle"></div>
+        <p class="exec-nav-sheet-title">Como deseja navegar?</p>
+        <div class="exec-nav-sheet-address" x-show="execStop">
+          <div class="exec-nav-sheet-name" x-show="getStopInfo(execStop?.original_address).description"
+               x-text="getStopInfo(execStop?.original_address).description"></div>
+          <div class="exec-nav-sheet-street" x-text="streetPart(execStop?.original_address ?? '')"></div>
+          <div class="exec-nav-sheet-rest" x-show="restPart(execStop?.original_address ?? '')"
+               x-text="restPart(execStop?.original_address ?? '')"></div>
+        </div>
+        <button class="btn-exec-sheet-nav btn-exec-sheet-gmaps" @click="openNavWith('gmaps')">
+          <img src="/gmaps_icon.svg" width="28" height="28" alt="Google Maps" />
+          <span>Google Maps</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+        <button class="btn-exec-sheet-nav btn-exec-sheet-waze" @click="openNavWith('waze')">
+          <img src="/waze-icon.svg" width="28" height="28" alt="Waze" />
+          <span>Waze</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+        <label class="exec-nav-sheet-remember">
+          <input type="checkbox" x-model="navRemember" />
+          <span>Lembrar minha escolha</span>
+        </label>
+        <button class="btn-exec-sheet-cancel" @click="execNavOpen = false">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Footer fixo -->
+    <div class="exec-footer">
+      <button class="btn-exec-prev" @click="execPrev()" :disabled="execStopIndex === 0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Anterior
+      </button>
+      <div class="exec-footer-dots">
+        <template x-for="(_, i) in (result?.optimized_route ?? [])" :key="i">
+          <span class="exec-dot"
+                :class="{
+                  'exec-dot-active':   i === execStopIndex,
+                  'exec-dot-visited':  visitedStops[result.optimized_route[i].order],
+                  'exec-dot-skipped':  skippedStops[result.optimized_route[i].order]
+                }"></span>
+        </template>
+      </div>
+      <button class="btn-exec-next" @click="execNext()" :disabled="execStopIndex >= execTotal - 1">
+        Próxima
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+
+  </div><!-- /exec-overlay -->
+
   <!-- Toast -->
   <div class="toast" x-show="notice !== ''" x-transition>
     <span class="toast-msg" x-text="notice"></span>
@@ -879,6 +1061,10 @@
         <div class="result-stat-label">Paradas</div>
         <div class="result-stat-value" x-text="result?.optimized_route?.length"></div>
       </div>
+      <div class="result-stat" x-show="visitedCount > 0">
+        <div class="result-stat-label">Visitadas</div>
+        <div class="result-stat-value green" x-text="visitedCount + ' de ' + result?.optimized_route?.length"></div>
+      </div>
     </div>
 
     <!-- Timeline -->
@@ -905,38 +1091,46 @@
       <!-- Intermediate stops -->
       <template x-for="stop in result?.optimized_route" :key="stop.order">
         <li class="route-item"
-            :class="{ 'route-item-selected': selectedStop === stop.order }"
+            :class="{ 'route-item-visited': visitedStops[stop.order], 'route-item-skipped': skippedStops[stop.order] }"
             :data-stop="stop.order"
-            @click="selectedStop = selectedStop === stop.order ? null : stop.order; _updateMarkerIcons()">
-          <div class="route-num-col">
-            <div class="route-num" x-text="stop.order"></div>
-            <div class="route-num-line"></div>
+            x-init="initSwipe($el, stop.order)"
+            @click="enterExecModeAt(stop.order)">
+          <!-- Reveal direita — Visitado -->
+          <div class="swipe-reveal swipe-reveal-right">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Visitado</span>
           </div>
-          <div class="route-content">
-            <div class="route-desc" x-show="getStopInfo(stop.original_address).description"
-                 x-text="getStopInfo(stop.original_address).description"></div>
-            <div :class="getStopInfo(stop.original_address).description ? 'route-rest' : 'route-street'"
-                 x-text="streetPart(stop.original_address)"></div>
-            <div class="route-rest" x-show="restPart(stop.original_address)" x-text="restPart(stop.original_address)"></div>
-            <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
-            <div class="stop-nav-btns" x-show="selectedStop === stop.order" x-transition>
-              <a class="btn-stop-nav btn-stop-nav-gmaps"
-                 :href="stopNavUrl(stop, 'gmaps')" target="_blank" @click.stop>
-                <img src="/gmaps_icon.svg" width="15" height="15" alt="Google Maps" />
-                Navegar com Google Maps
-              </a>
-              <a class="btn-stop-nav btn-stop-nav-waze"
-                 :href="stopNavUrl(stop, 'waze')" target="_blank" @click.stop>
-                <img src="/waze-icon.svg" width="15" height="15" alt="Waze" />
-                Navegar com Waze
-              </a>
+          <!-- Reveal esquerda — Pular -->
+          <div class="swipe-reveal swipe-reveal-left">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/>
+            </svg>
+            <span>Pular</span>
+          </div>
+          <!-- Conteúdo deslizável -->
+          <div class="swipe-inner">
+            <div class="route-num-col">
+              <div class="route-num"
+                   :class="{ 'route-num-done': visitedStops[stop.order], 'route-num-skipped': skippedStops[stop.order] }"
+                   x-text="visitedStops[stop.order] ? '✓' : skippedStops[stop.order] ? '—' : stop.order"></div>
+              <div class="route-num-line"></div>
             </div>
-          </div>
-          <div class="route-right" x-show="stop.leg_distance_km != null">
-            <div class="route-leg-pill">
-              <span class="route-leg-km" x-text="stop.leg_distance_km + ' km'"></span>
-              <span class="route-leg-min" x-show="stop.leg_duration_min != null"
-                    x-text="formatDuration(stop.leg_duration_min) + ' 🚗'"></span>
+            <div class="route-content">
+              <div class="route-desc" x-show="getStopInfo(stop.original_address).description"
+                   x-text="getStopInfo(stop.original_address).description"></div>
+              <div :class="getStopInfo(stop.original_address).description ? 'route-rest' : 'route-street'"
+                   x-text="streetPart(stop.original_address)"></div>
+              <div class="route-rest" x-show="restPart(stop.original_address)" x-text="restPart(stop.original_address)"></div>
+              <div class="route-coords" x-text="stop.coordinates.lat.toFixed(5) + ', ' + stop.coordinates.lng.toFixed(5)"></div>
+            </div>
+            <div class="route-right" x-show="stop.leg_distance_km != null">
+              <div class="route-leg-pill">
+                <span class="route-leg-km" x-text="stop.leg_distance_km + ' km'"></span>
+                <span class="route-leg-min" x-show="stop.leg_duration_min != null"
+                      x-text="formatDuration(stop.leg_duration_min) + ' 🚗'"></span>
+              </div>
             </div>
           </div>
         </li>
@@ -969,6 +1163,14 @@
         <div class="result-success-sub">Esta é a melhor sequência encontrada para seus destinos.</div>
       </div>
     </div>
+
+    <!-- CTA Modo Execução -->
+    <button class="btn-exec-mode" @click="enterExecMode()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+      Iniciar Execução da Rota
+    </button>
 
     <!-- Actions -->
     <div class="result-actions">

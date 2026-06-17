@@ -37,6 +37,17 @@ function routeApp() {
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
     selectedStop:   null,
+    visitedStops:   {},
+    skippedStops:   {},
+    execMode:         false,
+    execStopIndex:    0,
+    execNavOpen:      false,
+    navPreference:    null,   // 'gmaps' | 'waze' | null
+    navRemember:      false,
+    execMoreOpen:     false,
+    execObsOpen:      false,
+    execObsInput:     '',
+    stopObservations: {},
     _mapInstance:   null,
     _mapMarkers:    [],
     error:          '',
@@ -59,6 +70,9 @@ function routeApp() {
       const idx = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getDay();
       return `Ex: Entregas ${days[idx]}`;
     },
+    get visitedCount() { return Object.keys(this.visitedStops).length; },
+    get execStop() { return this.result?.optimized_route?.[this.execStopIndex] ?? null; },
+    get execTotal() { return this.result?.optimized_route?.length ?? 0; },
 
     templates: [
       { name: 'Entrega Campinas',      count: 20 },
@@ -74,6 +88,12 @@ function routeApp() {
           this._authToken = s.token;
           this.user = s.user;
         } catch (_) {}
+      }
+
+      const savedNav = localStorage.getItem('navPreference');
+      if (savedNav === 'gmaps' || savedNav === 'waze') {
+        this.navPreference = savedNav;
+        this.navRemember   = true;
       }
 
       const params    = new URLSearchParams(location.search);
@@ -357,19 +377,60 @@ function routeApp() {
 
     _updateMarkerIcons() {
       for (const m of this._mapMarkers) {
-        const active = m._stopOrder === this.selectedStop;
+        const active   = m._stopOrder === this.selectedStop;
+        const visited  = !!this.visitedStops[m._stopOrder];
+        const skipped  = !!this.skippedStops[m._stopOrder];
+        const color    = visited ? '#16a34a' : skipped ? '#9ca3af' : (active ? '#1e40af' : '#1d4ed8');
+        const opacity  = skipped ? 0.6 : visited ? 0.85 : 1;
         m.setIcon({
           path: google.maps.SymbolPath.CIRCLE,
           scale: active ? 13 : 11,
-          fillColor: active ? '#1e40af' : '#1d4ed8',
-          fillOpacity: 1,
-          strokeWeight: active ? 3 : 2,
-          strokeColor: '#fff',
+          fillColor: color, fillOpacity: opacity,
+          strokeWeight: active ? 3 : 2, strokeColor: '#fff',
         });
-        if (m.getLabel) {
-          m.setLabel({ text: String(m._stopOrder), color: '#fff', fontSize: active ? '12px' : '11px', fontWeight: 'bold' });
+        m.setLabel({
+          text: visited ? '✓' : skipped ? '—' : String(m._stopOrder),
+          color: '#fff',
+          fontSize: active ? '12px' : '11px',
+          fontWeight: 'bold',
+        });
+      }
+    },
+
+    toggleVisited(order, event) {
+      event.stopPropagation();
+      if (this.visitedStops[order]) {
+        const next = { ...this.visitedStops };
+        delete next[order];
+        this.visitedStops = next;
+      } else {
+        this.visitedStops = { ...this.visitedStops, [order]: true };
+        // desmarcar "pular" se estava pulado
+        if (this.skippedStops[order]) {
+          const next = { ...this.skippedStops };
+          delete next[order];
+          this.skippedStops = next;
         }
       }
+      this._updateMarkerIcons();
+    },
+
+    toggleSkipped(order, event) {
+      event.stopPropagation();
+      if (this.skippedStops[order]) {
+        const next = { ...this.skippedStops };
+        delete next[order];
+        this.skippedStops = next;
+      } else {
+        this.skippedStops = { ...this.skippedStops, [order]: true };
+        // desmarcar "visitado" se estava visitado
+        if (this.visitedStops[order]) {
+          const next = { ...this.visitedStops };
+          delete next[order];
+          this.visitedStops = next;
+        }
+      }
+      this._updateMarkerIcons();
     },
 
     _scrollToStop(order) {
@@ -383,6 +444,128 @@ function routeApp() {
       const { lat, lng } = stop.coordinates;
       if (provider === 'waze') return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
       return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    },
+
+    openExecNav() {
+      if (this.navPreference) {
+        // preferência salva — abre direto sem popup
+        window.open(this.stopNavUrl(this.execStop, this.navPreference), '_blank');
+      } else {
+        this.execNavOpen = !this.execNavOpen;
+      }
+    },
+
+    openNavWith(provider) {
+      if (this.navRemember) {
+        this.navPreference = provider;
+        localStorage.setItem('navPreference', provider);
+      }
+      window.open(this.stopNavUrl(this.execStop, provider), '_blank');
+      this.execNavOpen = false;
+    },
+
+    forgetNavPreference() {
+      this.navPreference = null;
+      this.navRemember   = false;
+      localStorage.removeItem('navPreference');
+    },
+
+    enterExecModeAt(order) {
+      const idx = this.result?.optimized_route?.findIndex(s => s.order === order) ?? 0;
+      this.execStopIndex = Math.max(0, idx);
+      this.execNavOpen = false; this.execMoreOpen = false; this.execObsOpen = false;
+      this.execMode = true;
+    },
+
+    markVisitedByOrder(order) {
+      if (this.visitedStops[order]) return;
+      this.visitedStops = { ...this.visitedStops, [order]: true };
+      if (this.skippedStops[order]) { const n = { ...this.skippedStops }; delete n[order]; this.skippedStops = n; }
+      this._updateMarkerIcons();
+    },
+
+    skipByOrder(order) {
+      if (this.skippedStops[order]) return;
+      this.skippedStops = { ...this.skippedStops, [order]: true };
+      if (this.visitedStops[order]) { const n = { ...this.visitedStops }; delete n[order]; this.visitedStops = n; }
+      this._updateMarkerIcons();
+    },
+
+    initSwipe(el, order) {
+      let startX = 0, startY = 0, currentDx = 0, swipeConsumed = false;
+      const THRESHOLD = 80;
+
+      el.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentDx = 0; swipeConsumed = false;
+        const inner = el.querySelector('.swipe-inner');
+        if (inner) inner.style.transition = 'none';
+      }, { passive: true });
+
+      el.addEventListener('touchmove', e => {
+        const ddx = e.touches[0].clientX - startX;
+        const ddy = e.touches[0].clientY - startY;
+        if (Math.abs(ddy) > Math.abs(ddx) + 8) return;
+        currentDx = ddx;
+        const inner = el.querySelector('.swipe-inner');
+        if (inner) inner.style.transform = `translateX(${currentDx}px)`;
+        el.classList.toggle('swipe-hinting-right', currentDx > 20);
+        el.classList.toggle('swipe-hinting-left',  currentDx < -20);
+      }, { passive: true });
+
+      el.addEventListener('touchend', () => {
+        const inner = el.querySelector('.swipe-inner');
+        if (inner) { inner.style.transition = 'transform .25s ease'; inner.style.transform = 'translateX(0)'; }
+        el.classList.remove('swipe-hinting-right', 'swipe-hinting-left');
+        if (currentDx > THRESHOLD) { swipeConsumed = true; this.markVisitedByOrder(order); }
+        else if (currentDx < -THRESHOLD) { swipeConsumed = true; this.skipByOrder(order); }
+        currentDx = 0;
+      });
+
+      el.addEventListener('click', e => {
+        if (swipeConsumed) { e.stopImmediatePropagation(); swipeConsumed = false; }
+      }, true);
+    },
+
+    enterExecMode() {
+      this.execStopIndex = 0;
+      this.execNavOpen   = false;
+      this.execMoreOpen  = false;
+      this.execObsOpen   = false;
+      this.execMode      = true;
+    },
+    exitExecMode() { this.execMode = false; },
+
+    execPrev() {
+      if (this.execStopIndex > 0) {
+        this.execStopIndex--;
+        this.execMoreOpen = false; this.execNavOpen = false; this.execObsOpen = false;
+      }
+    },
+    execNext() {
+      if (this.execStopIndex < this.execTotal - 1) {
+        this.execStopIndex++;
+        this.execMoreOpen = false; this.execNavOpen = false; this.execObsOpen = false;
+      }
+    },
+
+    saveExecObs() {
+      const stop = this.execStop;
+      if (!stop) return;
+      this.stopObservations = { ...this.stopObservations, [stop.order]: this.execObsInput.trim() };
+      this.execObsOpen  = false;
+      this.execObsInput = '';
+    },
+
+    copyStopAddress() {
+      const stop = this.execStop;
+      if (!stop) return;
+      navigator.clipboard.writeText(stop.original_address).then(() => {
+        this.notice = 'Endereço copiado!';
+        setTimeout(() => { this.notice = ''; }, 2000);
+      });
+      this.execMoreOpen = false;
     },
 
     cancelAddAddress() {
@@ -473,8 +656,12 @@ function routeApp() {
       this.addresses   = (inp.addresses ?? []).map(a => ({ address: a, description: '' }));
       this.origin      = inp.origin      ?? ''; this.originInput = this.origin;
       this.dest        = inp.destination ?? ''; this.destInput   = this.dest;
-      this.result      = route.result    ?? null;
-      this.fixedFirst  = null; this.fixedLast = null;
+      this.result       = route.result ?? null;
+      this.fixedFirst   = null; this.fixedLast = null;
+      this.selectedStop = null;
+      this.visitedStops = {};
+      this.skippedStops = {};
+      this.execMode     = false; this.execStopIndex = 0; this.stopObservations = {};
       this.myRoutesOpen = false;
       this.notice = `Rota "${route.name}" carregada.`;
       setTimeout(() => { this.notice = ''; }, 3000);
@@ -504,6 +691,9 @@ function routeApp() {
       this.locationHint = null;
       this.result = null;
       this.selectedStop = null;
+      this.visitedStops = {};
+      this.skippedStops = {};
+      this.execMode     = false; this.execStopIndex = 0; this.stopObservations = {};
       this._mapInstance = null;
       this._mapMarkers = [];
       this.error  = '';
