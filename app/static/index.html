@@ -170,7 +170,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.05rem">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <span>Dica: marque como visitado ao chegar para avançar para a próxima parada.</span>
+        <span>Dica: na lista, arraste para a direita para marcar como visitado e para a esquerda para pular uma parada.</span>
       </div>
 
     </div><!-- /exec-body -->
@@ -624,7 +624,7 @@
   </header>
 
   <!-- How-to card -->
-  <div class="how-to-card">
+  <div class="how-to-card" x-show="howToVisible" x-transition>
     <div class="how-to-header">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
@@ -637,7 +637,7 @@
         <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/><circle cx="12" cy="8" r="2"/>
         </svg>
-        <span>Adicione seus endereços</span>
+        <span>Adicione seus endereços de entrega ou visita</span>
       </div>
       <div class="how-to-connector"></div>
       <div class="how-to-step">
@@ -645,7 +645,7 @@
         <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
         </svg>
-        <span>Escolha início e destino (opcional)</span>
+        <span>Defina início e destino (opcional)</span>
       </div>
       <div class="how-to-connector"></div>
       <div class="how-to-step">
@@ -660,11 +660,14 @@
       <div class="how-to-step">
         <span class="how-to-num">4</span>
         <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+          <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
-        <span>Abra a rota no Google Maps</span>
+        <span>Use "Iniciar Execução" e navegue parada a parada</span>
       </div>
     </div>
+    <button class="how-to-dismiss" @click="howToVisible = false; localStorage.setItem('howToSeen', '1')">
+      Entendi, não mostrar mais
+    </button>
   </div>
 
   <!-- Stops section -->
@@ -1065,6 +1068,33 @@
         <div class="result-stat-label">Visitadas</div>
         <div class="result-stat-value green" x-text="visitedCount + ' de ' + result?.optimized_route?.length"></div>
       </div>
+    </div>
+
+    <!-- Swipe hint -->
+    <div class="swipe-hint" x-show="result !== null && !swipeHintSeen" x-transition>
+      <div class="swipe-hint-row">
+        <span class="swipe-hint-left">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Pular
+        </span>
+        <span class="swipe-hint-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5a2 2 0 0 0-2-2 2 2 0 0 0-2 2V17a5 5 0 0 0 5 5h1a5 5 0 0 0 5-5v-5a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/>
+          </svg>
+          Arraste as paradas
+        </span>
+        <span class="swipe-hint-right">
+          Visitado
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </span>
+      </div>
+      <button class="swipe-hint-dismiss"
+              @click="swipeHintSeen = true; localStorage.setItem('swipeHintSeen', '1')"
+              aria-label="Fechar dica">✕</button>
     </div>
 
     <!-- Timeline -->

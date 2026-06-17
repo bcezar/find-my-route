@@ -37,6 +37,8 @@ function routeApp() {
     canNativeShare: typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     result:         null,
     selectedStop:   null,
+    howToVisible:   true,
+    swipeHintSeen:  false,
     visitedStops:   {},
     skippedStops:   {},
     execMode:         false,
@@ -95,6 +97,9 @@ function routeApp() {
         this.navPreference = savedNav;
         this.navRemember   = true;
       }
+
+      if (localStorage.getItem('howToSeen') === '1') this.howToVisible  = false;
+      if (localStorage.getItem('swipeHintSeen') === '1') this.swipeHintSeen = true;
 
       const params    = new URLSearchParams(location.search);
       const urlOrigin = params.get('origin');

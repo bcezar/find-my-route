@@ -1167,5 +1167,43 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 }
 .btn-exec-mode:hover { background: #1e40af; }
 
+/* === HOW-TO DISMISS === */
+.how-to-dismiss {
+  display: block; margin: .75rem auto 0;
+  background: none; border: none; cursor: pointer;
+  font-size: .73rem; color: #6b7280; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.how-to-dismiss:hover { color: #374151; }
+
+/* === SWIPE HINT === */
+.swipe-hint {
+  display: flex; align-items: center; gap: .5rem;
+  background: #f0f9ff; border: 1.5px solid #bae6fd;
+  border-radius: 12px; padding: .55rem .8rem;
+  margin-bottom: .6rem;
+}
+.swipe-hint-row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex: 1; gap: .5rem;
+}
+.swipe-hint-left, .swipe-hint-right {
+  display: flex; align-items: center; gap: .3rem;
+  font-size: .75rem; font-weight: 700; white-space: nowrap;
+}
+.swipe-hint-left  { color: #dc2626; }
+.swipe-hint-right { color: #15803d; }
+.swipe-hint-center {
+  display: flex; align-items: center; gap: .3rem;
+  font-size: .72rem; color: #0369a1; font-weight: 600;
+  flex: 1; justify-content: center; text-align: center;
+}
+.swipe-hint-dismiss {
+  background: none; border: none; cursor: pointer;
+  font-size: .85rem; color: #9ca3af; line-height: 1;
+  flex-shrink: 0; padding: .1rem .25rem;
+}
+.swipe-hint-dismiss:hover { color: #374151; }
+
 /* === FOOTER === */
 .footer-security { text-align: center; font-size: .73rem; color: #b0b7c3; margin-top: 1.5rem; }
