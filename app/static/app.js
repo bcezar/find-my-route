@@ -674,6 +674,7 @@ function routeApp() {
       this.skippedStops = {};
       this.execMode     = false; this.execStopIndex = 0; this.stopObservations = {};
       this.myRoutesOpen = false;
+      this._track('route_loaded', { stop_count: this.addresses.length });
       this.notice = `Rota "${route.name}" carregada.`;
       setTimeout(() => { this.notice = ''; }, 3000);
     },
