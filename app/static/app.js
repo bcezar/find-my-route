@@ -103,12 +103,16 @@ function routeApp() {
       if (localStorage.getItem('howToSeen') === '1') this.howToVisible  = false;
       if (localStorage.getItem('swipeHintSeen') === '1') this.swipeHintSeen = true;
 
-      // Handle OAuth/magic-link callback params
-      const params = new URLSearchParams(location.search);
+      const params       = new URLSearchParams(location.search);
       const sessionToken = params.get('session');
       const authError    = params.get('auth_error');
+      const urlOrigin    = params.get('origin');
+      const urlDest      = params.get('dest');
+      const urlAddrs     = params.getAll('a');
+      const urlSaved     = params.get('saved');
+
+      // Handle OAuth/magic-link callback params
       if (sessionToken) {
-        // Fetch full user from /auth/me, persist session
         fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${sessionToken}` } })
           .then(r => r.ok ? r.json() : null)
           .then(userData => {
@@ -129,12 +133,6 @@ function routeApp() {
         setTimeout(() => { this.notice = ''; }, 5000);
         history.replaceState(null, '', location.pathname);
       }
-
-      const params    = new URLSearchParams(location.search);
-      const urlOrigin = params.get('origin');
-      const urlDest   = params.get('dest');
-      const urlAddrs  = params.getAll('a');
-      const urlSaved  = params.get('saved');
 
       if (urlSaved) {
         fetch(`/api/v1/routes/saved/${urlSaved}`)
