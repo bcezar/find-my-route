@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Body, HTTPException, Request
 from pydantic import BaseModel
@@ -80,7 +78,7 @@ async def billing_webhook(request: Request):
     payment = payload.get("payment", {})
 
     # Identify user: prefer externalReference on payment, fall back to subscription's externalReference
-    user_id: str | None = payment.get("externalReference")
+    user_id: Optional[str] = payment.get("externalReference")
     if not user_id:
         customer_id = payment.get("customer")
         if customer_id:
