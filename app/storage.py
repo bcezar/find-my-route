@@ -44,8 +44,11 @@ async def _execute(sql: str, args: list | None = None, *, ignore_error: bool = F
         raise
 
 
-def _cell(cell) -> str:
-    return cell["value"] if isinstance(cell, dict) else cell
+def _cell(cell):
+    if isinstance(cell, dict):
+        v = cell.get("value")
+        return None if v in (None, "null") else v
+    return None if cell in (None, "null") else cell
 
 
 def _now_iso() -> str:
@@ -180,11 +183,17 @@ async def delete_result(code: str, user_id: str) -> None:
 # ── Users & sessions ─────────────────────────────────────────────────────────
 
 def _row_to_user(row: list) -> dict:
+    def _int(v) -> int:
+        try:
+            return int(v) if v is not None else 0
+        except (TypeError, ValueError):
+            return 0
+
     return {
         "id":             _cell(row[0]),
         "email":          _cell(row[1]),
-        "is_pro":         bool(int(_cell(row[2]) or 0)),
-        "email_verified": bool(int(_cell(row[3]) or 0)),
+        "is_pro":         bool(_int(_cell(row[2]))),
+        "email_verified": bool(_int(_cell(row[3]))),
         "name":           _cell(row[4]) if len(row) > 4 else None,
         "picture_url":    _cell(row[5]) if len(row) > 5 else None,
     }
