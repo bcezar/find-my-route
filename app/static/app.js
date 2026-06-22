@@ -108,6 +108,16 @@ function routeApp() {
           const s = JSON.parse(session);
           this._authToken = s.token;
           this.user = s.user;
+          // Always revalidate session to pick up server-side changes (e.g. is_pro upgrade)
+          fetch('/api/v1/auth/me', { headers: { Authorization: `Bearer ${s.token}` } })
+            .then(r => r.ok ? r.json() : null)
+            .then(userData => {
+              if (userData) {
+                this.user = userData;
+                localStorage.setItem('routeSession', JSON.stringify({ token: s.token, user: userData }));
+              }
+            })
+            .catch(() => {});
         } catch (_) {}
       }
 
