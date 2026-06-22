@@ -49,7 +49,7 @@ def _cell(cell) -> str:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
 async def init_db() -> None:
@@ -269,7 +269,7 @@ async def find_or_create_user_google(email: str, google_sub: str,
 async def create_session(user_id: str) -> str:
     token = secrets.token_urlsafe(32)
     from datetime import timedelta
-    expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
     if _turso_configured():
         await _execute(
             "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
@@ -310,7 +310,7 @@ async def delete_session(token: str) -> None:
 async def create_magic_token(user_id: str) -> str:
     from datetime import timedelta
     token = secrets.token_urlsafe(32)
-    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
+    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
     if _turso_configured():
         await _execute(
             "INSERT INTO magic_tokens (token, user_id, expires_at) VALUES (?, ?, ?)",
@@ -357,7 +357,7 @@ async def mark_email_verified(user_id: str) -> None:
 async def create_oauth_state() -> str:
     from datetime import timedelta
     state = secrets.token_urlsafe(16)
-    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
+    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
     if _turso_configured():
         await _execute(
             "INSERT INTO oauth_states (state, expires_at) VALUES (?, ?)",

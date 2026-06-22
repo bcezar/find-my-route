@@ -113,17 +113,17 @@ function routeApp() {
 
       // Handle OAuth/magic-link callback params
       if (sessionToken) {
-        fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${sessionToken}` } })
-          .then(r => r.ok ? r.json() : null)
-          .then(userData => {
-            if (userData) {
-              this._authToken = sessionToken;
-              this.user = userData;
-              localStorage.setItem('routeSession', JSON.stringify({ token: sessionToken, user: userData }));
-            }
-          })
-          .catch(() => {});
         history.replaceState(null, '', location.pathname);
+        fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${sessionToken}` } })
+          .then(r => r.ok ? r.json() : Promise.reject('auth/me failed'))
+          .then(userData => {
+            this._authToken = sessionToken;
+            this.user = userData;
+            localStorage.setItem('routeSession', JSON.stringify({ token: sessionToken, user: userData }));
+          })
+          .catch(err => {
+            console.error('[auth] session callback error:', err);
+          });
       } else if (authError === 'expired') {
         this.notice = 'Link expirado. Solicite um novo acesso.';
         setTimeout(() => { this.notice = ''; }, 5000);
