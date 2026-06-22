@@ -945,6 +945,41 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 }
 .btn-clear-cancel:hover { background: #f9fafb; }
 
+/* === UPGRADE MODAL === */
+.upgrade-header { text-align: center; margin-bottom: 1.25rem; }
+.upgrade-title  { font-size: 1.2rem; font-weight: 800; color: #111; margin: .4rem 0 .2rem; }
+.upgrade-price  { font-size: 1.6rem; font-weight: 800; color: #7c3aed; }
+.upgrade-price span { font-size: .9rem; font-weight: 500; color: #6b7280; }
+.upgrade-benefits {
+  list-style: none; padding: 0; margin: 0 0 1.25rem;
+  display: flex; flex-direction: column; gap: .4rem;
+  text-align: left;
+}
+.upgrade-benefits li { font-size: .9rem; color: #374151; display: flex; align-items: center; gap: .5rem; }
+.upgrade-benefits li::before { content: '✓'; color: #7c3aed; font-weight: 700; }
+.upgrade-form { display: flex; flex-direction: column; gap: .65rem; text-align: left; }
+.upgrade-label { font-size: .8rem; font-weight: 600; color: #374151; }
+.upgrade-input {
+  width: 100%; padding: .6rem .75rem; border: 1.5px solid #d1d5db; border-radius: 10px;
+  font-size: .95rem; color: #111; outline: none; box-sizing: border-box;
+}
+.upgrade-input:focus { border-color: #7c3aed; }
+.upgrade-billing-toggle { display: flex; gap: .5rem; }
+.upgrade-billing-btn {
+  flex: 1; padding: .55rem; border: 1.5px solid #d1d5db; border-radius: 10px;
+  font-size: .9rem; font-weight: 600; color: #374151; background: #fff; cursor: pointer;
+  transition: all .15s;
+}
+.upgrade-billing-btn-active { border-color: #7c3aed; background: #f5f3ff; color: #7c3aed; }
+.btn-upgrade-confirm {
+  width: 100%; padding: .8rem; background: #7c3aed; color: #fff;
+  border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.btn-upgrade-confirm:hover:not(:disabled) { background: #6d28d9; }
+.btn-upgrade-confirm:disabled { background: #c4b5fd; cursor: default; }
+.upgrade-footer { font-size: .75rem; color: #9ca3af; text-align: center; margin: 0; }
+
 /* === HOW-TO CARD === */
 .how-to-card {
   background: #f0fdf4;

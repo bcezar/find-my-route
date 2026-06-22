@@ -14,7 +14,7 @@ from slowapi import _rate_limit_exceeded_handler
 from app import storage
 from app.config import settings
 from app.limiter import limiter
-from app.routers import routes
+from app.routers import billing, routes
 
 
 _STATIC = Path(__file__).parent / "static"
@@ -43,6 +43,7 @@ app.add_middleware(
 )
 
 app.include_router(routes.router, prefix="/api/v1")
+app.include_router(billing.router, prefix="/api/v1")
 
 
 @app.get("/health")

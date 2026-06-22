@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     app_base_url: str = "https://findmyroute.com.br"
     google_client_id: Optional[str] = None
     google_client_secret: Optional[str] = None
+    asaas_api_key: Optional[str] = None
+    asaas_webhook_token: Optional[str] = None
+    asaas_base_url: str = "https://sandbox.asaas.com/api/v3"
+    pro_price: float = 29.90
 
 
 settings = Settings()

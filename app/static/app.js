@@ -71,6 +71,10 @@ function routeApp() {
     myRoutesLoading:    false,
     anonOptCount:       0,
     anonOptDate:        '',
+    upgradeOpen:        false,
+    upgradeCpf:         '',
+    upgradeBillingType: 'PIX',
+    upgradeLoading:     false,
     get stopLimit() { return this.user?.is_pro ? 50 : 5; },
     get anonOptsRemaining() {
       if (this.user) return Infinity;
@@ -151,6 +155,23 @@ function routeApp() {
         this.notice = 'Não foi possível autenticar. Tente novamente.';
         setTimeout(() => { this.notice = ''; }, 5000);
         history.replaceState(null, '', location.pathname);
+      }
+
+      if (params.get('upgraded') === '1') {
+        history.replaceState(null, '', location.pathname);
+        // Revalidate session to refresh is_pro flag
+        if (this._authToken) {
+          fetch('/api/v1/auth/me', { headers: { Authorization: `Bearer ${this._authToken}` } })
+            .then(r => r.ok ? r.json() : null)
+            .then(userData => {
+              if (userData) {
+                this.user = userData;
+                localStorage.setItem('routeSession', JSON.stringify({ token: this._authToken, user: userData }));
+              }
+            });
+        }
+        this.notice = 'Bem-vindo ao Plano Pro! Agora você tem até 50 paradas.';
+        setTimeout(() => { this.notice = ''; }, 6000);
       }
 
       if (urlSaved) {
@@ -1100,6 +1121,36 @@ function routeApp() {
         this.error = 'Erro de conexão com a API.';
       } finally {
         this.loading = false;
+      }
+    },
+
+    async startCheckout() {
+      if (!this.user) { this.loginOpen = true; return; }
+      this.upgradeLoading = true;
+      this.error = '';
+      const cpf = this.upgradeCpf.replace(/\D/g, '');
+      if (cpf.length !== 11 && cpf.length !== 14) {
+        this.error = 'Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.';
+        this.upgradeLoading = false;
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/billing/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this._authToken}` },
+          body: JSON.stringify({ cpf_cnpj: cpf, billing_type: this.upgradeBillingType }),
+        });
+        const data = await res.json();
+        if (res.ok && data.payment_url) {
+          this.upgradeOpen = false;
+          window.open(data.payment_url, '_blank');
+        } else {
+          this.error = typeof data.detail === 'string' ? data.detail : 'Erro ao iniciar pagamento.';
+        }
+      } catch (e) {
+        this.error = 'Erro de conexão. Tente novamente.';
+      } finally {
+        this.upgradeLoading = false;
       }
     },
   };
