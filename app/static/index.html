@@ -665,15 +665,23 @@
           <template x-if="user">
             <div>
               <div class="user-menu-profile">
-                <div class="user-menu-name" x-text="user.email"></div>
-                <div class="user-menu-plan">Plano: Free</div>
+                <div class="user-menu-name" x-text="user.name || user.email"></div>
+                <div class="user-menu-plan" x-text="'Plano: ' + (user.is_pro ? 'Pro' : 'Free')"></div>
               </div>
               <div class="user-menu-divider"></div>
               <button class="user-menu-item user-menu-item-disabled">Perfil</button>
-              <button class="user-menu-item user-menu-item-disabled">
-                Upgrade de Plano
-                <span class="user-menu-soon">até 50 paradas no plano Pro</span>
-              </button>
+              <template x-if="!user.is_pro">
+                <button class="user-menu-item user-menu-item-disabled">
+                  Upgrade para Pro
+                  <span class="user-menu-soon">até 50 paradas + otimizações ilimitadas</span>
+                </button>
+              </template>
+              <template x-if="user.is_pro">
+                <button class="user-menu-item user-menu-item-disabled">
+                  Plano Pro ativo
+                  <span class="user-menu-soon">50 paradas + otimizações ilimitadas</span>
+                </button>
+              </template>
               <div class="user-menu-divider"></div>
               <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
             </div>
@@ -1076,8 +1084,9 @@
 
   <!-- Optimize button -->
   <button class="btn-optimize"
-          @click="optimize()"
-          :disabled="loading || addresses.length < 2">
+          @click="canOptimize && !loading ? optimize() : null"
+          :disabled="loading || addresses.length < 2"
+          :class="{'btn-optimize-blocked': !canOptimize && !loading && addresses.length >= 2}">
     <svg x-show="!loading" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
       <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
@@ -1085,6 +1094,23 @@
     <span x-show="!loading">Otimizar rota</span>
     <span x-show="loading">Calculando…</span>
   </button>
+
+  <!-- Plan limit hints -->
+  <div class="limit-hint" x-show="addresses.length > stopLimit">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Plano <strong x-text="user?.is_pro ? 'Pro' : 'Free'"></strong> suporta até <strong x-text="stopLimit"></strong> paradas.
+    <template x-if="!user">
+      <button class="limit-hint-cta" @click="loginOpen = true">Cadastre-se grátis</button>
+    </template>
+    <template x-if="user && !user.is_pro">
+      <span class="limit-hint-pro">Upgrade para Pro</span>
+    </template>
+  </div>
+  <div class="limit-hint" x-show="!user && anonOptCount >= 5 && addresses.length <= stopLimit">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Você usou suas <strong>5 otimizações gratuitas</strong> de hoje.
+    <button class="limit-hint-cta" @click="loginOpen = true">Cadastre-se grátis para ilimitadas</button>
+  </div>
 
   <!-- Mini map -->
   <div class="mini-map-card" x-show="result !== null" x-transition style="margin-top:.75rem">

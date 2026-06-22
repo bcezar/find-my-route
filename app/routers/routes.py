@@ -313,9 +313,28 @@ async def reverse_geocode(request: Request, lat: float = QueryParam(...), lng: f
     return {"address": address}
 
 
+_FREE_STOP_LIMIT = 5
+_PRO_STOP_LIMIT  = 50
+
+
 @router.post("/routes/optimize", response_model=RouteResponse)
 @limiter.limit("20/minute")
 async def optimize_route(request: Request, body: RouteRequest = Body(...)):
+    # Enforce per-plan stop limit (auth is optional — anon users have no token)
+    token = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+    current_user = await storage.get_user_by_token(token) if token else None
+    is_pro = bool(current_user.get("is_pro", False)) if current_user else False
+    stop_limit = _PRO_STOP_LIMIT if is_pro else _FREE_STOP_LIMIT
+    if len(body.addresses) > stop_limit:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "STOP_LIMIT_EXCEEDED",
+                "limit": stop_limit,
+                "is_pro": is_pro,
+            },
+        )
+
     # Collect all addresses that need geocoding (no duplicates)
     to_geocode = list(dict.fromkeys(
         ([body.origin] if body.origin else [])

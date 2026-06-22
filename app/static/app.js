@@ -69,6 +69,19 @@ function routeApp() {
     myRoutesOpen:       false,
     myRoutes:           [],
     myRoutesLoading:    false,
+    anonOptCount:       0,
+    anonOptDate:        '',
+    get stopLimit() { return this.user?.is_pro ? 50 : 5; },
+    get anonOptsRemaining() {
+      if (this.user) return Infinity;
+      return Math.max(0, 5 - this.anonOptCount);
+    },
+    get canOptimize() {
+      if (this.addresses.length < 2) return false;
+      if (this.addresses.length > this.stopLimit) return false;
+      if (!this.user && this.anonOptCount >= 5) return false;
+      return true;
+    },
     get saveRoutePlaceholder() {
       const days = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
       const idx = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getDay();
@@ -102,6 +115,12 @@ function routeApp() {
 
       if (localStorage.getItem('howToSeen') === '1') this.howToVisible  = false;
       if (localStorage.getItem('swipeHintSeen') === '1') this.swipeHintSeen = true;
+
+      // Load anon optimization counter (resets daily)
+      const today = new Date().toISOString().slice(0, 10);
+      const anonData = JSON.parse(localStorage.getItem('anonOpts') || '{}');
+      this.anonOptDate  = today;
+      this.anonOptCount = anonData.date === today ? (anonData.count ?? 0) : 0;
 
       const params       = new URLSearchParams(location.search);
       const sessionToken = params.get('session');
@@ -1052,8 +1071,20 @@ function routeApp() {
         });
         const data = await res.json();
         if (!res.ok) {
-          this.error = data.detail ?? `Erro ${res.status}`;
+          // Show user-friendly message for plan limit errors
+          if (res.status === 403 && data.detail?.code === 'STOP_LIMIT_EXCEEDED') {
+            this.error = this.user
+              ? `Seu plano suporta até ${data.detail.limit} paradas. Faça upgrade para o Plano Pro.`
+              : `Limite de ${data.detail.limit} paradas para uso gratuito. Cadastre-se para ilimitadas.`;
+          } else {
+            this.error = typeof data.detail === 'string' ? data.detail : `Erro ${res.status}`;
+          }
         } else {
+          // Increment anon daily optimization counter
+          if (!this.user) {
+            this.anonOptCount++;
+            localStorage.setItem('anonOpts', JSON.stringify({ date: this.anonOptDate, count: this.anonOptCount }));
+          }
           this.result = data;
           this._track('route_optimization_success', {
             stops: data.optimized_route?.length ?? 0,
