@@ -2,14 +2,30 @@ from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse, Response
 
 from app import storage
+from app.config import settings
 from app.limiter import limiter
-from app.models import Coordinates, LoginRequest, LoginResponse, MapImageRequest, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop, SaveRouteRequest, UserResponse
+from app.models import (
+    Coordinates, LoginRequest, LoginResponse, MagicRequestBody, MagicRequestResponse,
+    MapImageRequest, OriginInfo, PolylineRequest, RouteRequest, RouteResponse, RouteStop,
+    SaveRouteRequest, UserResponse,
+)
 from app.services import directions, distance, geocoding, optimizer, static_maps
 
 router = APIRouter()
+
+
+def _user_response(user: dict) -> dict:
+    return {
+        "id":             user["id"],
+        "email":          user["email"],
+        "is_pro":         user.get("is_pro", False),
+        "email_verified": user.get("email_verified", False),
+        "name":           user.get("name"),
+        "picture_url":    user.get("picture_url"),
+    }
 
 
 async def _require_auth(request: Request) -> dict:
@@ -22,18 +38,169 @@ async def _require_auth(request: Request) -> dict:
     return user
 
 
+# ── Auth: e-mail simples (mantido para retrocompatibilidade) ─────────────────
+
 @router.post("/auth/login", response_model=LoginResponse)
 @limiter.limit("10/minute")
 async def login(request: Request, body: LoginRequest = Body(...)):
     user = await storage.find_or_create_user(body.email.lower().strip())
     token = await storage.create_session(user["id"])
-    return {"token": token, "user": {"id": user["id"], "email": user["email"]}}
+    return {"token": token, "user": _user_response(user)}
+
+
+@router.post("/auth/logout")
+async def logout(request: Request):
+    token = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+    if token:
+        await storage.delete_session(token)
+    return {"ok": True}
 
 
 @router.get("/auth/me", response_model=UserResponse)
 async def me(request: Request):
     user = await _require_auth(request)
-    return {"id": user["id"], "email": user["email"]}
+    return _user_response(user)
+
+
+# ── Auth: Magic Link ──────────────────────────────────────────────────────────
+
+async def _send_magic_email(to_email: str, magic_token: str) -> None:
+    if not settings.resend_api_key:
+        return
+    link = f"{settings.app_base_url}/api/v1/auth/verify?token={magic_token}"
+    import resend
+    resend.api_key = settings.resend_api_key
+    resend.Emails.send({
+        "from": f"FindMyRoute <{settings.resend_from_email}>",
+        "to": [to_email],
+        "subject": "Seu link de acesso — FindMyRoute",
+        "html": f"""
+        <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:2rem">
+          <img src="https://findmyroute.com.br/logo-find-my-route.png"
+               width="40" style="border-radius:10px;margin-bottom:1.5rem" />
+          <h2 style="color:#111;margin:0 0 .5rem">Acesse o FindMyRoute</h2>
+          <p style="color:#6b7280;margin:0 0 1.5rem">
+            Clique no botão abaixo para entrar. O link expira em <strong>15 minutos</strong>.
+          </p>
+          <a href="{link}"
+             style="display:inline-block;background:#1d4ed8;color:#fff;
+                    padding:.8rem 1.5rem;border-radius:10px;text-decoration:none;
+                    font-weight:700;font-size:1rem">
+            Entrar no FindMyRoute
+          </a>
+          <p style="color:#9ca3af;font-size:.8rem;margin-top:2rem">
+            Se você não solicitou este link, ignore este e-mail.
+          </p>
+        </div>
+        """,
+    })
+
+
+@router.post("/auth/magic-request", response_model=MagicRequestResponse)
+@limiter.limit("3/hour")
+async def magic_request(request: Request, body: MagicRequestBody = Body(...)):
+    email = body.email.lower().strip()
+    user = await storage.find_or_create_user(email)
+    magic_token = await storage.create_magic_token(user["id"])
+    # fire-and-forget — não bloqueia o response se o e-mail demorar
+    import asyncio
+    asyncio.create_task(_send_magic_email(email, magic_token))
+    return {"ok": True}
+
+
+@router.get("/auth/verify")
+async def verify_magic(request: Request, token: str = QueryParam(...)):
+    user_id = await storage.consume_magic_token(token)
+    if not user_id:
+        return RedirectResponse(url="/?auth_error=expired", status_code=302)
+    session_token = await storage.create_session(user_id)
+    # mark email as verified
+    await storage.mark_email_verified(user_id)
+    return RedirectResponse(
+        url=f"/?session={session_token}",
+        status_code=302,
+    )
+
+
+# ── Auth: Google OAuth ────────────────────────────────────────────────────────
+
+@router.get("/auth/google/init")
+@limiter.limit("10/minute")
+async def google_init(request: Request):
+    if not settings.google_client_id:
+        raise HTTPException(status_code=501, detail="Google OAuth não configurado.")
+    state = await storage.create_oauth_state()
+    params = {
+        "client_id":     settings.google_client_id,
+        "redirect_uri":  f"{settings.app_base_url}/api/v1/auth/google/callback",
+        "response_type": "code",
+        "scope":         "openid email profile",
+        "state":         state,
+        "access_type":   "online",
+        "prompt":        "select_account",
+    }
+    from urllib.parse import urlencode
+    redirect_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
+    return {"redirect_url": redirect_url}
+
+
+@router.get("/auth/google/callback")
+async def google_callback(
+    request: Request,
+    code: Optional[str] = QueryParam(None),
+    state: Optional[str] = QueryParam(None),
+    error: Optional[str] = QueryParam(None),
+):
+    if error or not code or not state:
+        return RedirectResponse(url="/?auth_error=google_failed", status_code=302)
+
+    valid = await storage.consume_oauth_state(state)
+    if not valid:
+        return RedirectResponse(url="/?auth_error=google_failed", status_code=302)
+
+    # Exchange code for tokens
+    try:
+        async with httpx.AsyncClient() as client:
+            token_res = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code":          code,
+                    "client_id":     settings.google_client_id,
+                    "client_secret": settings.google_client_secret,
+                    "redirect_uri":  f"{settings.app_base_url}/api/v1/auth/google/callback",
+                    "grant_type":    "authorization_code",
+                },
+                timeout=10,
+            )
+            token_res.raise_for_status()
+            token_data = token_res.json()
+    except Exception:
+        return RedirectResponse(url="/?auth_error=google_failed", status_code=302)
+
+    # Verify and decode id_token using Authlib
+    try:
+        from authlib.jose import jwt as jose_jwt
+        from authlib.integrations.httpx_client import AsyncOAuth2Client
+
+        # Fetch Google's public keys
+        async with httpx.AsyncClient() as client:
+            certs_res = await client.get("https://www.googleapis.com/oauth2/v3/certs")
+            certs = certs_res.json()
+
+        id_token = token_data["id_token"]
+        claims = jose_jwt.decode(id_token, certs)
+        claims.validate()
+
+        email      = claims["email"]
+        google_sub = claims["sub"]
+        name       = claims.get("name")
+        picture    = claims.get("picture")
+    except Exception:
+        return RedirectResponse(url="/?auth_error=google_failed", status_code=302)
+
+    user = await storage.find_or_create_user_google(email, google_sub, name, picture)
+    session_token = await storage.create_session(user["id"])
+    return RedirectResponse(url=f"/?session={session_token}", status_code=302)
 
 
 @router.get("/autocomplete")

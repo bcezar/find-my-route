@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     turso_database_url: Optional[str] = None
     turso_auth_token: Optional[str] = None
     ga_measurement_id: Optional[str] = None
+    resend_api_key: Optional[str] = None
+    resend_from_email: str = "noreply@findmyroute.com.br"
+    app_base_url: str = "https://findmyroute.com.br"
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
 
 
 settings = Settings()

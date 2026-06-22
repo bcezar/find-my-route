@@ -58,8 +58,10 @@ function routeApp() {
     resultActionsOpen:  false,
     templatesOpen:      false,
     loginOpen:          false,
+    loginMode:          'email',  // 'email' | 'sent'
     loginEmail:         '',
     loginLoading:       false,
+    loginResendCooldown: 0,
     _authToken:         null,
     _pendingSave:       false,
     saveRouteNameOpen:  false,
@@ -100,6 +102,33 @@ function routeApp() {
 
       if (localStorage.getItem('howToSeen') === '1') this.howToVisible  = false;
       if (localStorage.getItem('swipeHintSeen') === '1') this.swipeHintSeen = true;
+
+      // Handle OAuth/magic-link callback params
+      const params = new URLSearchParams(location.search);
+      const sessionToken = params.get('session');
+      const authError    = params.get('auth_error');
+      if (sessionToken) {
+        // Fetch full user from /auth/me, persist session
+        fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${sessionToken}` } })
+          .then(r => r.ok ? r.json() : null)
+          .then(userData => {
+            if (userData) {
+              this._authToken = sessionToken;
+              this.user = userData;
+              localStorage.setItem('routeSession', JSON.stringify({ token: sessionToken, user: userData }));
+            }
+          })
+          .catch(() => {});
+        history.replaceState(null, '', location.pathname);
+      } else if (authError === 'expired') {
+        this.notice = 'Link expirado. Solicite um novo acesso.';
+        setTimeout(() => { this.notice = ''; }, 5000);
+        history.replaceState(null, '', location.pathname);
+      } else if (authError) {
+        this.notice = 'Não foi possível autenticar. Tente novamente.';
+        setTimeout(() => { this.notice = ''; }, 5000);
+        history.replaceState(null, '', location.pathname);
+      }
 
       const params    = new URLSearchParams(location.search);
       const urlOrigin = params.get('origin');
@@ -597,29 +626,56 @@ function routeApp() {
     },
 
     async login() {
+      // Magic link flow
       this.loginLoading = true;
       try {
-        const res = await fetch('/api/v1/auth/login', {
+        const res = await fetch('/api/v1/auth/magic-request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: this.loginEmail.trim() }),
         });
-        if (!res.ok) { this.error = 'Erro ao fazer login.'; return; }
-        const data = await res.json();
-        this._authToken = data.token;
-        this.user = data.user;
-        localStorage.setItem('routeSession', JSON.stringify({ token: data.token, user: data.user }));
-        this.loginOpen = false;
-        this.loginEmail = '';
-        if (this._pendingSave) { this._pendingSave = false; this.openSaveRouteName(); }
+        if (!res.ok) { this.error = 'Erro ao enviar link. Tente novamente.'; return; }
+        this.loginMode = 'sent';
+        this._startResendCooldown();
       } catch (_) {
-        this.error = 'Erro ao fazer login.';
+        this.error = 'Erro de conexão. Tente novamente.';
       } finally {
         this.loginLoading = false;
       }
     },
 
-    logout() {
+    _startResendCooldown() {
+      this.loginResendCooldown = 30;
+      const tick = setInterval(() => {
+        this.loginResendCooldown--;
+        if (this.loginResendCooldown <= 0) clearInterval(tick);
+      }, 1000);
+    },
+
+    async loginWithGoogle() {
+      try {
+        const res = await fetch('/api/v1/auth/google/init');
+        if (!res.ok) { this.error = 'Google OAuth não disponível.'; return; }
+        const data = await res.json();
+        window.location.href = data.redirect_url;
+      } catch (_) {
+        this.error = 'Erro ao iniciar login com Google.';
+      }
+    },
+
+    resetLogin() {
+      this.loginMode = 'email';
+      this.loginEmail = '';
+      this.loginResendCooldown = 0;
+    },
+
+    async logout() {
+      if (this._authToken) {
+        fetch('/api/v1/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${this._authToken}` },
+        }).catch(() => {});
+      }
       this._authToken = null;
       this.user = null;
       this.myRoutes = [];

@@ -37,9 +37,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://rotas.casapetcampinas.com.br"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_origins=["https://findmyroute.com.br"],
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 app.include_router(routes.router, prefix="/api/v1")

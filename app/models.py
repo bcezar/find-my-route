@@ -66,8 +66,20 @@ class LoginRequest(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: str
+    is_pro: bool = False
+    email_verified: bool = False
+    name: Optional[str] = None
+    picture_url: Optional[str] = None
 
 
 class LoginResponse(BaseModel):
     token: str
     user: UserResponse
+
+
+class MagicRequestBody(BaseModel):
+    email: str = Field(..., min_length=3, max_length=200)
+
+
+class MagicRequestResponse(BaseModel):
+    ok: bool

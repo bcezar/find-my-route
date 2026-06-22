@@ -4,6 +4,7 @@ import json
 import secrets
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 import httpx
 
@@ -71,8 +72,23 @@ async def init_db() -> None:
         "CREATE TABLE IF NOT EXISTS sessions "
         "(token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')))"
     )
-    # migrate: add user_id column to saved_routes if it doesn't exist yet
+    await _execute(
+        "CREATE TABLE IF NOT EXISTS magic_tokens "
+        "(token TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
+        "expires_at TEXT NOT NULL, used_at TEXT DEFAULT NULL)"
+    )
+    await _execute(
+        "CREATE TABLE IF NOT EXISTS oauth_states "
+        "(state TEXT PRIMARY KEY, expires_at TEXT NOT NULL)"
+    )
+    # migrations (idempotent)
     await _execute("ALTER TABLE saved_routes ADD COLUMN user_id TEXT", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN is_pro INTEGER DEFAULT 0", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN google_sub TEXT", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN name TEXT", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN picture_url TEXT", ignore_error=True)
+    await _execute("ALTER TABLE sessions ADD COLUMN expires_at TEXT", ignore_error=True)
 
 
 # ── Short links ─────────────────────────────────────────────────────────────
@@ -163,35 +179,101 @@ async def delete_result(code: str, user_id: str) -> None:
 
 # ── Users & sessions ─────────────────────────────────────────────────────────
 
+def _row_to_user(row: list) -> dict:
+    return {
+        "id":             _cell(row[0]),
+        "email":          _cell(row[1]),
+        "is_pro":         bool(int(_cell(row[2]) or 0)),
+        "email_verified": bool(int(_cell(row[3]) or 0)),
+        "name":           _cell(row[4]) if len(row) > 4 else None,
+        "picture_url":    _cell(row[5]) if len(row) > 5 else None,
+    }
+
+
 async def find_or_create_user(email: str) -> dict:
     if _turso_configured():
-        r = await _execute("SELECT id, email, created_at FROM users WHERE email = ?", [email])
+        r = await _execute(
+            "SELECT id, email, is_pro, email_verified, name, picture_url "
+            "FROM users WHERE email = ?", [email]
+        )
         rows = r.get("rows", [])
         if rows:
-            return {"id": _cell(rows[0][0]), "email": _cell(rows[0][1]), "created_at": _cell(rows[0][2])}
+            return _row_to_user(rows[0])
         user_id = str(uuid.uuid4())
-        created_at = _now_iso()
         await _execute(
             "INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)",
-            [user_id, email, created_at],
+            [user_id, email, _now_iso()],
         )
-        return {"id": user_id, "email": email, "created_at": created_at}
-    # in-memory fallback
+        return {"id": user_id, "email": email, "is_pro": False, "email_verified": False,
+                "name": None, "picture_url": None}
     for user in _users.values():
         if user["email"] == email:
             return user
     user_id = str(uuid.uuid4())
-    user = {"id": user_id, "email": email, "created_at": _now_iso()}
+    user = {"id": user_id, "email": email, "is_pro": False, "email_verified": False,
+            "name": None, "picture_url": None}
+    _users[user_id] = user
+    return user
+
+
+async def find_or_create_user_google(email: str, google_sub: str,
+                                      name: Optional[str], picture_url: Optional[str]) -> dict:
+    """Upsert user by google_sub; links to existing email account if present."""
+    if _turso_configured():
+        # Try by google_sub first
+        r = await _execute(
+            "SELECT id, email, is_pro, email_verified, name, picture_url "
+            "FROM users WHERE google_sub = ?", [google_sub]
+        )
+        rows = r.get("rows", [])
+        if rows:
+            return _row_to_user(rows[0])
+        # Try by email (link existing magic-link account)
+        r = await _execute(
+            "SELECT id, email, is_pro, email_verified, name, picture_url "
+            "FROM users WHERE email = ?", [email]
+        )
+        rows = r.get("rows", [])
+        if rows:
+            uid = _cell(rows[0][0])
+            await _execute(
+                "UPDATE users SET google_sub=?, name=?, picture_url=?, email_verified=1 WHERE id=?",
+                [google_sub, name, picture_url, uid],
+            )
+            user = _row_to_user(rows[0])
+            user.update({"google_sub": google_sub, "name": name,
+                         "picture_url": picture_url, "email_verified": True})
+            return user
+        # New user
+        user_id = str(uuid.uuid4())
+        await _execute(
+            "INSERT INTO users (id, email, google_sub, name, picture_url, email_verified, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 1, ?)",
+            [user_id, email, google_sub, name, picture_url, _now_iso()],
+        )
+        return {"id": user_id, "email": email, "is_pro": False, "email_verified": True,
+                "name": name, "picture_url": picture_url}
+    # in-memory fallback
+    for user in _users.values():
+        if user.get("google_sub") == google_sub or user["email"] == email:
+            user.update({"google_sub": google_sub, "name": name,
+                         "picture_url": picture_url, "email_verified": True})
+            return user
+    user_id = str(uuid.uuid4())
+    user = {"id": user_id, "email": email, "is_pro": False, "email_verified": True,
+            "google_sub": google_sub, "name": name, "picture_url": picture_url}
     _users[user_id] = user
     return user
 
 
 async def create_session(user_id: str) -> str:
     token = secrets.token_urlsafe(32)
+    from datetime import timedelta
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
     if _turso_configured():
         await _execute(
-            "INSERT INTO sessions (token, user_id) VALUES (?, ?)",
-            [token, user_id],
+            "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
+            [token, user_id, expires_at],
         )
     else:
         _sessions[token] = user_id
@@ -201,14 +283,105 @@ async def create_session(user_id: str) -> str:
 async def get_user_by_token(token: str) -> dict | None:
     if _turso_configured():
         r = await _execute(
-            "SELECT u.id, u.email FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.token = ?",
+            "SELECT u.id, u.email, u.is_pro, u.email_verified, u.name, u.picture_url "
+            "FROM sessions s JOIN users u ON s.user_id = u.id "
+            "WHERE s.token = ? AND (s.expires_at IS NULL OR s.expires_at > datetime('now'))",
             [token],
         )
         rows = r.get("rows", [])
         if rows:
-            return {"id": _cell(rows[0][0]), "email": _cell(rows[0][1])}
+            return _row_to_user(rows[0])
         return None
     user_id = _sessions.get(token)
     if user_id:
         return _users.get(user_id)
     return None
+
+
+async def delete_session(token: str) -> None:
+    if _turso_configured():
+        await _execute("DELETE FROM sessions WHERE token = ?", [token])
+    else:
+        _sessions.pop(token, None)
+
+
+# ── Magic link tokens ─────────────────────────────────────────────────────────
+
+async def create_magic_token(user_id: str) -> str:
+    from datetime import timedelta
+    token = secrets.token_urlsafe(32)
+    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
+    if _turso_configured():
+        await _execute(
+            "INSERT INTO magic_tokens (token, user_id, expires_at) VALUES (?, ?, ?)",
+            [token, user_id, expires_at],
+        )
+    else:
+        _sessions["magic:" + token] = {"user_id": user_id, "expires_at": expires_at}
+    return token
+
+
+async def consume_magic_token(token: str) -> Optional[str]:
+    """Returns user_id if token is valid and unused; marks it used. Returns None otherwise."""
+    if _turso_configured():
+        r = await _execute(
+            "SELECT user_id FROM magic_tokens "
+            "WHERE token = ? AND used_at IS NULL AND expires_at > datetime('now')",
+            [token],
+        )
+        rows = r.get("rows", [])
+        if not rows:
+            return None
+        user_id = _cell(rows[0][0])
+        await _execute(
+            "UPDATE magic_tokens SET used_at = ? WHERE token = ?",
+            [_now_iso(), token],
+        )
+        return user_id
+    entry = _sessions.get("magic:" + token)
+    if entry and not entry.get("used_at"):
+        entry["used_at"] = _now_iso()
+        return entry["user_id"]
+    return None
+
+
+async def mark_email_verified(user_id: str) -> None:
+    if _turso_configured():
+        await _execute("UPDATE users SET email_verified = 1 WHERE id = ?", [user_id])
+    elif user_id in _users:
+        _users[user_id]["email_verified"] = True
+
+
+# ── OAuth states (CSRF) ───────────────────────────────────────────────────────
+
+async def create_oauth_state() -> str:
+    from datetime import timedelta
+    state = secrets.token_urlsafe(16)
+    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
+    if _turso_configured():
+        await _execute(
+            "INSERT INTO oauth_states (state, expires_at) VALUES (?, ?)",
+            [state, expires_at],
+        )
+    else:
+        _sessions["oauth_state:" + state] = expires_at
+    return state
+
+
+async def consume_oauth_state(state: str) -> bool:
+    """Returns True if state is valid; deletes it."""
+    if _turso_configured():
+        r = await _execute(
+            "SELECT state FROM oauth_states WHERE state = ? AND expires_at > datetime('now')",
+            [state],
+        )
+        rows = r.get("rows", [])
+        if not rows:
+            return False
+        await _execute("DELETE FROM oauth_states WHERE state = ?", [state])
+        return True
+    key = "oauth_state:" + state
+    if key in _sessions:
+        del _sessions[key]
+        return True
+    return False

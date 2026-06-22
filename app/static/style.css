@@ -865,6 +865,11 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   background: #eff6ff; display: flex; align-items: center; justify-content: center;
   margin: 0 auto .75rem;
 }
+.login-sent-icon {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: #eff6ff; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1rem;
+}
 .login-email-input {
   width: 100%; margin-top: .75rem;
   padding: .6rem .75rem;
@@ -873,6 +878,22 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   transition: border-color .15s;
 }
 .login-email-input:focus { border-color: #1d4ed8; }
+.btn-google-login {
+  display: flex; align-items: center; justify-content: center; gap: .6rem;
+  width: 100%; padding: .7rem 1rem; margin-top: .25rem;
+  background: #fff; color: #374151;
+  border: 1.5px solid #dadce0; border-radius: 10px;
+  font-size: .92rem; font-weight: 600; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.btn-google-login:hover { background: #f8f9fa; border-color: #bec2c8; }
+.login-divider {
+  display: flex; align-items: center; gap: .75rem;
+  color: #9ca3af; font-size: .8rem; margin: .85rem 0 .25rem;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: #e5e7eb;
+}
 
 /* === CLEAR CONFIRM MODAL === */
 .modal-card-sm { max-width: 360px; text-align: center; padding: 2rem 1.5rem; }
