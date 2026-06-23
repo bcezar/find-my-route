@@ -705,7 +705,7 @@
                 <div class="user-menu-plan" x-text="'Plano: ' + (user.is_pro ? 'Pro' : 'Free')"></div>
               </div>
               <div class="user-menu-divider"></div>
-              <button class="user-menu-item user-menu-item-disabled">Perfil</button>
+              <a href="/conta" class="user-menu-item" style="text-decoration:none">Minha Conta</a>
               <template x-if="!user.is_pro">
                 <button class="user-menu-item" @click="upgradeOpen = true; userMenuOpen = false">
                   Upgrade para Pro

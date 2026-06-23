@@ -80,6 +80,15 @@ async def index(request: Request):
     })
 
 
+@app.get("/conta")
+async def conta(request: Request):
+    return templates.TemplateResponse("conta.html", {
+        "request": request,
+        "css_version": _css_hash,
+        "ga_measurement_id": settings.ga_measurement_id or "",
+    })
+
+
 _SEO_PAGES: dict[str, dict[str, str]] = {
     "como-funciona": {
         "title": "Como Funciona o FindMyRoute — Otimização de Rota com TSP",

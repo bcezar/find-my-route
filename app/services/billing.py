@@ -100,3 +100,54 @@ async def create_subscription(
             "subscription_id": sub_id,
             "payment_url": payment_url,
         }
+
+
+async def get_active_subscription(customer_id: str) -> Optional[dict]:
+    """Return the first ACTIVE subscription for a customer, or None."""
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            f"{settings.asaas_base_url}/subscriptions",
+            headers=_headers(),
+            params={"customer": customer_id, "status": "ACTIVE"},
+            timeout=10,
+        )
+        r.raise_for_status()
+        data = r.json().get("data", [])
+        return data[0] if data else None
+
+
+async def cancel_subscription(subscription_id: str) -> None:
+    """Cancel (delete) a subscription. Pending charges are removed by Asaas automatically."""
+    async with httpx.AsyncClient() as client:
+        r = await client.delete(
+            f"{settings.asaas_base_url}/subscriptions/{subscription_id}",
+            headers=_headers(),
+            timeout=10,
+        )
+        r.raise_for_status()
+
+
+async def list_payments(customer_id: str, limit: int = 12) -> list:
+    """Return recent payments for a customer, newest first."""
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            f"{settings.asaas_base_url}/payments",
+            headers=_headers(),
+            params={"customer": customer_id, "limit": limit},
+            timeout=10,
+        )
+        r.raise_for_status()
+        payments = r.json().get("data", [])
+        return [
+            {
+                "id":                   p.get("id"),
+                "value":                p.get("value"),
+                "status":               p.get("status"),
+                "billingType":          p.get("billingType"),
+                "dueDate":              p.get("dueDate"),
+                "paymentDate":          p.get("paymentDate"),
+                "invoiceUrl":           p.get("invoiceUrl"),
+                "transactionReceiptUrl": p.get("transactionReceiptUrl"),
+            }
+            for p in payments
+        ]

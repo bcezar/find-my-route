@@ -93,6 +93,7 @@ async def init_db() -> None:
     await _execute("ALTER TABLE users ADD COLUMN picture_url TEXT", ignore_error=True)
     await _execute("ALTER TABLE sessions ADD COLUMN expires_at TEXT", ignore_error=True)
     await _execute("ALTER TABLE users ADD COLUMN asaas_customer_id TEXT", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN pro_expires_at TEXT", ignore_error=True)
 
 
 # ── Short links ─────────────────────────────────────────────────────────────
@@ -293,7 +294,9 @@ async def create_session(user_id: str) -> str:
 async def get_user_by_token(token: str) -> dict | None:
     if _turso_configured():
         r = await _execute(
-            "SELECT u.id, u.email, u.is_pro, u.email_verified, u.name, u.picture_url "
+            "SELECT u.id, u.email, "
+            "CASE WHEN u.is_pro = 1 AND (u.pro_expires_at IS NULL OR u.pro_expires_at > datetime('now')) THEN 1 ELSE 0 END AS is_pro, "
+            "u.email_verified, u.name, u.picture_url "
             "FROM sessions s JOIN users u ON s.user_id = u.id "
             "WHERE s.token = ? AND (s.expires_at IS NULL OR s.expires_at > datetime('now'))",
             [token],
@@ -405,6 +408,16 @@ async def set_user_pro(user_id: str, is_pro: bool) -> None:
         await _execute("UPDATE users SET is_pro = ? WHERE id = ?", [value, user_id])
     elif user_id in _users:
         _users[user_id]["is_pro"] = is_pro
+
+
+async def set_pro_expires_at(user_id: str, expires_at: Optional[str]) -> None:
+    if _turso_configured():
+        await _execute(
+            "UPDATE users SET pro_expires_at = ? WHERE id = ?",
+            [expires_at, user_id],
+        )
+    elif user_id in _users:
+        _users[user_id]["pro_expires_at"] = expires_at
 
 
 async def set_asaas_customer_id(user_id: str, customer_id: str) -> None:

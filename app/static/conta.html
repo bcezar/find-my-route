@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Minha Conta — FindMyRoute</title>
+  <link rel="icon" type="image/png" href="/icon-find-my-route.png" />
+  <link rel="apple-touch-icon" href="/icon-find-my-route.png" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
+  {% if ga_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ ga_measurement_id }}');
+  </script>
+  {% endif %}
+</head>
+<body x-data="accountApp()" x-init="init()">
+
+  <!-- Header -->
+  <header class="conta-header">
+    <a href="/" class="conta-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Voltar
+    </a>
+    <a href="/" class="conta-logo">
+      <img src="/logo-find-my-route.png" width="24" height="24" alt="FindMyRoute" />
+      <span>FindMyRoute</span>
+    </a>
+  </header>
+
+  <main class="conta-page">
+
+    <!-- Loading -->
+    <div class="conta-loading" x-show="loading">
+      <div class="conta-spinner"></div>
+      <p>Carregando sua conta…</p>
+    </div>
+
+    <template x-if="!loading">
+      <div>
+
+        <!-- Perfil -->
+        <div class="conta-card">
+          <div class="conta-card-header">
+            <div class="conta-avatar" x-text="(user?.name || user?.email || '?')[0].toUpperCase()"></div>
+            <div>
+              <div class="conta-user-name" x-text="user?.name || user?.email"></div>
+              <div class="conta-user-email" x-show="user?.name" x-text="user?.email"></div>
+            </div>
+            <div class="conta-badge" :class="user?.is_pro ? 'conta-badge-pro' : 'conta-badge-free'"
+                 x-text="user?.is_pro ? 'Pro' : 'Free'"></div>
+          </div>
+        </div>
+
+        <!-- Assinatura -->
+        <div class="conta-card" x-show="user?.is_pro || subscription || proExpiresAt">
+          <h2 class="conta-section-title">Assinatura</h2>
+
+          <!-- Ativa -->
+          <template x-if="subscription && subscription.status === 'ACTIVE'">
+            <div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Status</span>
+                <span class="conta-sub-value">
+                  <span class="payment-status-received">● Ativo</span>
+                </span>
+              </div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Plano</span>
+                <span class="conta-sub-value">Pro — R$ <span x-text="subscription.value?.toFixed(2).replace('.',',')"></span>/mês</span>
+              </div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Próximo vencimento</span>
+                <span class="conta-sub-value" x-text="formatDate(subscription.nextDueDate)"></span>
+              </div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Forma de pagamento</span>
+                <span class="conta-sub-value" x-text="formatBillingType(subscription.billingType)"></span>
+              </div>
+              <button class="conta-btn-cancel" @click="cancelConfirmOpen = true">
+                Cancelar plano
+              </button>
+            </div>
+          </template>
+
+          <!-- Cancelado com período restante -->
+          <template x-if="!subscription && proExpiresAt">
+            <div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Status</span>
+                <span class="conta-sub-value">
+                  <span class="payment-status-pending">● Cancelado</span>
+                </span>
+              </div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Acesso Pro até</span>
+                <span class="conta-sub-value" x-text="formatDate(proExpiresAt)"></span>
+              </div>
+              <button class="conta-btn-reactivate" @click="window.location.href='/?upgrade=1'">
+                Reativar plano Pro
+              </button>
+            </div>
+          </template>
+
+          <!-- Pro sem subscription visível (webhook ativou) -->
+          <template x-if="user?.is_pro && !subscription && !proExpiresAt">
+            <div>
+              <div class="conta-sub-row">
+                <span class="conta-sub-label">Status</span>
+                <span class="conta-sub-value"><span class="payment-status-received">● Ativo</span></span>
+              </div>
+              <p class="conta-sub-hint">Assinatura gerenciada externamente.</p>
+            </div>
+          </template>
+        </div>
+
+        <!-- Sem plano -->
+        <div class="conta-card conta-card-upgrade" x-show="!user?.is_pro && !proExpiresAt">
+          <p class="conta-upgrade-text">Você está no plano <strong>Free</strong> (até 5 paradas).</p>
+          <a href="/" class="conta-btn-upgrade">Ver Plano Pro</a>
+        </div>
+
+        <!-- Histórico de pagamentos -->
+        <div class="conta-card" x-show="payments.length > 0">
+          <h2 class="conta-section-title">Histórico de pagamentos</h2>
+          <div class="payment-list">
+            <template x-for="p in payments" :key="p.id">
+              <div class="payment-row">
+                <div class="payment-row-left">
+                  <span class="payment-date" x-text="formatDate(p.paymentDate || p.dueDate)"></span>
+                  <span class="payment-type" x-text="formatBillingType(p.billingType)"></span>
+                </div>
+                <div class="payment-row-right">
+                  <span class="payment-value" x-text="'R$ ' + p.value?.toFixed(2).replace('.',',')"></span>
+                  <span class="payment-status"
+                        :class="{
+                          'payment-status-received': p.status === 'RECEIVED',
+                          'payment-status-pending':  ['PENDING','AWAITING_RISK_ANALYSIS'].includes(p.status),
+                          'payment-status-refunded': ['REFUNDED','CHARGEBACK_REQUESTED','OVERDUE'].includes(p.status),
+                        }"
+                        x-text="formatStatus(p.status)"></span>
+                  <a x-show="p.transactionReceiptUrl || p.invoiceUrl"
+                     :href="p.transactionReceiptUrl || p.invoiceUrl"
+                     target="_blank" rel="noopener"
+                     class="payment-receipt">Comprovante</a>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+      </div>
+    </template>
+
+  </main>
+
+  <!-- Modal: confirmar cancelamento -->
+  <div class="modal-overlay" x-show="cancelConfirmOpen" x-transition @click.self="cancelConfirmOpen = false">
+    <div class="modal-card modal-card-sm">
+      <div class="clear-confirm-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h2 class="clear-confirm-title">Cancelar plano Pro?</h2>
+      <p class="clear-confirm-sub">
+        Futuras cobranças serão canceladas. Seu acesso Pro continua ativo por
+        <strong>30 dias</strong> a partir de hoje.
+      </p>
+      <div class="clear-confirm-actions">
+        <button class="btn-clear-confirm" @click="cancelSubscription()" :disabled="cancelLoading">
+          <span x-show="!cancelLoading">Cancelar plano mesmo assim</span>
+          <span x-show="cancelLoading">Cancelando…</span>
+        </button>
+        <button class="btn-clear-cancel" @click="cancelConfirmOpen = false">Manter plano</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script>
+  function accountApp() {
+    return {
+      loading:           true,
+      user:              null,
+      subscription:      null,
+      payments:          [],
+      proExpiresAt:      null,
+      cancelConfirmOpen: false,
+      cancelLoading:     false,
+      _token:            null,
+      error:             '',
+
+      async init() {
+        let s = {};
+        try { s = JSON.parse(localStorage.getItem('routeSession') || '{}'); } catch (_) {}
+        if (!s.token) { window.location.href = '/?login=1'; return; }
+        this._token = s.token;
+        try {
+          const r = await fetch('/api/v1/billing/account', {
+            headers: { Authorization: `Bearer ${s.token}` },
+          });
+          if (r.status === 401) { window.location.href = '/?login=1'; return; }
+          const d = await r.json();
+          this.user         = d.user;
+          this.subscription = d.subscription;
+          this.payments     = d.payments;
+          // Update localStorage with fresh user data
+          s.user = d.user;
+          localStorage.setItem('routeSession', JSON.stringify(s));
+        } catch (e) {
+          this.error = 'Erro ao carregar dados da conta.';
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      async cancelSubscription() {
+        this.cancelLoading = true;
+        try {
+          const r = await fetch('/api/v1/billing/subscription', {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${this._token}` },
+          });
+          const d = await r.json();
+          if (r.ok) {
+            this.proExpiresAt = d.pro_expires_at;
+            this.subscription = null;
+            // Update localStorage
+            const s = JSON.parse(localStorage.getItem('routeSession') || '{}');
+            if (s.user) { s.user.is_pro = true; localStorage.setItem('routeSession', JSON.stringify(s)); }
+          } else {
+            this.error = d.detail || 'Erro ao cancelar assinatura.';
+          }
+        } catch (e) {
+          this.error = 'Erro de conexão.';
+        } finally {
+          this.cancelLoading   = false;
+          this.cancelConfirmOpen = false;
+        }
+      },
+
+      formatDate(iso) {
+        if (!iso) return '—';
+        const [y, m, d] = iso.slice(0, 10).split('-');
+        return `${d}/${m}/${y}`;
+      },
+
+      formatBillingType(type) {
+        return { PIX: 'Pix', CREDIT_CARD: 'Cartão de crédito', BOLETO: 'Boleto' }[type] || type || '—';
+      },
+
+      formatStatus(status) {
+        return {
+          RECEIVED:               'Pago',
+          CONFIRMED:              'Confirmado',
+          PENDING:                'Pendente',
+          AWAITING_RISK_ANALYSIS: 'Em análise',
+          OVERDUE:                'Vencido',
+          REFUNDED:               'Estornado',
+          CHARGEBACK_REQUESTED:   'Contestado',
+        }[status] || status || '—';
+      },
+    };
+  }
+  </script>
+</body>
+</html>
