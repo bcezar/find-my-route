@@ -1095,9 +1095,11 @@ function routeApp() {
       this._track('route_optimization_started', { stop_count: this.addresses.length });
 
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (this._authToken) headers['Authorization'] = `Bearer ${this._authToken}`;
         const res = await fetch('/api/v1/routes/optimize', {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body:    JSON.stringify(body),
         });
         const data = await res.json();
