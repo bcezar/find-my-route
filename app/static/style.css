@@ -1280,6 +1280,9 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 
 /* === FOOTER === */
 .footer-security { text-align: center; font-size: .73rem; color: #b0b7c3; margin-top: 1.5rem; }
+.footer-links { text-align: center; font-size: .70rem; color: #b0b7c3; margin-top: .5rem; margin-bottom: .5rem; }
+.footer-links a { color: #b0b7c3; text-decoration: none; }
+.footer-links a:hover { text-decoration: underline; }
 
 /* === SEO PAGES === */
 .seo-page {
