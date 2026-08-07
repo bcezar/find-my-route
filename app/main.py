@@ -37,7 +37,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://findmyroute.com.br"],
+    allow_origins=["https://rotaotimizada.com.br"],
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
 )
@@ -91,43 +91,43 @@ async def conta(request: Request):
 
 _SEO_PAGES: dict[str, dict[str, str]] = {
     "como-funciona": {
-        "title": "Como Funciona o FindMyRoute — Otimização de Rota com TSP",
-        "description": "Entenda como o FindMyRoute calcula a ordem ideal de visitas usando o algoritmo TSP. Economize tempo e combustível nas suas entregas.",
+        "title": "Como Funciona o Rota Otimizada — Otimização de Rota com TSP",
+        "description": "Entenda como o Rota Otimizada calcula a ordem ideal de visitas usando o algoritmo TSP. Economize tempo e combustível nas suas entregas.",
         "template": "como-funciona.html",
     },
     "importar-enderecos-csv": {
-        "title": "Importar Endereços via CSV — FindMyRoute",
-        "description": "Aprenda a importar uma lista de endereços por arquivo CSV ou Excel no FindMyRoute. Roteirize dezenas de paradas em segundos.",
+        "title": "Importar Endereços via CSV — Rota Otimizada",
+        "description": "Aprenda a importar uma lista de endereços por arquivo CSV ou Excel no Rota Otimizada. Roteirize dezenas de paradas em segundos.",
         "template": "importar-enderecos-csv.html",
     },
     "otimizar-rota-entregas": {
-        "title": "Otimizar Rota de Entregas Gratuitamente — FindMyRoute",
+        "title": "Otimizar Rota de Entregas Gratuitamente — Rota Otimizada",
         "description": "Calcule a melhor ordem de entregas com múltiplos endereços. Reduza km rodados, economize combustível e faça mais entregas por dia.",
         "template": "otimizar-rota-entregas.html",
     },
     "roteirizador-gratuito": {
-        "title": "Roteirizador Gratuito com Múltiplos Endereços — FindMyRoute",
+        "title": "Roteirizador Gratuito com Múltiplos Endereços — Rota Otimizada",
         "description": "O melhor roteirizador do Brasil. Grátis até 5 paradas, até 50 no plano Pro. Sem cadastro, sem complicação. Abra direto no Maps.",
         "template": "roteirizador-gratuito.html",
     },
     "google-maps-multiplos-enderecos": {
-        "title": "Google Maps com Múltiplos Endereços Otimizados — FindMyRoute",
-        "description": "Supere o limite do Google Maps e otimize a ordem de visitas. O FindMyRoute calcula a rota ideal e abre automaticamente no Google Maps.",
+        "title": "Google Maps com Múltiplos Endereços Otimizados — Rota Otimizada",
+        "description": "Supere o limite do Google Maps e otimize a ordem de visitas. O Rota Otimizada calcula a rota ideal e abre automaticamente no Google Maps.",
         "template": "google-maps-multiplos-enderecos.html",
     },
     "waze-multiplos-destinos": {
-        "title": "Waze com Múltiplos Destinos Otimizados — FindMyRoute",
-        "description": "Use o Waze com vários destinos em ordem otimizada. O FindMyRoute organiza suas paradas e abre cada uma diretamente no Waze.",
+        "title": "Waze com Múltiplos Destinos Otimizados — Rota Otimizada",
+        "description": "Use o Waze com vários destinos em ordem otimizada. O Rota Otimizada organiza suas paradas e abre cada uma diretamente no Waze.",
         "template": "waze-multiplos-destinos.html",
     },
     "perguntas-frequentes": {
-        "title": "Perguntas Frequentes — FindMyRoute",
-        "description": "Tire suas dúvidas sobre o FindMyRoute: como otimizar rotas, importar endereços, usar com Google Maps e Waze, e muito mais.",
+        "title": "Perguntas Frequentes — Rota Otimizada",
+        "description": "Tire suas dúvidas sobre o Rota Otimizada: como otimizar rotas, importar endereços, usar com Google Maps e Waze, e muito mais.",
         "template": "perguntas-frequentes.html",
     },
 }
 
-_BASE_URL = "https://findmyroute.com.br"
+_BASE_URL = "https://rotaotimizada.com.br"
 
 
 @app.get("/{slug}")

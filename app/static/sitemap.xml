@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://findmyroute.com.br/</loc>
+    <loc>https://rotaotimizada.com.br/</loc>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/como-funciona</loc>
+    <loc>https://rotaotimizada.com.br/como-funciona</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/importar-enderecos-csv</loc>
+    <loc>https://rotaotimizada.com.br/importar-enderecos-csv</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/otimizar-rota-entregas</loc>
+    <loc>https://rotaotimizada.com.br/otimizar-rota-entregas</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/roteirizador-gratuito</loc>
+    <loc>https://rotaotimizada.com.br/roteirizador-gratuito</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/google-maps-multiplos-enderecos</loc>
+    <loc>https://rotaotimizada.com.br/google-maps-multiplos-enderecos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/waze-multiplos-destinos</loc>
+    <loc>https://rotaotimizada.com.br/waze-multiplos-destinos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://findmyroute.com.br/perguntas-frequentes</loc>
+    <loc>https://rotaotimizada.com.br/perguntas-frequentes</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

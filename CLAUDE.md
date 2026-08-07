@@ -1,4 +1,4 @@
-# find-my-route
+# rota-otimizada
 
 API REST de roteirização de endereços com frontend web completo. Recebe uma lista de endereços, geocodifica, calcula distâncias reais de estrada e retorna a ordem de visita otimizada (TSP).
 
@@ -48,7 +48,7 @@ static/
     ├── app.js            # Lógica Alpine.js (~700 linhas)
     ├── style.css         # Estilos (~840 linhas)
     ├── robots.txt        # Bloqueia /api/, /r/, /s/; aponta para sitemap
-    ├── sitemap.xml       # Homepage canônica (findmyroute.com.br)
+    ├── sitemap.xml       # Homepage canônica (rotaotimizada.com.br)
     ├── capa.png          # Imagem OG/WhatsApp (og:image, twitter:image)
     ├── logo-find-my-route.png
     ├── icon-find-my-route.png
@@ -118,7 +118,7 @@ Alpine.js v3, sem build step, single-page. Lógica em `app.js`, markup em `index
 - **Exportar paradas:** baixa `enderecos.csv` com colunas `endereco,descricao`; template também disponível
 - **Resultado:** mini-mapa SVG (fallback) + imagem Google Static Maps; timeline com badges 0/1-N/F; distância e tempo por trecho; link Google Maps
 - **Ações do resultado:** Abrir no Google Maps, Copiar rota (texto formatado), Compartilhar/Copiar link, Salvar rota, Exportar CSV/PDF (desabilitados)
-- **Copiar rota:** texto formatado com assinatura `findmyroute.com.br`
+- **Copiar rota:** texto formatado com assinatura `rotaotimizada.com.br`
 - **Compartilhar:** chama `/api/v1/shorten` → URL curta `/r/CODE`; `navigator.share()` no mobile, clipboard no desktop
 - **Auth:** login por e-mail (magic token); sessão em localStorage (`routeSession`); avatar/iniciais no header; menu de usuário
 - **Rotas salvas:** modal "Minhas Rotas" — lista, carrega, exclui; modal com input de nome para salvar
@@ -128,7 +128,7 @@ Alpine.js v3, sem build step, single-page. Lógica em `app.js`, markup em `index
 
 ## Segurança
 
-- **CORS:** ainda restrito a `rotas.casapetcampinas.com.br` em `main.py` — **pendente migrar para `findmyroute.com.br`**
+- **CORS:** restrito a `rotaotimizada.com.br` em `main.py`
 - **Rate limiting:** slowapi por IP no código + Cloudflare Rate Limiting no painel (proteção dupla)
 - **Validação:** `Address` com `max_length=200`, addresses com `min_length=2, max_length=50`
 - **Auth:** token Bearer gerado por `secrets.token_urlsafe(32)`, armazenado no Turso; sem expiração por enquanto
@@ -137,14 +137,14 @@ Alpine.js v3, sem build step, single-page. Lógica em `app.js`, markup em `index
 
 - **Railway** (Python) — auto-deploy via GitHub push
 - `Procfile`: `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Cloudflare** — DNS proxy + Rate Limiting; domínio `findmyroute.com.br` já apontando via Cloudflare
-- **Domínio:** `findmyroute.com.br` (SEO e meta tags já atualizados); CORS no código ainda usa o domínio antigo
+- **Cloudflare** — DNS proxy + Rate Limiting; domínio `rotaotimizada.com.br` já apontando via Cloudflare
+- **Domínio:** `rotaotimizada.com.br` (SEO, meta tags e CORS atualizados)
 
 ## Variáveis de ambiente (`.env`)
 
 ```
 GOOGLE_MAPS_API_KEY=     # obrigatório para autocomplete, reverse geocoding e geocoding de qualidade
-NOMINATIM_USER_AGENT=find-my-route/1.0
+NOMINATIM_USER_AGENT=rota-otimizada/1.0
 NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
 TSP_TIMEOUT_SECONDS=5
 MAX_ADDRESSES=50
@@ -182,7 +182,7 @@ TURSO_AUTH_TOKEN=        # token de autenticação do Turso
 - [x] Importar/exportar paradas (CSV/XLSX)
 - [x] SEO — canonical, robots.txt, sitemap.xml, Open Graph, Twitter Cards, JSON-LD, novo título
 - [x] Google Search Console — verificado via Cloudflare DNS; sitemap enviado
-- [ ] **Migração de domínio (CORS)** — atualizar `allow_origins` em `main.py` para `findmyroute.com.br`
+- [x] **Migração de domínio (CORS)** — `allow_origins` em `main.py` atualizado para `rotaotimizada.com.br`
 - [ ] Cache persistente de geocoding (Redis ou SQLite)
 - [ ] Exportar rota otimizada como CSV/PDF
 - [ ] **Upgrade de plano (freemium)** — modelo: 5 paradas grátis, 50 no plano Pro:

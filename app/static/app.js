@@ -866,7 +866,7 @@ function routeApp() {
       } catch (_) {}
 
       const msg = 'Veja os endereços que separei para você — clique em otimizar para encontrar a melhor rota!';
-      const shareData = { title: 'Rota — Find My Route', text: msg, url: shareUrl };
+      const shareData = { title: 'Rota — Rota Otimizada', text: msg, url: shareUrl };
       if (navigator.share && navigator.canShare?.(shareData)) {
         navigator.share(shareData).catch(() => {});
       } else {
@@ -887,7 +887,7 @@ function routeApp() {
         lines.push(`${stop.order}. ${label}${stop.original_address}`);
       }
       if (this.result.destination) lines.push(`F. ${this.result.destination.address} (destino)`);
-      lines.push('', 'Rota otimizada com findmyroute.com.br');
+      lines.push('', 'Rota otimizada com rotaotimizada.com.br');
       navigator.clipboard.writeText(lines.join('\n')).then(() => {
         this.copied = true;
         setTimeout(() => { this.copied = false; }, 2000);

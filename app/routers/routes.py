@@ -71,14 +71,14 @@ async def _send_magic_email(to_email: str, magic_token: str) -> None:
     import resend
     resend.api_key = settings.resend_api_key
     resend.Emails.send({
-        "from": f"FindMyRoute <{settings.resend_from_email}>",
+        "from": f"Rota Otimizada <{settings.resend_from_email}>",
         "to": [to_email],
-        "subject": "Seu link de acesso — FindMyRoute",
+        "subject": "Seu link de acesso — Rota Otimizada",
         "html": f"""
         <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:2rem">
-          <img src="https://findmyroute.com.br/logo-find-my-route.png"
+          <img src="https://rotaotimizada.com.br/logo-rota-otimizada.png"
                width="40" style="border-radius:10px;margin-bottom:1.5rem" />
-          <h2 style="color:#111;margin:0 0 .5rem">Acesse o FindMyRoute</h2>
+          <h2 style="color:#111;margin:0 0 .5rem">Acesse o Rota Otimizada</h2>
           <p style="color:#6b7280;margin:0 0 1.5rem">
             Clique no botão abaixo para entrar. O link expira em <strong>15 minutos</strong>.
           </p>
@@ -86,7 +86,7 @@ async def _send_magic_email(to_email: str, magic_token: str) -> None:
              style="display:inline-block;background:#1d4ed8;color:#fff;
                     padding:.8rem 1.5rem;border-radius:10px;text-decoration:none;
                     font-weight:700;font-size:1rem">
-            Entrar no FindMyRoute
+            Entrar no Rota Otimizada
           </a>
           <p style="color:#9ca3af;font-size:.8rem;margin-top:2rem">
             Se você não solicitou este link, ignore este e-mail.

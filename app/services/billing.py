@@ -72,7 +72,7 @@ async def create_subscription(
                 "value": settings.pro_price,
                 "nextDueDate": next_due,
                 "cycle": "MONTHLY",
-                "description": "FindMyRoute Pro",
+                "description": "Rota Otimizada Pro",
                 "externalReference": user_id,
             },
             timeout=10,
