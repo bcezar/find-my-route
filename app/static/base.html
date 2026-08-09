@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="{{ i18n.lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>{{ title }}</title>
-  <link rel="icon" type="image/png" href="/icon-rota-otimizada.png" />
-  <link rel="apple-touch-icon" href="/icon-rota-otimizada.png" />
+  <link rel="icon" type="image/png" href="{{ i18n.icon }}" />
+  <link rel="apple-touch-icon" href="{{ i18n.icon }}" />
   <meta name="description" content="{{ description }}" />
   <link rel="canonical" href="{{ canonical }}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ canonical }}" />
   <meta property="og:title" content="{{ title }}" />
   <meta property="og:description" content="{{ description }}" />
-  <meta property="og:image" content="https://rotaotimizada.com.br/capa.png" />
-  <meta property="og:locale" content="pt_BR" />
-  <meta property="og:site_name" content="Rota Otimizada" />
+  <meta property="og:image" content="{{ base_url }}/capa.png" />
+  <meta property="og:locale" content="{{ i18n.og_locale }}" />
+  <meta property="og:site_name" content="{{ i18n.brand }}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{{ title }}" />
   <meta name="twitter:description" content="{{ description }}" />
-  <meta name="twitter:image" content="https://rotaotimizada.com.br/capa.png" />
+  <meta name="twitter:image" content="{{ base_url }}/capa.png" />
   <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
   {% block extra_head %}{% endblock %}
   {% if ga_measurement_id %}
@@ -35,8 +35,8 @@
 
   <header class="seo-header">
     <a href="/" style="display:flex;align-items:center;gap:.5rem;text-decoration:none">
-      <img src="/logo-rota-otimizada.png" alt="Rota Otimizada" class="seo-header-logo" />
-      <span class="seo-header-title">Rota Otimizada</span>
+      <img src="{{ i18n.logo }}" alt="{{ i18n.brand }}" class="seo-header-logo" />
+      <span class="seo-header-title">{{ i18n.brand }}</span>
     </a>
     <a href="/" class="seo-header-cta">Otimizar rota →</a>
   </header>
@@ -46,7 +46,7 @@
   </main>
 
   <footer class="seo-footer">
-    <p>© 2025 Rota Otimizada · <a href="/">Otimizador de Rotas Gratuito</a> · <a href="/perguntas-frequentes">FAQ</a> · <a href="/como-funciona">Como funciona</a></p>
+    <p>© 2026 {{ i18n.brand }} · <a href="/">Otimizador de Rotas Gratuito</a> · <a href="/perguntas-frequentes">FAQ</a> · <a href="/como-funciona">Como funciona</a></p>
   </footer>
 
   {% block schema %}{% endblock %}

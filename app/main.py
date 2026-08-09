@@ -13,6 +13,7 @@ from slowapi import _rate_limit_exceeded_handler
 
 from app import storage
 from app.config import settings
+from app.i18n import get_strings
 from app.limiter import limiter
 from app.routers import billing, routes
 
@@ -22,6 +23,9 @@ _css_hash = md5(_STATIC.joinpath("style.css").read_bytes()).hexdigest()[:8]
 _js_hash  = md5(_STATIC.joinpath("app.js").read_bytes()).hexdigest()[:8]
 
 templates = Jinja2Templates(directory=str(_STATIC))
+
+_i18n = get_strings(settings.locale)
+_BASE_URL = settings.app_base_url
 
 
 @asynccontextmanager
@@ -37,7 +41,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://rotaotimizada.com.br"],
+    allow_origins=["https://rotaotimizada.com.br", "https://findmyroute.com.br"],
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
 )
@@ -77,6 +81,8 @@ async def index(request: Request):
         "js_version": _js_hash,
         "google_maps_key": settings.google_maps_api_key or "",
         "ga_measurement_id": settings.ga_measurement_id or "",
+        "base_url": _BASE_URL,
+        "i18n": _i18n,
     })
 
 
@@ -86,6 +92,7 @@ async def conta(request: Request):
         "request": request,
         "css_version": _css_hash,
         "ga_measurement_id": settings.ga_measurement_id or "",
+        "i18n": _i18n,
     })
 
 
@@ -127,9 +134,6 @@ _SEO_PAGES: dict[str, dict[str, str]] = {
     },
 }
 
-_BASE_URL = "https://rotaotimizada.com.br"
-
-
 @app.get("/{slug}")
 async def seo_page(request: Request, slug: str):
     # Serve known static files that need to bypass the SEO handler
@@ -147,7 +151,9 @@ async def seo_page(request: Request, slug: str):
         "title": page["title"],
         "description": page["description"],
         "canonical": f"{_BASE_URL}/{slug}",
+        "base_url": _BASE_URL,
         "ga_measurement_id": settings.ga_measurement_id or "",
+        "i18n": _i18n,
     })
 
 

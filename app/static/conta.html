@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Minha Conta — Rota Otimizada</title>
-  <link rel="icon" type="image/png" href="/icon-rota-otimizada.png" />
-  <link rel="apple-touch-icon" href="/icon-rota-otimizada.png" />
+  <title>Minha Conta — {{ i18n.brand }}</title>
+  <link rel="icon" type="image/png" href="{{ i18n.icon }}" />
+  <link rel="apple-touch-icon" href="{{ i18n.icon }}" />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
   {% if ga_measurement_id %}
@@ -29,8 +29,8 @@
       Voltar
     </a>
     <a href="/" class="conta-logo">
-      <img src="/logo-rota-otimizada.png" width="24" height="24" alt="Rota Otimizada" />
-      <span>Rota Otimizada</span>
+      <img src="{{ i18n.logo }}" width="24" height="24" alt="{{ i18n.brand }}" />
+      <span>{{ i18n.brand }}</span>
     </a>
   </header>
 
