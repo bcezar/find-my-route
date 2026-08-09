@@ -96,7 +96,7 @@ async def conta(request: Request):
     })
 
 
-_SEO_PAGES: dict[str, dict[str, str]] = {
+_SEO_PAGES_PT: dict[str, dict[str, str]] = {
     "como-funciona": {
         "title": "Como Funciona o Rota Otimizada — Otimização de Rota com TSP",
         "description": "Entenda como o Rota Otimizada calcula a ordem ideal de visitas usando o algoritmo TSP. Economize tempo e combustível nas suas entregas.",
@@ -133,6 +133,46 @@ _SEO_PAGES: dict[str, dict[str, str]] = {
         "template": "perguntas-frequentes.html",
     },
 }
+
+_SEO_PAGES_EN: dict[str, dict[str, str]] = {
+    "how-it-works": {
+        "title": "How Find My Route Optimizes Your Route — TSP Route Optimization",
+        "description": "Learn how Find My Route calculates the ideal visit order using the TSP algorithm. Save time and fuel on your deliveries.",
+        "template": "how-it-works.html",
+    },
+    "import-addresses-csv": {
+        "title": "Import Addresses via CSV — Find My Route",
+        "description": "Learn how to import a list of addresses from a CSV or Excel file into Find My Route. Plan dozens of stops in seconds.",
+        "template": "import-addresses-csv.html",
+    },
+    "optimize-delivery-route": {
+        "title": "Optimize Your Delivery Route for Free — Find My Route",
+        "description": "Calculate the best order for deliveries with multiple addresses. Reduce mileage, save fuel, and complete more deliveries per day.",
+        "template": "optimize-delivery-route.html",
+    },
+    "free-route-planner": {
+        "title": "Free Route Planner with Multiple Addresses — Find My Route",
+        "description": "The best free route planner. Free up to 5 stops, up to 50 on the Pro plan. No sign-up, no hassle. Open directly in Maps.",
+        "template": "free-route-planner.html",
+    },
+    "google-maps-multiple-addresses": {
+        "title": "Google Maps with Multiple Optimized Addresses — Find My Route",
+        "description": "Overcome the Google Maps limit and optimize your visit order. Find My Route calculates the ideal route and opens it automatically in Google Maps.",
+        "template": "google-maps-multiple-addresses.html",
+    },
+    "waze-multiple-destinations": {
+        "title": "Waze with Multiple Optimized Destinations — Find My Route",
+        "description": "Use Waze with multiple destinations in optimized order. Find My Route organizes your stops and opens each one directly in Waze.",
+        "template": "waze-multiple-destinations.html",
+    },
+    "faq": {
+        "title": "Frequently Asked Questions — Find My Route",
+        "description": "Get answers about Find My Route: how to optimize routes, import addresses, use with Google Maps and Waze, and much more.",
+        "template": "faq.html",
+    },
+}
+
+_SEO_PAGES = _SEO_PAGES_EN if settings.locale == "en-US" else _SEO_PAGES_PT
 
 @app.get("/{slug}")
 async def seo_page(request: Request, slug: str):

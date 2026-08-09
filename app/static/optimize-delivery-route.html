@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Optimize Your Delivery Route</h1>
+  <p>Delivery drivers, couriers, sales reps, and field teams: Find My Route calculates the ideal visit sequence so you cover less distance, spend less on fuel, and serve more customers in the same amount of time.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Why does delivery order matter?</h2>
+  <p>A poorly ordered route can make you cross the city back and forth multiple times. Studies show that optimizing the delivery sequence can reduce total distance traveled by <strong>20% to 40%</strong>.</p>
+  <p>That means:</p>
+  <ul>
+    <li>Less fuel spent per route</li>
+    <li>Less vehicle wear and tear</li>
+    <li>More deliveries completed in the same time window</li>
+    <li>Fewer overtime hours</li>
+    <li>Customers served with shorter wait times</li>
+  </ul>
+</div>
+
+<div class="seo-section">
+  <h2>How to use it for delivery routes</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Import your list</strong> — Paste addresses one by one or import directly from a CSV spreadsheet. Up to 5 stops on the free plan, up to 50 on the Pro plan.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Set the starting point</strong> — Enter the warehouse, garage, or departure address. You can also define where the route should end.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Optimize with one click</strong> — The algorithm calculates the best sequence in seconds, with distance and estimated time per leg.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Run it with Execution Mode</strong> — Navigate stop by stop, mark as delivered or skip closed addresses, all without leaving your phone.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Does it work on mobile?</h2>
+  <p>Yes. Find My Route is optimized for mobile use. During the route, you can use <strong>Execution Mode</strong> — a dedicated screen that shows one stop at a time, with buttons to navigate via Google Maps or Waze, mark as delivered, or skip addresses that weren't found.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Who uses Find My Route?</h2>
+  <ul>
+    <li>E-commerce and marketplace delivery drivers</li>
+    <li>Couriers and gig economy drivers</li>
+    <li>Sales representatives with customer visits</li>
+    <li>Field technicians and service providers</li>
+    <li>Collection and distribution teams</li>
+    <li>Small businesses with their own delivery service</li>
+  </ul>
+</div>
+
+<a href="/" onclick="if(typeof gtag==='function')gtag('event','cta_clicked',{page:'optimize-delivery-route'})" class="seo-cta seo-cta-green">Create my delivery route →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Find My Route — Delivery Route Optimizer",
+  "url": "https://findmyroute.com.br/optimize-delivery-route",
+  "description": "Optimize delivery routes with multiple addresses. Reduce distance traveled and save on fuel.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "en",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+}
+</script>
+{% endblock %}

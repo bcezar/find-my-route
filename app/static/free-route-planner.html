@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Free Route Planner for Multiple Addresses</h1>
+  <p>Find My Route is a <strong>100% free</strong> route planner, with no registration, no route limit, and no ads. Type your addresses and get the ideal visit order with one click.</p>
+</div>
+
+<div class="seo-section">
+  <h2>What you get for free</h2>
+  <ul>
+    <li><span class="seo-badge">Free</span> Optimization of up to 5 stops per route</li>
+    <li><span class="seo-badge">Pro</span> Up to 50 stops per route</li>
+    <li><span class="seo-badge">Free</span> CSV and Excel list import</li>
+    <li><span class="seo-badge">Free</span> Google Maps and Waze integration</li>
+    <li><span class="seo-badge">Free</span> Route map with numbered markers</li>
+    <li><span class="seo-badge">Free</span> Stop-by-stop Execution Mode</li>
+    <li><span class="seo-badge">Free</span> Route sharing via link</li>
+    <li><span class="seo-badge">Free</span> Works on mobile without installing an app</li>
+  </ul>
+</div>
+
+<div class="seo-section">
+  <h2>Why do other tools charge?</h2>
+  <p>Tools like RouteXL, Circuit, and OptimoRoute charge monthly fees because they add enterprise features such as real-time tracking, driver signature capture, and integration with management systems.</p>
+  <p>The free plan covers routes of up to <strong>5 stops</strong> (+ starting point and final destination) — ideal for occasional use. For independent drivers, small businesses, and sales reps with larger itineraries, the <strong>Pro plan</strong> raises the limit to 50 stops per route.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Do I need to create an account?</h2>
+  <p>No. You can use Find My Route immediately, with no email, no password, and no credit card. Your address history is saved automatically in your browser.</p>
+  <p>If you want to <strong>save routes</strong> to access from another device, just create a free account with your email.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Does it work offline?</h2>
+  <p>Find My Route needs an internet connection to geocode addresses and calculate real distances. But during route execution, after opening Google Maps or Waze, those apps may work offline depending on the downloaded maps.</p>
+</div>
+
+<a href="/" onclick="if(typeof gtag==='function')gtag('event','cta_clicked',{page:'free-route-planner'})" class="seo-cta seo-cta-green">Use the free route planner →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Find My Route — Free Route Planner",
+  "url": "https://findmyroute.com.br/free-route-planner",
+  "description": "Free route planner with multiple addresses. No registration, no limits, integrated with Google Maps and Waze.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "en",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+}
+</script>
+{% endblock %}

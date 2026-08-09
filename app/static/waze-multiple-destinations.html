@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Waze with Multiple Destinations Organized</h1>
+  <p>Waze is excellent for avoiding traffic, but it does not support multiple destinations in a single route. Find My Route fills that gap: it calculates the ideal sequence and opens each stop individually in Waze with a single tap.</p>
+</div>
+
+<div class="seo-section">
+  <h2>What Waze can't do (and Find My Route solves)</h2>
+  <ul>
+    <li>Waze <strong>does not accept multiple stops</strong> in a single route</li>
+    <li>There is no way to import an address list in Waze</li>
+    <li>There is no automatic sequence optimization</li>
+    <li>There is no tracking of which addresses have already been visited</li>
+  </ul>
+  <p>With Find My Route, you organize everything before you leave and use Waze only for navigation — which is what it does best.</p>
+</div>
+
+<div class="seo-section">
+  <h2>How to use Waze with Find My Route</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Add your destinations</strong> in Find My Route — up to 5 stops on the free plan, or up to 50 on the Pro plan. One by one or by importing a CSV.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Calculate the optimized route</strong> — the order that minimizes total distance is calculated in seconds.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Activate Execution Mode</strong> — see one stop at a time with the full address, distance, and estimated time.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Tap "Open in Waze"</strong> — Waze opens directly with the current stop's address. After arriving, return to Find My Route and advance to the next stop.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Remember my favorite app</h2>
+  <p>If you always prefer Waze, Find My Route has a <em>"Remember my choice"</em> option. After the first selection, the button will open Waze directly, without asking every time.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Why use Waze for deliveries?</h2>
+  <ul>
+    <li>Real-time traffic, speed camera, and accident alerts</li>
+    <li>Dynamic routing that recalculates throughout the delivery</li>
+    <li>Active community reporting road events</li>
+    <li>Free, just like Find My Route</li>
+  </ul>
+</div>
+
+<a href="/" onclick="if(typeof gtag==='function')gtag('event','cta_clicked',{page:'waze-multiple-destinations'})" class="seo-cta">Create route and open in Waze →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Find My Route — Waze with Multiple Destinations",
+  "url": "https://findmyroute.com.br/waze-multiple-destinations",
+  "description": "Organize multiple destinations and open each stop in Waze in optimized order.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "inLanguage": "en",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+}
+</script>
+{% endblock %}

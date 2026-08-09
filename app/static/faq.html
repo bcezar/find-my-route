@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Frequently Asked Questions</h1>
+  <p>Get answers to your questions about how to use Find My Route to optimize delivery routes, sales visits, and any trip with multiple addresses.</p>
+</div>
+
+<div class="seo-section">
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Is Find My Route really free?</div>
+    <div class="seo-faq-a">The free plan allows you to optimize routes with up to 5 stops (+ starting point and final destination), with no mandatory registration and no daily route limit. The Pro plan raises this limit to 50 stops per route.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">How many addresses can I add per route?</div>
+    <div class="seo-faq-a">On the free plan, up to 5 stops per route (plus starting point and final destination). On the Pro plan, up to 50 stops per route — enough for the vast majority of delivery routes and sales visits.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Do I need to install any application?</div>
+    <div class="seo-faq-a">No. Find My Route works directly in your phone or computer browser, with no installation required. Access it at findmyroute.com.br.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">How is the route opened in Google Maps?</div>
+    <div class="seo-faq-a">After optimizing, click "Open in Google Maps". The app opens automatically with all points already inserted in the calculated order. On mobile, you can use Execution Mode to navigate stop by stop.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Does it work with Waze?</div>
+    <div class="seo-faq-a">Yes. In Execution Mode, each stop has an "Open in Waze" button that takes you directly to the current address. Find My Route remembers your preference so it doesn't ask every time.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Can I import an address spreadsheet?</div>
+    <div class="seo-faq-a">Yes. Find My Route accepts CSV and Excel (.xlsx) files. The file must have an "address" column and, optionally, a "description" column. You can download a sample template directly from the app.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Is the route calculated with real road distances or straight-line distances?</div>
+    <div class="seo-faq-a">With real road distances, using the OSRM API (Open Source Routing Machine). This ensures the algorithm considers available roads, not just the straight geographic distance.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Can I define where I want to start and end?</div>
+    <div class="seo-faq-a">Yes. You can define a "Starting point" (e.g., your warehouse) and a "Final destination" (e.g., return to warehouse). The algorithm will respect these fixed points and optimize only the intermediate stops.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Can I share the route with someone else?</div>
+    <div class="seo-faq-a">Yes. After optimizing, click "Share" or "Copy link". A short link is generated and can be sent via WhatsApp, email, or any messenger. The recipient will see the same list of addresses.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">What is Execution Mode?</div>
+    <div class="seo-faq-a">It is a focused screen for use in the field. It shows one stop at a time with the full address, distance and estimated time, navigation buttons (Maps or Waze), and options to mark as visited, skip, or add a note. You advance to the next stop with the "Next →" button.</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Can I save routes to use in the future?</div>
+    <div class="seo-faq-a">Yes. Create a free account with your email and you can save routes with a name and access them from any device under "My Routes".</div>
+  </div>
+  <div class="seo-faq-item">
+    <div class="seo-faq-q">Does Find My Route work in rural areas / small towns?</div>
+    <div class="seo-faq-a">Yes. The system uses Google Maps to geocode addresses and OpenStreetMap as a fallback. Coverage is good across virtually all regions, including smaller towns.</div>
+  </div>
+</div>
+
+<a href="/" onclick="if(typeof gtag==='function')gtag('event','cta_clicked',{page:'faq'})" class="seo-cta seo-cta-green">Optimize my route now →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Find My Route really free?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Yes, 100% free. No mandatory registration, no paid plan required, no daily usage limit."}
+    },
+    {
+      "@type": "Question",
+      "name": "How many addresses can I add per route?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Up to 5 stops on the free plan, up to 50 stops on the Pro plan."}
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need to install any application?",
+      "acceptedAnswer": {"@type": "Answer", "text": "No. Find My Route works directly in the browser, no installation needed."}
+    },
+    {
+      "@type": "Question",
+      "name": "How is the route opened in Google Maps?",
+      "acceptedAnswer": {"@type": "Answer", "text": "After optimizing, click 'Open in Google Maps'. The app opens with all points already in the calculated order."}
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work with Waze?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Yes. In Execution Mode, each stop has a button that opens directly in Waze."}
+    },
+    {
+      "@type": "Question",
+      "name": "Can I import an address spreadsheet?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Yes. Accepts CSV and Excel files with an 'address' column and optionally a 'description' column."}
+    },
+    {
+      "@type": "Question",
+      "name": "Does the route use real road distances?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Yes, using the OSRM API with real road distances."}
+    },
+    {
+      "@type": "Question",
+      "name": "What is Execution Mode?",
+      "acceptedAnswer": {"@type": "Answer", "text": "A focused screen for field use. Shows one stop at a time with navigation, visited marking, and progress tracking."}
+    }
+  ]
+}
+</script>
+{% endblock %}

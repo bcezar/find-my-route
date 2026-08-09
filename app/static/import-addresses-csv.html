@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>Import Your Addresses via CSV or Excel</h1>
+  <p>Have a spreadsheet with customer addresses or delivery points? Find My Route accepts CSV and Excel (.xlsx) files and imports all stops at once, with no manual typing required.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Accepted format</h2>
+  <p>The file must have at least one column called <code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">address</code>. You can also include a <code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">description</code> column with the customer name, landmark, or any annotation.</p>
+  <p>CSV example:</p>
+  <pre style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;font-size:.8rem;overflow-x:auto;margin:.5rem 0">address,description
+"1000 Fifth Avenue, New York, NY","Customer A"
+"350 Fifth Ave, New York, NY","Empire State Building"
+"Broadway & W 42nd St, New York, NY",""</pre>
+</div>
+
+<div class="seo-section">
+  <h2>Step-by-step import guide</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Open the menu</strong> — Click the menu icon (☰) in the upper left corner or click "⋮" (More options) in the stops section.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Select "Import CSV" or "Import XLS"</strong> — Choose the format of your file.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Select the file</strong> — Drag the file to the indicated area or click to select from your device.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Confirm the import</strong> — You will see how many addresses were found. Choose between "Add" (keep existing stops) or "Replace" (start over).</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Don't have a file ready?</h2>
+  <p>You can download a <strong>CSV template</strong> directly from the app. It already comes with the correct columns and filled-in examples. Just replace them with your addresses and re-import.</p>
+  <p>The template is available in the side menu under <em>"Download CSV template"</em> or in the import modal.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Supported delimiters</h2>
+  <p>Find My Route automatically detects whether the CSV uses a comma (<code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">,</code>) or semicolon (<code style="background:#f3f4f6;padding:.1rem .3rem;border-radius:4px;font-size:.85rem">;</code>) as the separator. No configuration needed.</p>
+</div>
+
+<a href="/" onclick="if(typeof gtag==='function')gtag('event','cta_clicked',{page:'import-addresses-csv'})" class="seo-cta">Import my address list →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to import addresses via CSV in Find My Route",
+  "description": "Step-by-step guide to importing an address list in CSV or Excel into the Find My Route route planner.",
+  "step": [
+    {"@type": "HowToStep", "name": "Prepare the CSV", "text": "Create a CSV file with the 'address' and 'description' columns (optional)."},
+    {"@type": "HowToStep", "name": "Open the import menu", "text": "Click More options (⋮) in the stops section and select Import CSV."},
+    {"@type": "HowToStep", "name": "Select the file", "text": "Drag the file to the dropzone or click to select."},
+    {"@type": "HowToStep", "name": "Confirm the import", "text": "Review the count and click Add or Replace."}
+  ]
+}
+</script>
+{% endblock %}

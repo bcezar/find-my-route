@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="seo-hero">
+  <h1>How Find My Route Optimizes Your Route</h1>
+  <p>Find My Route uses computational intelligence to calculate the visit sequence that minimizes the total distance traveled. Here's how it works under the hood.</p>
+</div>
+
+<div class="seo-section">
+  <h2>The Travelling Salesman Problem (TSP)</h2>
+  <p>The challenge of visiting multiple addresses in the most efficient order is called the <strong>Travelling Salesman Problem</strong> (TSP). It is one of the most studied problems in computer science.</p>
+  <p>For 10 addresses, there are more than 180,000 possible sequences. For 20 addresses, that number exceeds 1.2 quintillion. Testing all combinations manually is impossible.</p>
+</div>
+
+<div class="seo-section">
+  <h2>How Find My Route solves this</h2>
+  <div class="seo-steps">
+    <div class="seo-step">
+      <div class="seo-step-num">1</div>
+      <div class="seo-step-text"><strong>Geocoding</strong> — Each address you type is converted into geographic coordinates (latitude and longitude) via Google Maps or OpenStreetMap.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">2</div>
+      <div class="seo-step-text"><strong>Distance matrix</strong> — We calculate the real road distance between every pair of addresses using the OSRM API (Open Source Routing Machine).</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">3</div>
+      <div class="seo-step-text"><strong>Optimization with OR-Tools</strong> — Google OR-Tools' TSP algorithm finds the lowest-cost sequence in seconds, using GLS (Guided Local Search) metaheuristics.</div>
+    </div>
+    <div class="seo-step">
+      <div class="seo-step-num">4</div>
+      <div class="seo-step-text"><strong>Practical result</strong> — You receive the ordered list with distance and estimated time per leg, plus a direct link to Google Maps or Waze with the route already built.</div>
+    </div>
+  </div>
+</div>
+
+<div class="seo-section">
+  <h2>Starting point and final destination</h2>
+  <p>You can (optionally) define a <strong>starting point</strong> — such as your warehouse or work address — and a fixed <strong>final destination</strong>. The algorithm respects these constraints and optimizes only the intermediate stops.</p>
+  <p>You can also mark any stop in the list as "first destination" or "last destination", forcing its position in the route without removing the others.</p>
+</div>
+
+<div class="seo-section">
+  <h2>How many addresses can I use?</h2>
+  <p>The free plan supports up to <strong>5 stops per route</strong> (+ starting point and final destination). The <strong>Pro plan</strong> expands this limit to 50 stops, ideal for longer delivery routes. Calculation time is approximately 2 to 5 seconds for 50 stops.</p>
+</div>
+
+<div class="seo-section">
+  <h2>Is it free?</h2>
+  <p>Yes. Find My Route is <strong>100% free</strong>, with no mandatory registration, no daily usage limit, and no intrusive ads. You can optimize as many routes as you want.</p>
+</div>
+
+<a href="/" onclick="if(typeof gtag==='function')gtag('event','cta_clicked',{page:'how-it-works'})" class="seo-cta seo-cta-green">Optimize my route now →</a>
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to optimize a route with multiple addresses in Find My Route",
+  "description": "Step-by-step guide to calculating the best visit or delivery order using Find My Route.",
+  "step": [
+    {"@type": "HowToStep", "name": "Add addresses", "text": "Enter the addresses you need to visit in the stops field."},
+    {"@type": "HowToStep", "name": "Set start and destination (optional)", "text": "Enter where you are starting from and where you want to end, if needed."},
+    {"@type": "HowToStep", "name": "Click Optimize Route", "text": "The system calculates the most efficient sequence in seconds."},
+    {"@type": "HowToStep", "name": "Open in Google Maps or Waze", "text": "With one click, open the optimized route directly in your navigation app."}
+  ]
+}
+</script>
+{% endblock %}
