@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
@@ -53,6 +53,19 @@ app.include_router(billing.router, prefix="/api/v1")
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap():
+    base = _BASE_URL
+    slugs = list(_SEO_PAGES.keys())
+    urls = [f"  <url><loc>{base}/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>"]
+    for slug in slugs:
+        urls.append(f"  <url><loc>{base}/{slug}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>")
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += "\n".join(urls)
+    xml += "\n</urlset>"
+    return Response(content=xml, media_type="application/xml")
 
 
 @app.get("/s/{code}")
