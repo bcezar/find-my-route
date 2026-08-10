@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="{{ i18n.lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Minha Conta — {{ i18n.brand }}</title>
+  <title>{{ i18n.account_page_title }} — {{ i18n.brand }}</title>
   <link rel="icon" type="image/png" href="{{ i18n.icon }}" />
   <link rel="apple-touch-icon" href="{{ i18n.icon }}" />
   <meta name="robots" content="noindex, nofollow" />
@@ -17,6 +17,7 @@
     gtag('config', '{{ ga_measurement_id }}');
   </script>
   {% endif %}
+  <script>window.I18N = {{ i18n | tojson }};</script>
 </head>
 <body x-data="accountApp()" x-init="init()">
 
@@ -26,7 +27,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
-      Voltar
+      {{ i18n.account_back }}
     </a>
     <a href="/" class="conta-logo">
       <img src="{{ i18n.logo }}" width="24" height="24" alt="{{ i18n.brand }}" />
@@ -39,7 +40,7 @@
     <!-- Loading -->
     <div class="conta-loading" x-show="loading">
       <div class="conta-spinner"></div>
-      <p>Carregando sua conta…</p>
+      <p>{{ i18n.account_loading }}</p>
     </div>
 
     <template x-if="!loading">
@@ -60,7 +61,7 @@
 
         <!-- Assinatura -->
         <div class="conta-card" x-show="user?.is_pro || subscription || proExpiresAt">
-          <h2 class="conta-section-title">Assinatura</h2>
+          <h2 class="conta-section-title">{{ i18n.account_subscription_title }}</h2>
 
           <!-- Ativa -->
           <template x-if="subscription && subscription.status === 'ACTIVE'">
@@ -68,23 +69,23 @@
               <div class="conta-sub-row">
                 <span class="conta-sub-label">Status</span>
                 <span class="conta-sub-value">
-                  <span class="payment-status-received">● Ativo</span>
+                  <span class="payment-status-received">{{ i18n.account_status_active }}</span>
                 </span>
               </div>
               <div class="conta-sub-row">
-                <span class="conta-sub-label">Plano</span>
+                <span class="conta-sub-label">{{ i18n.account_plan_label }}</span>
                 <span class="conta-sub-value">Pro — R$ <span x-text="subscription.value?.toFixed(2).replace('.',',')"></span>/mês</span>
               </div>
               <div class="conta-sub-row">
-                <span class="conta-sub-label">Próximo vencimento</span>
+                <span class="conta-sub-label">{{ i18n.account_next_due }}</span>
                 <span class="conta-sub-value" x-text="formatDate(subscription.nextDueDate)"></span>
               </div>
               <div class="conta-sub-row">
-                <span class="conta-sub-label">Forma de pagamento</span>
+                <span class="conta-sub-label">{{ i18n.account_payment_method }}</span>
                 <span class="conta-sub-value" x-text="formatBillingType(subscription.billingType)"></span>
               </div>
               <button class="conta-btn-cancel" @click="cancelConfirmOpen = true">
-                Cancelar plano
+                {{ i18n.account_cancel_plan_btn }}
               </button>
             </div>
           </template>
@@ -95,15 +96,15 @@
               <div class="conta-sub-row">
                 <span class="conta-sub-label">Status</span>
                 <span class="conta-sub-value">
-                  <span class="payment-status-pending">● Cancelado</span>
+                  <span class="payment-status-pending">{{ i18n.account_status_cancelled }}</span>
                 </span>
               </div>
               <div class="conta-sub-row">
-                <span class="conta-sub-label">Acesso Pro até</span>
+                <span class="conta-sub-label">{{ i18n.account_pro_until }}</span>
                 <span class="conta-sub-value" x-text="formatDate(proExpiresAt)"></span>
               </div>
               <button class="conta-btn-reactivate" @click="window.location.href='/?upgrade=1'">
-                Reativar plano Pro
+                {{ i18n.account_reactivate_btn }}
               </button>
             </div>
           </template>
@@ -113,22 +114,22 @@
             <div>
               <div class="conta-sub-row">
                 <span class="conta-sub-label">Status</span>
-                <span class="conta-sub-value"><span class="payment-status-received">● Ativo</span></span>
+                <span class="conta-sub-value"><span class="payment-status-received">{{ i18n.account_status_active }}</span></span>
               </div>
-              <p class="conta-sub-hint">Assinatura gerenciada externamente.</p>
+              <p class="conta-sub-hint">{{ i18n.account_managed_externally }}</p>
             </div>
           </template>
         </div>
 
         <!-- Sem plano -->
         <div class="conta-card conta-card-upgrade" x-show="!user?.is_pro && !proExpiresAt">
-          <p class="conta-upgrade-text">Você está no plano <strong>Free</strong> (até 5 paradas).</p>
-          <a href="/" class="conta-btn-upgrade">Ver Plano Pro</a>
+          <p class="conta-upgrade-text">{{ i18n.account_free_plan_msg }}</p>
+          <a href="/" class="conta-btn-upgrade">{{ i18n.account_see_pro_btn }}</a>
         </div>
 
         <!-- Histórico de pagamentos -->
         <div class="conta-card" x-show="payments.length > 0">
-          <h2 class="conta-section-title">Histórico de pagamentos</h2>
+          <h2 class="conta-section-title">{{ i18n.account_payment_history_title }}</h2>
           <div class="payment-list">
             <template x-for="p in payments" :key="p.id">
               <div class="payment-row">
@@ -148,7 +149,7 @@
                   <a x-show="p.transactionReceiptUrl || p.invoiceUrl"
                      :href="p.transactionReceiptUrl || p.invoiceUrl"
                      target="_blank" rel="noopener"
-                     class="payment-receipt">Comprovante</a>
+                     class="payment-receipt">{{ i18n.account_receipt_link }}</a>
                 </div>
               </div>
             </template>
@@ -169,17 +170,14 @@
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       </div>
-      <h2 class="clear-confirm-title">Cancelar plano Pro?</h2>
-      <p class="clear-confirm-sub">
-        Futuras cobranças serão canceladas. Seu acesso Pro continua ativo por
-        <strong>30 dias</strong> a partir de hoje.
-      </p>
+      <h2 class="clear-confirm-title">{{ i18n.account_cancel_modal_title }}</h2>
+      <p class="clear-confirm-sub">{{ i18n.account_cancel_modal_body }}</p>
       <div class="clear-confirm-actions">
         <button class="btn-clear-confirm" @click="cancelSubscription()" :disabled="cancelLoading">
-          <span x-show="!cancelLoading">Cancelar plano mesmo assim</span>
-          <span x-show="cancelLoading">Cancelando…</span>
+          <span x-show="!cancelLoading">{{ i18n.account_cancel_confirm_btn }}</span>
+          <span x-show="cancelLoading">{{ i18n.account_cancelling_btn }}</span>
         </button>
-        <button class="btn-clear-cancel" @click="cancelConfirmOpen = false">Manter plano</button>
+        <button class="btn-clear-cancel" @click="cancelConfirmOpen = false">{{ i18n.account_keep_plan_btn }}</button>
       </div>
     </div>
   </div>
@@ -216,7 +214,7 @@
           s.user = d.user;
           localStorage.setItem('routeSession', JSON.stringify(s));
         } catch (e) {
-          this.error = 'Erro ao carregar dados da conta.';
+          this.error = window.I18N.account_error_load;
         } finally {
           this.loading = false;
         }
@@ -237,10 +235,10 @@
             const s = JSON.parse(localStorage.getItem('routeSession') || '{}');
             if (s.user) { s.user.is_pro = true; localStorage.setItem('routeSession', JSON.stringify(s)); }
           } else {
-            this.error = d.detail || 'Erro ao cancelar assinatura.';
+            this.error = d.detail || window.I18N.account_error_cancel;
           }
         } catch (e) {
-          this.error = 'Erro de conexão.';
+          this.error = window.I18N.account_error_connection;
         } finally {
           this.cancelLoading   = false;
           this.cancelConfirmOpen = false;
@@ -254,18 +252,22 @@
       },
 
       formatBillingType(type) {
-        return { PIX: 'Pix', CREDIT_CARD: 'Cartão de crédito', BOLETO: 'Boleto' }[type] || type || '—';
+        return {
+          PIX:         window.I18N.account_billing_pix,
+          CREDIT_CARD: window.I18N.account_billing_card,
+          BOLETO:      window.I18N.account_billing_boleto,
+        }[type] || type || '—';
       },
 
       formatStatus(status) {
         return {
-          RECEIVED:               'Pago',
-          CONFIRMED:              'Confirmado',
-          PENDING:                'Pendente',
-          AWAITING_RISK_ANALYSIS: 'Em análise',
-          OVERDUE:                'Vencido',
-          REFUNDED:               'Estornado',
-          CHARGEBACK_REQUESTED:   'Contestado',
+          RECEIVED:               window.I18N.status_paid,
+          CONFIRMED:              window.I18N.status_confirmed,
+          PENDING:                window.I18N.status_pending,
+          AWAITING_RISK_ANALYSIS: window.I18N.status_under_review,
+          OVERDUE:                window.I18N.status_overdue,
+          REFUNDED:               window.I18N.status_refunded,
+          CHARGEBACK_REQUESTED:   window.I18N.status_disputed,
         }[status] || status || '—';
       },
     };

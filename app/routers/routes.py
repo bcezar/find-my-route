@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse, Response
 
 from app import storage
 from app.config import settings
+from app.i18n import get_strings
 from app.limiter import limiter
 from app.models import (
     Coordinates, LoginRequest, LoginResponse, MagicRequestBody, MagicRequestResponse,
@@ -29,12 +30,13 @@ def _user_response(user: dict) -> dict:
 
 
 async def _require_auth(request: Request) -> dict:
+    s = get_strings(settings.locale)
     token = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
     if not token:
-        raise HTTPException(status_code=401, detail="Autenticação necessária.")
+        raise HTTPException(status_code=401, detail=s["err_auth_required"])
     user = await storage.get_user_by_token(token)
     if not user:
-        raise HTTPException(status_code=401, detail="Sessão inválida ou expirada.")
+        raise HTTPException(status_code=401, detail=s["err_session_invalid"])
     return user
 
 
@@ -67,29 +69,30 @@ async def me(request: Request):
 async def _send_magic_email(to_email: str, magic_token: str) -> None:
     if not settings.resend_api_key:
         return
+    s = get_strings(settings.locale)
     link = f"{settings.app_base_url}/api/v1/auth/verify?token={magic_token}"
     import resend
     resend.api_key = settings.resend_api_key
     resend.Emails.send({
-        "from": f"Rota Otimizada <{settings.resend_from_email}>",
+        "from": f"{s['email_from_name']} <{settings.resend_from_email}>",
         "to": [to_email],
-        "subject": "Seu link de acesso — Rota Otimizada",
+        "subject": s["email_subject"],
         "html": f"""
         <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:2rem">
-          <img src="https://rotaotimizada.com.br/logo-rota-otimizada.png"
+          <img src="{settings.app_base_url}/{s['logo']}"
                width="40" style="border-radius:10px;margin-bottom:1.5rem" />
-          <h2 style="color:#111;margin:0 0 .5rem">Acesse o Rota Otimizada</h2>
+          <h2 style="color:#111;margin:0 0 .5rem">{s['email_heading']}</h2>
           <p style="color:#6b7280;margin:0 0 1.5rem">
-            Clique no botão abaixo para entrar. O link expira em <strong>15 minutos</strong>.
+            {s['email_body']}
           </p>
           <a href="{link}"
              style="display:inline-block;background:#1d4ed8;color:#fff;
                     padding:.8rem 1.5rem;border-radius:10px;text-decoration:none;
                     font-weight:700;font-size:1rem">
-            Entrar no Rota Otimizada
+            {s['email_cta']}
           </a>
           <p style="color:#9ca3af;font-size:.8rem;margin-top:2rem">
-            Se você não solicitou este link, ignore este e-mail.
+            {s['email_footer']}
           </p>
         </div>
         """,

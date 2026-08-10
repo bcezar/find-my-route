@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-Disallow: /api/
-Disallow: /r/
-Disallow: /s/
-
-Sitemap: https://rotaotimizada.com.br/sitemap.xml

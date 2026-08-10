@@ -68,6 +68,19 @@ async def sitemap():
     return Response(content=xml, media_type="application/xml")
 
 
+@app.get("/robots.txt", include_in_schema=False)
+async def robots():
+    content = f"""User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /r/
+Disallow: /s/
+
+Sitemap: {_BASE_URL}/sitemap.xml"""
+    return Response(content=content, media_type="text/plain")
+
+
 @app.get("/s/{code}")
 async def expand_saved_route(code: str):
     return RedirectResponse(url=f"/?saved={code}", status_code=302)

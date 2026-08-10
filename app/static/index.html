@@ -77,9 +77,9 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
-        Voltar
+        {{ i18n.execution_back }}
       </button>
-      <span class="exec-title">Modo Execução</span>
+      <span class="exec-title">{{ i18n.execution_mode_title }}</span>
       <span class="exec-progress" x-text="(execStopIndex + 1) + ' / ' + execTotal"></span>
     </div>
 
@@ -105,11 +105,11 @@
         <!-- Stats -->
         <div class="exec-stats" x-show="execStop?.leg_distance_km != null">
           <div class="exec-stat">
-            <div class="exec-stat-label">Distância até aqui</div>
+            <div class="exec-stat-label">{{ i18n.execution_distance_label }}</div>
             <div class="exec-stat-value" x-text="execStop?.leg_distance_km + ' km'"></div>
           </div>
           <div class="exec-stat" x-show="execStop?.leg_duration_min != null">
-            <div class="exec-stat-label">Tempo estimado</div>
+            <div class="exec-stat-label">{{ i18n.execution_time_label }}</div>
             <div class="exec-stat-value" x-text="formatDuration(execStop?.leg_duration_min)"></div>
           </div>
         </div>
@@ -123,12 +123,12 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="3 11 22 2 13 21 11 13 3 11"/>
           </svg>
-          <span x-text="navPreference ? (navPreference === 'gmaps' ? 'Abrir no Google Maps' : 'Abrir no Waze') : 'Iniciar Rota'"></span>
+          <span x-text="navPreference ? (navPreference === 'gmaps' ? window.I18N.execution_open_maps : window.I18N.execution_open_waze) : window.I18N.execution_start_btn"></span>
         </button>
 
         <!-- Link para trocar preferência se ela já estiver salva -->
         <button class="btn-exec-change-nav" x-show="navPreference" @click="forgetNavPreference()">
-          Trocar app de navegação
+          {{ i18n.execution_change_app }}
         </button>
 
         <!-- Mais Ações -->
@@ -140,7 +140,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span x-text="visitedStops[execStop?.order] ? 'Visitado ✓' : 'Marcar visitado'"></span>
+            <span x-text="visitedStops[execStop?.order] ? window.I18N.execution_visited_label : window.I18N.execution_mark_visited"></span>
           </button>
           <button class="exec-action-btn"
                   :class="{ 'exec-action-btn-gray': skippedStops[execStop?.order] }"
@@ -148,13 +148,13 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/>
             </svg>
-            <span x-text="skippedStops[execStop?.order] ? 'Pulado →' : 'Pular parada'"></span>
+            <span x-text="skippedStops[execStop?.order] ? window.I18N.execution_skipped_label : window.I18N.execution_skip_stop"></span>
           </button>
           <button class="exec-action-btn" @click="copyStopAddress()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            <span>Copiar endereço</span>
+            <span>{{ i18n.execution_copy_address }}</span>
           </button>
           <button class="exec-action-btn"
                   :class="{ 'exec-action-btn-active': execObsOpen }"
@@ -162,17 +162,17 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
             </svg>
-            <span>Observação</span>
+            <span>{{ i18n.execution_note_label }}</span>
           </button>
         </div>
 
         <!-- Input de observação -->
         <div class="exec-obs-input-wrap" x-show="execObsOpen" x-transition>
-          <textarea class="exec-obs-input" placeholder="Ex: portão azul, ligar antes…"
+          <textarea class="exec-obs-input" :placeholder="window.I18N.execution_note_placeholder"
                     x-model="execObsInput" rows="2"></textarea>
           <div class="exec-obs-actions">
-            <button class="btn-exec-obs-save" @click="saveExecObs()">Salvar</button>
-            <button class="btn-exec-obs-cancel" @click="execObsOpen = false">Cancelar</button>
+            <button class="btn-exec-obs-save" @click="saveExecObs()">{{ i18n.execution_save }}</button>
+            <button class="btn-exec-obs-cancel" @click="execObsOpen = false">{{ i18n.execution_cancel }}</button>
           </div>
         </div>
 
@@ -183,7 +183,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.05rem">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <span>Dica: na lista, arraste para a direita para marcar como visitado e para a esquerda para pular uma parada.</span>
+        <span>{{ i18n.execution_swipe_tip }}</span>
       </div>
 
     </div><!-- /exec-body -->
@@ -192,7 +192,7 @@
     <div class="exec-nav-sheet-overlay" x-show="execNavOpen" x-transition @click.self="execNavOpen = false">
       <div class="exec-nav-sheet">
         <div class="exec-nav-sheet-handle"></div>
-        <p class="exec-nav-sheet-title">Como deseja navegar?</p>
+        <p class="exec-nav-sheet-title">{{ i18n.execution_nav_modal_title }}</p>
         <div class="exec-nav-sheet-address" x-show="execStop">
           <div class="exec-nav-sheet-name" x-show="getStopInfo(execStop?.original_address).description"
                x-text="getStopInfo(execStop?.original_address).description"></div>
@@ -216,9 +216,9 @@
         </button>
         <label class="exec-nav-sheet-remember">
           <input type="checkbox" x-model="navRemember" />
-          <span>Lembrar minha escolha</span>
+          <span>{{ i18n.execution_remember_choice }}</span>
         </label>
-        <button class="btn-exec-sheet-cancel" @click="execNavOpen = false">Cancelar</button>
+        <button class="btn-exec-sheet-cancel" @click="execNavOpen = false">{{ i18n.execution_cancel }}</button>
       </div>
     </div>
 
@@ -228,7 +228,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
-        Anterior
+        {{ i18n.execution_prev }}
       </button>
       <div class="exec-footer-dots">
         <template x-for="(_, i) in (result?.optimized_route ?? [])" :key="i">
@@ -241,7 +241,7 @@
         </template>
       </div>
       <button class="btn-exec-next" @click="execNext()" :disabled="execStopIndex >= execTotal - 1">
-        Próxima
+        {{ i18n.execution_next }}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
@@ -259,26 +259,26 @@
   <!-- Help Modal -->
   <div class="modal-overlay" x-show="helpOpen" x-transition @click.self="helpOpen = false">
     <div class="modal-card">
-      <h2 class="modal-title">Como usar o Roteirizador</h2>
+      <h2 class="modal-title">{{ i18n.howto_modal_title }}</h2>
       <div class="modal-steps">
         <div class="modal-step">
           <div class="modal-step-num">1</div>
-          <p class="modal-step-text"><strong>Ponto de partida (opcional)</strong> — informe de onde você vai sair, como seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
+          <p class="modal-step-text"><strong>{{ i18n.howto_step1_origin }}</strong> — informe de onde você vai sair, como seu depósito ou endereço da empresa. Se não informado, a rota começa no primeiro endereço da lista.</p>
         </div>
         <div class="modal-step">
           <div class="modal-step-num">2</div>
-          <p class="modal-step-text"><strong>Destino final (opcional)</strong> — onde a rota deve terminar. Pode ser igual à origem para fechar o ciclo. Se não informado, termina no último endereço otimizado.</p>
+          <p class="modal-step-text"><strong>{{ i18n.howto_step2_dest }}</strong> — onde a rota deve terminar. Pode ser igual à origem para fechar o ciclo. Se não informado, termina no último endereço otimizado.</p>
         </div>
         <div class="modal-step">
           <div class="modal-step-num">3</div>
-          <p class="modal-step-text"><strong>Adicione as paradas</strong> — clique em "Adicionar parada" e informe os endereços que precisa visitar. A ordem não importa, o sistema calcula a sequência mais eficiente.</p>
+          <p class="modal-step-text"><strong>{{ i18n.howto_step3_stops }}</strong> — clique em "Adicionar parada" e informe os endereços que precisa visitar. A ordem não importa, o sistema calcula a sequência mais eficiente.</p>
         </div>
         <div class="modal-step">
           <div class="modal-step-num">4</div>
-          <p class="modal-step-text"><strong>Início / Destino por parada</strong> — use os botões <em>Início</em> e <em>Destino</em> em cada endereço para forçar uma parada obrigatória no começo ou no fim da rota.</p>
+          <p class="modal-step-text"><strong>{{ i18n.howto_step4_pin }}</strong> — use os botões <em>Início</em> e <em>Destino</em> em cada endereço para forçar uma parada obrigatória no começo ou no fim da rota.</p>
         </div>
       </div>
-      <button class="btn-modal-close" @click="helpOpen = false">Entendi</button>
+      <button class="btn-modal-close" @click="helpOpen = false">{{ i18n.howto_understood }}</button>
     </div>
   </div>
 
@@ -286,7 +286,7 @@
   <div class="modal-overlay" x-show="importOpen" x-transition @click.self="importOpen = false; importFile = null; importStep = 'select'; importError = ''">
     <div class="modal-card">
       <div class="import-modal-header">
-        <h2 class="modal-title" style="margin-bottom:0">Importar endereços</h2>
+        <h2 class="modal-title" style="margin-bottom:0">{{ i18n.import_modal_title }}</h2>
         <button class="drawer-close" @click="importOpen = false; importFile = null; importStep = 'select'; importError = ''" aria-label="Fechar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -310,8 +310,8 @@
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <p class="import-dropzone-title">Arraste o arquivo aqui</p>
-              <p class="import-dropzone-sub">ou clique para selecionar</p>
+              <p class="import-dropzone-title">{{ i18n.import_drag_text }}</p>
+              <p class="import-dropzone-sub">{{ i18n.import_click_text }}</p>
               <span class="import-dropzone-hint" x-text="'Formato aceito: .' + importType"></span>
             </div>
           </template>
@@ -332,11 +332,11 @@
           <span>Não possui um arquivo?</span>
           <button class="import-template-btn" @click="downloadTemplate()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Baixar template CSV
+            {{ i18n.import_csv_template_btn }}
           </button>
         </div>
 
-        <button class="btn-modal-close" style="margin-top:.5rem" :disabled="!importFile" @click="importAddresses()">Importar</button>
+        <button class="btn-modal-close" style="margin-top:.5rem" :disabled="!importFile" @click="importAddresses()">{{ i18n.import_btn }}</button>
       </div>
 
       <!-- Step: preview -->
@@ -344,11 +344,11 @@
         <div class="import-preview">
           <div class="import-preview-stat import-preview-ok">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span><strong x-text="importedRows.length"></strong> endereços encontrados</span>
+            <span><strong x-text="importedRows.length"></strong> {{ i18n.import_addresses_found }}</span>
           </div>
           <div class="import-preview-stat import-preview-warn" x-show="importedSkipped > 0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span><strong x-text="importedSkipped"></strong> linhas ignoradas (sem endereço)</span>
+            <span><strong x-text="importedSkipped"></strong> {{ i18n.import_rows_skipped }}</span>
           </div>
         </div>
 
@@ -356,11 +356,11 @@
           <p class="import-error" x-text="importError"></p>
         </template>
 
-        <p class="import-action-label">O que deseja fazer?</p>
+        <p class="import-action-label">{{ i18n.import_what_to_do }}</p>
         <div class="import-action-btns">
-          <button class="btn-modal-close" @click="applyImport('add')">Adicionar às paradas atuais</button>
-          <button class="btn-modal-close import-btn-replace" @click="applyImport('replace')">Substituir lista atual</button>
-          <button class="btn-clear-cancel" style="margin-top:.4rem" @click="importStep = 'select'; importError = ''">← Voltar</button>
+          <button class="btn-modal-close" @click="applyImport('add')">{{ i18n.import_add_to_list }}</button>
+          <button class="btn-modal-close import-btn-replace" @click="applyImport('replace')">{{ i18n.import_replace_list }}</button>
+          <button class="btn-clear-cancel" style="margin-top:.4rem" @click="importStep = 'select'; importError = ''">{{ i18n.import_back }}</button>
         </div>
       </div>
     </div>
@@ -378,8 +378,8 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
           </svg>
         </div>
-        <h2 class="clear-confirm-title">Entrar</h2>
-        <p class="clear-confirm-sub">Salve e acesse suas rotas em qualquer dispositivo.</p>
+        <h2 class="clear-confirm-title">{{ i18n.auth_modal_title }}</h2>
+        <p class="clear-confirm-sub">{{ i18n.auth_modal_subtitle }}</p>
 
         <!-- Botão Google -->
         <button class="btn-google-login" @click="loginWithGoogle()">
@@ -389,10 +389,10 @@
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
           </svg>
-          Entrar com Google
+          {{ i18n.auth_google_btn }}
         </button>
 
-        <div class="login-divider"><span>ou</span></div>
+        <div class="login-divider"><span>{{ i18n.auth_or }}</span></div>
 
         <input type="email" class="login-email-input" placeholder="seu@email.com"
                x-model="loginEmail"
@@ -400,11 +400,11 @@
                x-init="$el.focus()" />
         <button class="btn-modal-close" style="margin-top:.75rem"
                 @click="login()" :disabled="loginLoading || loginEmail.trim().length < 3">
-          <span x-show="!loginLoading">Enviar link de acesso</span>
-          <span x-show="loginLoading">Enviando…</span>
+          <span x-show="!loginLoading">{{ i18n.auth_send_link_btn }}</span>
+          <span x-show="loginLoading">{{ i18n.auth_sending_btn }}</span>
         </button>
         <button class="btn-clear-cancel" style="margin-top:.4rem"
-                @click="loginOpen = false; _pendingSave = false; resetLogin()">Cancelar</button>
+                @click="loginOpen = false; _pendingSave = false; resetLogin()">{{ i18n.auth_cancel }}</button>
       </div>
 
       <!-- Estado: link enviado -->
@@ -415,19 +415,19 @@
             <polyline points="22,6 12,13 2,6"/>
           </svg>
         </div>
-        <h2 class="clear-confirm-title">Verifique seu e-mail</h2>
+        <h2 class="clear-confirm-title">{{ i18n.auth_check_email_title }}</h2>
         <p class="clear-confirm-sub">
-          Enviamos um link de acesso para <strong x-text="loginEmail"></strong>.<br/>
-          Clique no link dentro de <strong>15 minutos</strong>.
+          {{ i18n.auth_check_email_body1 }} <strong x-text="loginEmail"></strong>.<br/>
+          {{ i18n.auth_check_email_body2 }}
         </p>
         <button class="btn-modal-close" style="margin-top:.75rem"
                 :disabled="loginResendCooldown > 0"
                 @click="login()">
-          <span x-show="loginResendCooldown <= 0">Reenviar link</span>
-          <span x-show="loginResendCooldown > 0">Reenviar em <span x-text="loginResendCooldown"></span>s</span>
+          <span x-show="loginResendCooldown <= 0">{{ i18n.auth_resend_btn }}</span>
+          <span x-show="loginResendCooldown > 0">{{ i18n.auth_resend_in }} <span x-text="loginResendCooldown"></span>s</span>
         </button>
         <button class="btn-clear-cancel" style="margin-top:.4rem"
-                @click="resetLogin()">Usar outro e-mail</button>
+                @click="resetLogin()">{{ i18n.auth_use_other_email }}</button>
       </div>
 
     </div>
@@ -436,18 +436,18 @@
   <!-- Save Route Name Modal -->
   <div class="modal-overlay" x-show="saveRouteNameOpen" x-transition @click.self="saveRouteNameOpen = false">
     <div class="modal-card modal-card-sm">
-      <h2 class="clear-confirm-title">Salvar rota</h2>
-      <p class="clear-confirm-sub">Dê um nome para identificar esta rota depois.</p>
+      <h2 class="clear-confirm-title">{{ i18n.save_route_modal_title }}</h2>
+      <p class="clear-confirm-sub">{{ i18n.save_route_modal_subtitle }}</p>
       <input type="text" class="login-email-input" :placeholder="saveRoutePlaceholder"
              x-model="saveRouteName"
              @keydown.enter="saveRoute()"
              x-ref="saveRouteNameInput" />
       <button class="btn-modal-close" style="margin-top:.75rem"
               @click="saveRoute()" :disabled="saveRouteName.trim().length === 0">
-        Salvar
+        {{ i18n.save_route_btn }}
       </button>
       <button class="btn-clear-cancel" style="margin-top:.4rem"
-              @click="saveRouteNameOpen = false">Cancelar</button>
+              @click="saveRouteNameOpen = false">{{ i18n.save_route_cancel }}</button>
     </div>
   </div>
 
@@ -455,16 +455,16 @@
   <div class="modal-overlay" x-show="myRoutesOpen" x-transition @click.self="myRoutesOpen = false">
     <div class="modal-card">
       <div class="import-modal-header">
-        <h2 class="modal-title" style="margin-bottom:0">Minhas Rotas</h2>
+        <h2 class="modal-title" style="margin-bottom:0">{{ i18n.my_routes_modal_title }}</h2>
         <button class="drawer-close" @click="myRoutesOpen = false" aria-label="Fechar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
-      <p class="field-hint" x-show="myRoutesLoading" style="text-align:center;padding:.75rem 0">Carregando…</p>
+      <p class="field-hint" x-show="myRoutesLoading" style="text-align:center;padding:.75rem 0">{{ i18n.my_routes_loading }}</p>
       <template x-if="!myRoutesLoading && myRoutes.length === 0">
-        <p class="field-hint" style="text-align:center;padding:1.5rem 0">Nenhuma rota salva ainda.</p>
+        <p class="field-hint" style="text-align:center;padding:1.5rem 0">{{ i18n.my_routes_empty }}</p>
       </template>
       <ul class="templates-list" x-show="!myRoutesLoading && myRoutes.length > 0">
         <template x-for="r in myRoutes" :key="r.code">
@@ -472,11 +472,11 @@
             <div class="template-card-info">
               <div class="template-card-name" x-text="r.name"></div>
               <div class="template-card-count"
-                   x-text="(r.result?.total_distance_km ?? '?') + ' km · ' + (r.result?.optimized_route?.length ?? '?') + ' paradas'">
+                   x-text="(r.result?.total_distance_km ?? '?') + ' km · ' + (r.result?.optimized_route?.length ?? '?') + window.I18N.my_routes_stops_suffix">
               </div>
             </div>
             <div style="display:flex;gap:.4rem;flex-shrink:0">
-              <button class="btn-template-use" @click="loadRoute(r)">Carregar</button>
+              <button class="btn-template-use" @click="loadRoute(r)">{{ i18n.my_routes_load_btn }}</button>
               <button class="btn-route-delete" @click="deleteRoute(r.code)" aria-label="Excluir rota">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -504,17 +504,17 @@
           </svg>
         </button>
       </div>
-      <p class="field-hint" style="margin-bottom:1rem">Selecione um template para pré-preencher os endereços.</p>
+      <p class="field-hint" style="margin-bottom:1rem">{{ i18n.template_modal_subtitle }}</p>
       <ul class="templates-list">
         <template x-for="t in templates" :key="t.name">
           <li class="template-card">
             <div class="template-card-info">
               <div class="template-card-name" x-text="t.name"></div>
-              <div class="template-card-count" x-text="t.count + ' endereços'"></div>
+              <div class="template-card-count" x-text="t.count + window.I18N.template_addresses_suffix"></div>
             </div>
             <button class="btn-template-use"
                     @click="templatesOpen = false; notice = 'Em breve: carregamento de templates.'">
-              Usar
+              {{ i18n.template_use_btn }}
             </button>
           </li>
         </template>
@@ -531,30 +531,32 @@
       </button>
       <div class="upgrade-header">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        <h2 class="upgrade-title">Plano Pro</h2>
-        <p class="upgrade-price">R$ 29,90<span>/mês</span></p>
+        <h2 class="upgrade-title">{{ i18n.upgrade_modal_title }}</h2>
+        <p class="upgrade-price" x-text="window.I18N.pro_price_label"></p>
       </div>
       <ul class="upgrade-benefits">
-        <li>Até <strong>50 paradas</strong> por rota</li>
-        <li>Otimizações <strong>ilimitadas</strong></li>
-        <li>Rotas salvas ilimitadas</li>
+        <li>{{ i18n.upgrade_feature1 }}</li>
+        <li>{{ i18n.upgrade_feature2 }}</li>
+        <li>{{ i18n.upgrade_feature3 }}</li>
       </ul>
       <div class="upgrade-form">
-        <label class="upgrade-label">CPF ou CNPJ</label>
-        <input class="upgrade-input" x-model="upgradeCpf" placeholder="000.000.000-00" inputmode="numeric" maxlength="18" />
+        <div x-show="window.I18N.show_cpf_field">
+          <label class="upgrade-label">{{ i18n.upgrade_cpf_label }}</label>
+          <input class="upgrade-input" x-model="upgradeCpf" :placeholder="window.I18N.upgrade_cpf_placeholder" inputmode="numeric" maxlength="18" />
+        </div>
         <div class="upgrade-billing-toggle">
-          <button class="upgrade-billing-btn"
+          <button class="upgrade-billing-btn" x-show="window.I18N.show_pix"
                   :class="{'upgrade-billing-btn-active': upgradeBillingType === 'PIX'}"
-                  @click="upgradeBillingType = 'PIX'">Pix</button>
+                  @click="upgradeBillingType = 'PIX'">{{ i18n.upgrade_pix_label }}</button>
           <button class="upgrade-billing-btn"
                   :class="{'upgrade-billing-btn-active': upgradeBillingType === 'CREDIT_CARD'}"
-                  @click="upgradeBillingType = 'CREDIT_CARD'">Cartão</button>
+                  @click="upgradeBillingType = 'CREDIT_CARD'">{{ i18n.upgrade_card_label }}</button>
         </div>
         <button class="btn-upgrade-confirm" @click="startCheckout()" :disabled="upgradeLoading">
-          <span x-show="!upgradeLoading">Continuar para pagamento</span>
-          <span x-show="upgradeLoading">Aguarde…</span>
+          <span x-show="!upgradeLoading">{{ i18n.upgrade_continue_btn }}</span>
+          <span x-show="upgradeLoading">{{ i18n.upgrade_processing_btn }}</span>
         </button>
-        <p class="upgrade-footer">Pagamento processado pelo Asaas. Cancele quando quiser.</p>
+        <p class="upgrade-footer">{{ i18n.upgrade_footer_note }}</p>
       </div>
     </div>
   </div>
@@ -567,19 +569,19 @@
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       </div>
-      <h2 class="clear-confirm-title">Iniciar nova rota?</h2>
-      <p class="clear-confirm-sub">A rota atual e todos os endereços serão perdidos.</p>
+      <h2 class="clear-confirm-title">{{ i18n.clear_modal_title }}</h2>
+      <p class="clear-confirm-sub">{{ i18n.clear_modal_body }}</p>
       <div class="clear-confirm-actions">
         <template x-if="result !== null">
           <button class="btn-clear-save" @click="saveAndClear()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
             </svg>
-            Salvar rota antes
+            {{ i18n.clear_save_first }}
           </button>
         </template>
-        <button class="btn-clear-confirm" @click="clearAll(); clearConfirmOpen = false; drawerOpen = false">Limpar mesmo assim</button>
-        <button class="btn-clear-cancel" @click="clearConfirmOpen = false">Cancelar</button>
+        <button class="btn-clear-confirm" @click="clearAll(); clearConfirmOpen = false; drawerOpen = false">{{ i18n.clear_anyway }}</button>
+        <button class="btn-clear-cancel" @click="clearConfirmOpen = false">{{ i18n.clear_cancel }}</button>
       </div>
     </div>
   </div>
@@ -603,11 +605,11 @@
     <ul class="drawer-nav">
       <li class="drawer-item" @click="confirmClearAll(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nova rota
+        {{ i18n.drawer_new_route }}
       </li>
       <li class="drawer-item" @click="myRoutesOpen = true; loadMyRoutes(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/></svg>
-        Minhas rotas
+        {{ i18n.drawer_my_routes }}
       </li>
       <li class="drawer-item" @click="templatesOpen = true; drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7m-3.5-3.5v7"/></svg>
@@ -615,38 +617,38 @@
       </li>
       <li class="drawer-item" @click="importType = 'csv'; importFile = null; importStep = 'select'; importError = ''; importOpen = true; drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Importar endereços
+        {{ i18n.drawer_import }}
       </li>
       <li class="drawer-item" @click="exportAddresses(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar paradas
+        {{ i18n.drawer_export }}
       </li>
       <li class="drawer-item" @click="downloadTemplate(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Baixar template CSV
+        {{ i18n.drawer_csv_template }}
       </li>
 
       <li class="drawer-divider"></li>
 
       <li class="drawer-item drawer-item-disabled">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        Configurações
+        {{ i18n.drawer_settings }}
       </li>
       <li class="drawer-item" x-show="user" @click="window.location.href='/conta'; drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Minha conta
+        {{ i18n.drawer_account }}
       </li>
       <li class="drawer-item" @click="helpOpen = true; drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Ajuda
+        {{ i18n.drawer_help }}
       </li>
       <li class="drawer-item drawer-item-danger" x-show="user" @click="logout(); drawerOpen = false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sair
+        {{ i18n.drawer_signout }}
       </li>
       <li class="drawer-item" x-show="!user" @click="loginOpen = true; drawerOpen = false; _track('login_clicked', { source: 'drawer' })">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        Entrar
+        {{ i18n.drawer_signin }}
       </li>
     </ul>
   </nav>
@@ -670,7 +672,7 @@
       <div class="header-user-inner">
         <button class="btn-avatar" :class="{ 'btn-avatar-guest': !user }"
                 @click="userMenuOpen = !userMenuOpen"
-                :aria-label="user ? 'Perfil do usuário' : 'Conta'">
+                :aria-label="user ? window.I18N.user_profile_aria : window.I18N.user_account_aria">
           <img x-show="user && user.avatar" :src="user?.avatar" class="avatar-img" alt="Avatar" />
           <span class="avatar-initials" x-show="user && !user.avatar"
                 x-text="user?.email?.charAt(0)?.toUpperCase()"></span>
@@ -690,7 +692,7 @@
                   <polyline points="10 17 15 12 10 7"/>
                   <line x1="15" y1="12" x2="3" y2="12"/>
                 </svg>
-                Entrar
+                {{ i18n.user_signin }}
               </button>
             </div>
           </template>
@@ -698,24 +700,24 @@
             <div>
               <div class="user-menu-profile">
                 <div class="user-menu-name" x-text="user.name || user.email"></div>
-                <div class="user-menu-plan" x-text="'Plano: ' + (user.is_pro ? 'Pro' : 'Free')"></div>
+                <div class="user-menu-plan" x-text="window.I18N.user_plan_prefix + (user.is_pro ? 'Pro' : 'Free')"></div>
               </div>
               <div class="user-menu-divider"></div>
-              <a href="/conta" class="user-menu-item" style="text-decoration:none">Minha Conta</a>
+              <a href="/conta" class="user-menu-item" style="text-decoration:none">{{ i18n.user_account_link }}</a>
               <template x-if="!user.is_pro">
                 <button class="user-menu-item" @click="upgradeOpen = true; userMenuOpen = false">
-                  Upgrade para Pro
-                  <span class="user-menu-soon">até 50 paradas + otimizações ilimitadas</span>
+                  {{ i18n.user_upgrade_btn }}
+                  <span class="user-menu-soon">{{ i18n.user_upgrade_desc }}</span>
                 </button>
               </template>
               <template x-if="user.is_pro">
                 <button class="user-menu-item user-menu-item-disabled">
-                  Plano Pro ativo
-                  <span class="user-menu-soon">50 paradas + otimizações ilimitadas</span>
+                  {{ i18n.user_pro_active }}
+                  <span class="user-menu-soon">{{ i18n.user_pro_desc }}</span>
                 </button>
               </template>
               <div class="user-menu-divider"></div>
-              <button class="user-menu-item user-menu-item-danger" @click="logout()">Sair</button>
+              <button class="user-menu-item user-menu-item-danger" @click="logout()">{{ i18n.user_signout }}</button>
             </div>
           </template>
         </div>
@@ -737,7 +739,7 @@
         <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/><circle cx="12" cy="8" r="2"/>
         </svg>
-        <span>Adicione seus endereços de entrega ou visita</span>
+        <span>{{ i18n.how_to_step1 }}</span>
       </div>
       <div class="how-to-connector"></div>
       <div class="how-to-step">
@@ -745,7 +747,7 @@
         <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
         </svg>
-        <span>Defina início e destino (opcional)</span>
+        <span>{{ i18n.how_to_step2 }}</span>
       </div>
       <div class="how-to-connector"></div>
       <div class="how-to-step">
@@ -754,7 +756,7 @@
           <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
           <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
         </svg>
-        <span>Clique em "Otimizar rota"</span>
+        <span>{{ i18n.how_to_step3 }}</span>
       </div>
       <div class="how-to-connector"></div>
       <div class="how-to-step">
@@ -762,11 +764,11 @@
         <svg class="how-to-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
-        <span>Use "Iniciar Execução" e navegue parada a parada</span>
+        <span>{{ i18n.how_to_step4 }}</span>
       </div>
     </div>
     <button class="how-to-dismiss" @click="howToVisible = false; localStorage.setItem('howToSeen', '1')">
-      Entendi, não mostrar mais
+      {{ i18n.how_to_dismiss }}
     </button>
   </div>
 
@@ -778,11 +780,11 @@
           <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/>
           <circle cx="12" cy="8" r="2"/>
         </svg>
-        Paradas adicionadas
+        {{ i18n.stops_section_title }}
         <span class="badge-count" x-show="addresses.length > 0" x-text="addresses.length"></span>
       </div>
       <div class="stops-btn-group" @click.outside="stopActionsOpen = false">
-        <button class="btn-add-stop" @click="openAddInput(); _track('add_stop_clicked')">＋ Adicionar parada</button>
+        <button class="btn-add-stop" @click="openAddInput(); _track('add_stop_clicked')">{{ i18n.add_stop_btn }}</button>
         <button class="btn-stop-more" @click="stopActionsOpen = !stopActionsOpen" aria-label="Mais opções">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
@@ -795,39 +797,39 @@
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <span x-text="showSearch ? 'Fechar busca' : 'Buscar parada'"></span>
+            <span x-text="showSearch ? window.I18N.close_search : window.I18N.search_stop"></span>
           </button>
           <div class="stops-actions-divider"></div>
           <button class="stops-actions-item" @click="importType = 'csv'; importFile = null; importStep = 'select'; importError = ''; importOpen = true; stopActionsOpen = false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Importar CSV
+            {{ i18n.import_csv_menu }}
           </button>
           <button class="stops-actions-item" @click="importType = 'xls'; importFile = null; importStep = 'select'; importError = ''; importOpen = true; stopActionsOpen = false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
-            Importar XLS
+            {{ i18n.import_xls_menu }}
           </button>
           <div class="stops-actions-divider"></div>
           <button class="stops-actions-item" @click="templatesOpen = true; stopActionsOpen = false">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7m-3.5-3.5v7"/></svg>
-            Utilizar template
+            {{ i18n.use_template_menu }}
           </button>
         </div>
       </div>
     </div>
     <div x-show="showSearch" x-transition class="input-wrap" style="margin-top:.5rem">
       <input type="text" x-ref="searchInput"
-             placeholder="Buscar por nome ou endereço…"
+             :placeholder="window.I18N.search_placeholder"
              x-model="searchQuery"
              @keydown.escape="showSearch = false; searchQuery = ''" />
     </div>
 
-    <p class="field-hint">Adicione pelo menos 2 endereços. A ordem em que você digita não importa.</p>
+    <p class="field-hint">{{ i18n.empty_stops_hint }}</p>
 
     <!-- Add input (toggle) -->
     <div x-show="showAddInput" x-transition>
       <div class="add-input-row">
         <div class="input-wrap">
-          <input type="text" placeholder="Ex: Av. Paulista, 1000, São Paulo/SP"
+          <input type="text" :placeholder="window.I18N.add_stop_placeholder"
                  x-ref="addInput"
                  x-model="newAddress"
                  @input.debounce.400ms="fetchSuggestions('address', newAddress)"
@@ -843,7 +845,7 @@
       <div class="add-desc-row">
         <input type="text"
                class="description-input"
-               placeholder="Descrição (opcional) — ex: Farmácia do João"
+               :placeholder="window.I18N.add_stop_desc_placeholder"
                x-model="newDescription"
                @keydown.enter="addAddress()"
                @keydown.escape="cancelAddAddress()" />
@@ -856,14 +858,14 @@
             <polyline points="17 21 17 13 7 13 7 21"/>
             <polyline points="7 3 7 8 15 8"/>
           </svg>
-          Salvar
+          {{ i18n.add_stop_save }}
         </button>
         <button class="btn-cancel-addr" @click="cancelAddAddress()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
-          Cancelar
+          {{ i18n.add_stop_cancel }}
         </button>
       </div>
     </div>
@@ -899,8 +901,8 @@
                       x-text="streetPart(item.address)"></span>
                 <span class="addr-rest" x-show="restPart(item.address)"
                       x-text="restPart(item.address)"></span>
-                <span class="addr-badge addr-badge-start" x-show="fixedFirst === item.address">Início da rota</span>
-                <span class="addr-badge addr-badge-end"   x-show="fixedLast  === item.address">Destino final</span>
+                <span class="addr-badge addr-badge-start" x-show="fixedFirst === item.address">{{ i18n.addr_badge_start }}</span>
+                <span class="addr-badge addr-badge-end"   x-show="fixedLast  === item.address">{{ i18n.addr_badge_end }}</span>
               </div>
               <div class="addr-menu-wrap">
                 <button class="btn-addr-more"
@@ -918,7 +920,7 @@
                       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
                       <line x1="4" y1="22" x2="4" y2="15"/>
                     </svg>
-                    <span x-text="fixedFirst === item.address ? 'Remover início da rota' : 'Definir como primeiro destino'"></span>
+                    <span x-text="fixedFirst === item.address ? window.I18N.remove_first_dest : window.I18N.set_first_dest"></span>
                   </button>
                   <button class="addr-actions-item"
                           @click="toggleLast(item.address); openMenuIndex = null">
@@ -927,7 +929,7 @@
                       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
                       <line x1="4" y1="22" x2="4" y2="15"/>
                     </svg>
-                    <span x-text="fixedLast === item.address ? 'Remover destino final' : 'Definir como último destino'"></span>
+                    <span x-text="fixedLast === item.address ? window.I18N.remove_last_dest : window.I18N.set_last_dest"></span>
                   </button>
                   <div class="addr-actions-divider"></div>
                   <button class="addr-actions-item"
@@ -937,7 +939,7 @@
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
-                    Editar
+                    {{ i18n.edit_stop }}
                   </button>
                   <button class="addr-actions-item addr-actions-item-danger"
                           @click="if(item.address===fixedFirst)fixedFirst=null; if(item.address===fixedLast)fixedLast=null; addresses.splice(i,1); openMenuIndex=null">
@@ -946,7 +948,7 @@
                       <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
                       <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                     </svg>
-                    Excluir
+                    {{ i18n.delete_stop }}
                   </button>
                 </div>
               </div>
@@ -958,7 +960,7 @@
               <input type="text" class="addr-edit-input" x-model="editAddress"
                      @keydown.enter="saveEdit(i)" @keydown.escape="cancelEdit()" />
               <input type="text" class="description-input addr-edit-desc" x-model="editDescription"
-                     placeholder="Descrição (opcional)"
+                     :placeholder="window.I18N.edit_desc_placeholder"
                      @keydown.enter="saveEdit(i)" @keydown.escape="cancelEdit()" />
               <div class="addr-edit-actions">
                 <button class="btn-save-addr" @click="saveEdit(i)" :disabled="editAddress.trim() === ''">
@@ -968,14 +970,14 @@
                     <polyline points="17 21 17 13 7 13 7 21"/>
                     <polyline points="7 3 7 8 15 8"/>
                   </svg>
-                  Salvar
+                  {{ i18n.edit_save }}
                 </button>
                 <button class="btn-cancel-addr" @click="cancelEdit()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  Cancelar
+                  {{ i18n.edit_cancel }}
                 </button>
               </div>
             </div>
@@ -989,13 +991,13 @@
             @click="addressesExpanded = !addressesExpanded">
       <template x-if="!addressesExpanded">
         <div style="display:flex;flex-direction:column;align-items:center;gap:.12rem">
-          <span class="btn-expand-count">+ <span x-text="addresses.length - 5"></span> paradas</span>
+          <span class="btn-expand-count">+ <span x-text="addresses.length - 5"></span>{{ i18n.expand_stops_btn }}</span>
           <span style="display:flex;align-items:center;gap:.3rem">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
-            <span class="btn-expand-sub">Mostrar todas</span>
+            <span class="btn-expand-sub">{{ i18n.show_all_btn }}</span>
           </span>
         </div>
       </template>
@@ -1005,7 +1007,7 @@
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="18 15 12 9 6 15"/>
           </svg>
-          Recolher paradas
+          {{ i18n.collapse_btn }}
         </span>
       </template>
     </button>
@@ -1015,8 +1017,8 @@
   <div class="info-banner">
     <div class="info-banner-icon">✦</div>
     <div>
-      <div class="info-banner-title">A ordem será calculada automaticamente</div>
-      <div class="info-banner-sub">Defina início e destino (opcional) e adicione suas paradas.</div>
+      <div class="info-banner-title">{{ i18n.banner_title }}</div>
+      <div class="info-banner-sub">{{ i18n.banner_body }}</div>
     </div>
   </div>
 
@@ -1027,9 +1029,9 @@
     <div class="endpoint-row">
       <div class="endpoint-icon icon-origin">▶</div>
       <div class="endpoint-content">
-        <div class="endpoint-label">Ponto de partida (opcional)</div>
+        <div class="endpoint-label">{{ i18n.origin_label }}</div>
         <div class="input-wrap" x-show="origin === ''" x-ref="originWrap">
-          <input type="text" placeholder="Ex.: Rua X, 123, Campinas/SP"
+          <input type="text" :placeholder="window.I18N.origin_placeholder"
                  x-model="originInput"
                  @input.debounce.400ms="fetchSuggestions('origin', originInput)"
                  @keydown.escape="originSuggestions = []"
@@ -1047,7 +1049,7 @@
         <button class="btn btn-remove" x-show="origin !== ''" @click="origin = ''; originInput = ''; originSuggestions = []">−</button>
         <button class="btn-geo" x-show="origin === ''" :disabled="geolocating" @click="geolocate()">
           <img src="/my-location.svg" width="15" height="15" x-show="!geolocating" />
-          <span class="btn-geo-text" x-show="!geolocating">Localização</span>
+          <span class="btn-geo-text" x-show="!geolocating">{{ i18n.geo_btn }}</span>
           <span x-show="geolocating">…</span>
         </button>
       </div>
@@ -1059,9 +1061,9 @@
     <div class="endpoint-row">
       <div class="endpoint-icon icon-dest">⚑</div>
       <div class="endpoint-content">
-        <div class="endpoint-label">Destino final (opcional)</div>
+        <div class="endpoint-label">{{ i18n.dest_label }}</div>
         <div class="input-wrap" x-show="dest === ''">
-          <input type="text" placeholder="Ex.: Depósito, Rua Y, 456, Campinas/SP"
+          <input type="text" :placeholder="window.I18N.dest_placeholder"
                  x-model="destInput"
                  @input.debounce.400ms="fetchSuggestions('dest', destInput)"
                  @keydown.escape="destSuggestions = []"
@@ -1075,7 +1077,7 @@
         <span class="set-label" x-show="dest !== ''" x-text="dest"></span>
         <button class="btn-copy-origin"
                 x-show="origin !== '' && dest === ''"
-                @click="destInput = origin; setDest()">← Usar mesmo endereço da origem</button>
+                @click="destInput = origin; setDest()">{{ i18n.use_same_origin }}</button>
       </div>
       <div class="endpoint-actions">
         <button class="btn btn-add" x-show="dest === ''" @click="setDest()" :disabled="destInput.trim() === ''">+</button>
@@ -1094,11 +1096,9 @@
     <div class="ready-card-text">
       <div class="ready-card-icon">✦</div>
       <div class="ready-card-title"
-           x-text="addresses.length >= 2 ? 'Pronto para otimizar' : 'Quase lá!'"></div>
+           x-text="addresses.length >= 2 ? window.I18N.ready_title : window.I18N.not_ready_title"></div>
       <div class="ready-card-sub"
-           x-text="addresses.length >= 2
-             ? 'Vamos encontrar a melhor ordem para economizar tempo e combustível.'
-             : 'Adicione pelo menos 2 paradas para calcular a rota mais eficiente.'"></div>
+           x-text="addresses.length >= 2 ? window.I18N.ready_body : window.I18N.not_ready_body"></div>
     </div>
     <div class="ready-card-illustration">
       <svg width="70" height="62" viewBox="0 0 70 62" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1123,25 +1123,25 @@
       <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
       <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
     </svg>
-    <span x-show="!loading">Otimizar rota</span>
-    <span x-show="loading">Calculando…</span>
+    <span x-show="!loading">{{ i18n.optimize_btn }}</span>
+    <span x-show="loading">{{ i18n.optimizing_btn }}</span>
   </button>
 
   <!-- Plan limit hints -->
   <div class="limit-hint" x-show="addresses.length > stopLimit">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    Plano <strong x-text="user?.is_pro ? 'Pro' : 'Free'"></strong> suporta até <strong x-text="stopLimit"></strong> paradas.
+    {{ i18n.free_plan_limit_hint }} <strong x-text="stopLimit"></strong> {{ i18n.free_plan_limit_stops }}
     <template x-if="!user">
-      <button class="limit-hint-cta" @click="loginOpen = true">Cadastre-se grátis</button>
+      <button class="limit-hint-cta" @click="loginOpen = true">{{ i18n.signup_free_btn }}</button>
     </template>
     <template x-if="user && !user.is_pro">
-      <button class="limit-hint-cta" @click="upgradeOpen = true">Upgrade para Pro</button>
+      <button class="limit-hint-cta" @click="upgradeOpen = true">{{ i18n.upgrade_pro_btn }}</button>
     </template>
   </div>
   <div class="limit-hint" x-show="!user && anonOptCount >= 5 && addresses.length <= stopLimit">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    Você usou suas <strong>5 otimizações gratuitas</strong> de hoje.
-    <button class="limit-hint-cta" @click="loginOpen = true">Cadastre-se grátis para ilimitadas</button>
+    {{ i18n.daily_limit_msg }}
+    <button class="limit-hint-cta" @click="loginOpen = true">{{ i18n.daily_limit_signup }}</button>
   </div>
 
   <!-- Mini map -->
@@ -1162,8 +1162,8 @@
       </div>
       <div>
         <div class="result-title-row">
-          <span class="result-title">Rota Otimizada</span>
-          <span class="result-badge-success">✓ Sucesso</span>
+          <span class="result-title">{{ i18n.result_title }}</span>
+          <span class="result-badge-success">{{ i18n.result_success }}</span>
         </div>
       </div>
     </div>
@@ -1171,20 +1171,20 @@
     <!-- Stats -->
     <div class="result-stats">
       <div class="result-stat">
-        <div class="result-stat-label">Distância total</div>
+        <div class="result-stat-label">{{ i18n.stat_distance }}</div>
         <div class="result-stat-value green" x-text="result?.total_distance_km + ' km'"></div>
       </div>
       <div class="result-stat" x-show="result?.total_duration_min != null">
-        <div class="result-stat-label">Tempo estimado</div>
+        <div class="result-stat-label">{{ i18n.stat_time }}</div>
         <div class="result-stat-value" x-text="formatDuration(result?.total_duration_min)"></div>
       </div>
       <div class="result-stat">
-        <div class="result-stat-label">Paradas</div>
+        <div class="result-stat-label">{{ i18n.stat_stops }}</div>
         <div class="result-stat-value" x-text="result?.optimized_route?.length"></div>
       </div>
       <div class="result-stat" x-show="visitedCount > 0">
-        <div class="result-stat-label">Visitadas</div>
-        <div class="result-stat-value green" x-text="visitedCount + ' de ' + result?.optimized_route?.length"></div>
+        <div class="result-stat-label">{{ i18n.stat_visited }}</div>
+        <div class="result-stat-value green" x-text="visitedCount + window.I18N.visited_of + result?.optimized_route?.length"></div>
       </div>
     </div>
 
@@ -1195,7 +1195,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-          Pular
+          {{ i18n.execution_swipe_skip }}
         </span>
         <span class="swipe-hint-center">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1204,7 +1204,7 @@
           Arraste as paradas
         </span>
         <span class="swipe-hint-right">
-          Visitado
+          {{ i18n.execution_swipe_visited }}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
@@ -1231,7 +1231,7 @@
             <div class="route-coords" x-text="result.origin.coordinates.lat.toFixed(5) + ', ' + result.origin.coordinates.lng.toFixed(5)"></div>
           </div>
           <div class="route-right">
-            <span class="route-badge-start">Início</span>
+            <span class="route-badge-start">{{ i18n.timeline_start }}</span>
           </div>
         </li>
       </template>
@@ -1248,14 +1248,14 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span>Visitado</span>
+            <span>{{ i18n.execution_swipe_visited }}</span>
           </div>
           <!-- Reveal esquerda — Pular -->
           <div class="swipe-reveal swipe-reveal-left">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/>
             </svg>
-            <span>Pular</span>
+            <span>{{ i18n.execution_swipe_skip }}</span>
           </div>
           <!-- Conteúdo deslizável -->
           <div class="swipe-inner">
@@ -1296,7 +1296,7 @@
             <div class="route-coords" x-text="result.destination.coordinates.lat.toFixed(5) + ', ' + result.destination.coordinates.lng.toFixed(5)"></div>
           </div>
           <div class="route-right">
-            <span class="route-badge-end">Fim</span>
+            <span class="route-badge-end">{{ i18n.timeline_end }}</span>
           </div>
         </li>
       </template>
@@ -1307,8 +1307,8 @@
     <div class="result-success-banner">
       <div class="result-success-icon">✓</div>
       <div>
-        <div class="result-success-title">Rota otimizada com sucesso!</div>
-        <div class="result-success-sub">Esta é a melhor sequência encontrada para seus destinos.</div>
+        <div class="result-success-title">{{ i18n.result_success_banner_title }}</div>
+        <div class="result-success-sub">{{ i18n.result_success_banner_body }}</div>
       </div>
     </div>
 
@@ -1317,7 +1317,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="5 3 19 12 5 21 5 3"/>
       </svg>
-      Iniciar Execução da Rota
+      {{ i18n.result_start_execution }}
     </button>
 
     <!-- Actions -->
@@ -1327,7 +1327,7 @@
           <path d="M12 2C8.69 2 6 4.69 6 8c0 5 6 13 6 13s6-8 6-13c0-3.31-2.69-6-6-6z"/>
           <circle cx="12" cy="8" r="2"/>
         </svg>
-        Abrir no Google Maps
+        {{ i18n.result_open_maps }}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
         </svg>
@@ -1337,16 +1337,16 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
           </svg>
-          <span x-show="!copied">Copiar rota</span>
-          <span x-show="copied">Copiado! ✓</span>
+          <span x-show="!copied">{{ i18n.result_copy_route }}</span>
+          <span x-show="copied">{{ i18n.result_copied }}</span>
         </button>
         <button class="btn-copy" :class="{ copied: shared }" @click="shareRoute()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
           </svg>
-          <span x-show="!shared" x-text="canNativeShare ? 'Compartilhar' : 'Copiar link'"></span>
-          <span x-show="shared">Link copiado! ✓</span>
+          <span x-show="!shared" x-text="canNativeShare ? window.I18N.result_share : window.I18N.result_copy_link"></span>
+          <span x-show="shared">{{ i18n.result_link_copied }}</span>
         </button>
         <div class="result-more-wrap">
           <button class="btn-result-more" @click="resultActionsOpen = !resultActionsOpen" aria-label="Mais ações">
@@ -1359,7 +1359,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
               </svg>
-              Salvar rota
+              {{ i18n.result_save_route }}
               <span class="result-more-badge" x-show="saved">✓</span>
             </button>
             <div class="stops-actions-divider"></div>
@@ -1368,14 +1368,14 @@
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                 <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
               </svg>
-              Exportar CSV
+              {{ i18n.result_export_csv }}
             </button>
             <button class="result-more-item result-more-item-disabled">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                 <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/>
               </svg>
-              Exportar PDF
+              {{ i18n.result_export_pdf }}
             </button>
           </div>
         </div>
@@ -1383,18 +1383,18 @@
     </div>
 
     <div class="failures" x-show="result?.geocoding_failures?.length > 0">
-      Não encontrados: <span x-text="result?.geocoding_failures.join(', ')"></span>
+      {{ i18n.result_not_found }} <span x-text="result?.geocoding_failures.join(', ')"></span>
     </div>
   </div>
 
   <!-- Footer -->
-  <p class="footer-security">🔒 Seus dados estão seguros e não são compartilhados.</p>
+  <p class="footer-security">{{ i18n.security_notice }}</p>
   <p class="footer-links">
-    <a href="/como-funciona">Como funciona</a> ·
-    <a href="/otimizar-rota-entregas">Otimizar rotas de entrega</a> ·
-    <a href="/roteirizador-gratuito">Roteirizador gratuito</a> ·
-    <a href="/google-maps-multiplos-enderecos">Google Maps com múltiplos endereços</a> ·
-    <a href="/perguntas-frequentes">Perguntas frequentes</a>
+    <a href="{{ i18n.footer_how_it_works_href }}">{{ i18n.footer_how_it_works }}</a> ·
+    <a href="{{ i18n.footer_optimize_deliveries_href }}">{{ i18n.footer_optimize_deliveries }}</a> ·
+    <a href="{{ i18n.footer_free_planner_href }}">{{ i18n.footer_free_planner }}</a> ·
+    <a href="{{ i18n.footer_google_maps_href }}">{{ i18n.footer_google_maps }}</a> ·
+    <a href="{{ i18n.footer_faq_href }}">{{ i18n.footer_faq }}</a>
   </p>
 
 </div>
