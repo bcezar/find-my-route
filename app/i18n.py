@@ -28,6 +28,7 @@ _STRINGS: dict[str, dict] = {
         "share_msg":        "Veja os endereços que separei para você — clique em otimizar para encontrar a melhor rota!",
         "copy_signature":   "Rota otimizada com rotaotimizada.com.br",
         "how_to_title":     "Como usar o Rota Otimizada",
+        "geocoding_country": "br",
 
         # How-to card
         "how_to_step1":     "Adicione seus endereços de entrega ou visita",
@@ -344,6 +345,7 @@ _STRINGS: dict[str, dict] = {
         "share_msg":        "Check out the addresses I put together — click optimize to find the best route!",
         "copy_signature":   "Optimized route by findmyroute.com.br",
         "how_to_title":     "How to use Find My Route",
+        "geocoding_country": "",
 
         # How-to card
         "how_to_step1":     "Add your delivery or visit addresses",
@@ -637,4 +639,7 @@ _STRINGS: dict[str, dict] = {
 
 
 def get_strings(locale: str) -> dict:
-    return _STRINGS.get(locale, _STRINGS["pt-BR"])
+    from app.config import settings
+    base = dict(_STRINGS.get(locale, _STRINGS["pt-BR"]))
+    base["geocoding_country"] = settings.geocoding_country
+    return base

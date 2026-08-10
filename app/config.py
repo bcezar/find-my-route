@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     nominatim_user_agent: str = "rota-otimizada/1.0"
     locale: str = "pt-BR"
     brand_name: str = "Rota Otimizada"
+    geocoding_country: str = "br"
+    geocoding_language: str = "pt-BR"
     nominatim_base_url: str = "https://nominatim.openstreetmap.org"
     tsp_timeout_seconds: int = 5
     max_addresses: int = 50

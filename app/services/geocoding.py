@@ -40,9 +40,10 @@ def _normalize(address: str) -> str:
 
     # Replace city/state slash separator: Americana/SP → Americana, SP
     normalized = re.sub(r"([A-Za-zÀ-ú\s]+)/([A-Z]{2})\b", r"\1, \2", address)
-    # Append Brasil if not already present
-    if "brasil" not in normalized.lower() and "brazil" not in normalized.lower():
-        normalized = normalized.rstrip(", ") + ", Brasil"
+    # Append country hint for Nominatim if locale is Brazil
+    if settings.geocoding_country == "br":
+        if "brasil" not in normalized.lower() and "brazil" not in normalized.lower():
+            normalized = normalized.rstrip(", ") + ", Brasil"
     return normalized
 
 
@@ -63,7 +64,7 @@ def _parse_structured(address: str) -> dict[str, str] | None:
         "country": "Brasil",
         "format": "json",
         "limit": "1",
-        "countrycodes": "br",
+        **({"countrycodes": settings.geocoding_country} if settings.geocoding_country else {}),
     }
 
 
@@ -123,7 +124,9 @@ async def _geocode_nominatim(
 ) -> tuple[float, float] | None:
     normalized = _normalize(address)
 
-    base_params: dict = {"q": normalized, "format": "json", "limit": 1, "countrycodes": "br"}
+    base_params: dict = {"q": normalized, "format": "json", "limit": 1}
+    if settings.geocoding_country:
+        base_params["countrycodes"] = settings.geocoding_country
     if lat is not None and lng is not None:
         d = _BOUNDS_DELTA
         base_params["viewbox"] = f"{lng-d},{lat+d},{lng+d},{lat-d}"
@@ -166,8 +169,8 @@ async def autocomplete_address(query: str, lat: float | None = None, lng: float 
     params: dict = {
         "input": query,
         "key": settings.google_maps_api_key,
-        "language": "pt-BR",
-        "components": "country:br",
+        "language": settings.geocoding_language,
+        **({"components": f"country:{settings.geocoding_country}"} if settings.geocoding_country else {}),
     }
     if lat is not None and lng is not None:
         params["location"] = f"{lat},{lng}"
@@ -193,7 +196,7 @@ async def reverse_geocode(lat: float, lng: float) -> "str | None":
             try:
                 response = await client.get(
                     "https://maps.googleapis.com/maps/api/geocode/json",
-                    params={"latlng": f"{lat},{lng}", "key": settings.google_maps_api_key, "language": "pt-BR"},
+                    params={"latlng": f"{lat},{lng}", "key": settings.google_maps_api_key, "language": settings.geocoding_language},
                     timeout=10.0,
                 )
                 data = response.json()
