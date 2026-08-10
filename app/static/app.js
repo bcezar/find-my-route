@@ -1106,9 +1106,8 @@ function routeApp() {
         if (!res.ok) {
           // Show user-friendly message for plan limit errors
           if (res.status === 403 && data.detail?.code === 'STOP_LIMIT_EXCEEDED') {
-            this.error = this.user
-              ? `Seu plano suporta até ${data.detail.limit} paradas. Faça upgrade para o Plano Pro.`
-              : `Limite de ${data.detail.limit} paradas para uso gratuito. Cadastre-se para ilimitadas.`;
+            const tpl = this.user ? window.I18N.err_stop_limit_pro : window.I18N.err_stop_limit_anon;
+            this.error = tpl.replace('{limit}', data.detail.limit);
           } else {
             this.error = typeof data.detail === 'string' ? data.detail : `Erro ${res.status}`;
           }

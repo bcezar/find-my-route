@@ -98,6 +98,8 @@ _STRINGS: dict[str, dict] = {
         "upgrade_pro_btn":  "Upgrade para Pro",
         "daily_limit_msg":  "Você usou suas 5 otimizações gratuitas de hoje.",
         "daily_limit_signup": "Cadastre-se grátis para ilimitadas",
+        "err_stop_limit_pro": "Seu plano suporta até {limit} paradas. Faça upgrade para o Plano Pro.",
+        "err_stop_limit_anon": "Limite de {limit} paradas para uso gratuito. Cadastre-se para ilimitadas.",
 
         # Result section
         "result_title":     "Rota Otimizada",
@@ -124,6 +126,7 @@ _STRINGS: dict[str, dict] = {
         "result_success_banner_body": "Esta é a melhor sequência encontrada para seus destinos.",
         "execution_swipe_visited": "Visitado",
         "execution_swipe_skip":    "Pular",
+        "execution_swipe_hint":   "Arraste as paradas",
 
         # Execution mode
         "execution_back":   "Voltar",
@@ -411,6 +414,8 @@ _STRINGS: dict[str, dict] = {
         "upgrade_pro_btn":  "Upgrade to Pro",
         "daily_limit_msg":  "You've used your 5 free optimizations today.",
         "daily_limit_signup": "Sign up for free for unlimited",
+        "err_stop_limit_pro": "Your plan supports up to {limit} stops. Upgrade to the Pro Plan.",
+        "err_stop_limit_anon": "Limit of {limit} stops for free use. Sign up for unlimited.",
 
         # Result section
         "result_title":     "Optimized Route",
@@ -437,6 +442,7 @@ _STRINGS: dict[str, dict] = {
         "result_success_banner_body": "This is the best sequence found for your destinations.",
         "execution_swipe_visited": "Visited",
         "execution_swipe_skip":    "Skip",
+        "execution_swipe_hint":   "Swipe the stops",
 
         # Execution mode
         "execution_back":   "Back",
