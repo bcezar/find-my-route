@@ -12,23 +12,32 @@
   <meta property="og:url" content="{{ canonical }}" />
   <meta property="og:title" content="{{ title }}" />
   <meta property="og:description" content="{{ description }}" />
-  <meta property="og:image" content="{{ base_url }}/capa.png" />
+  <meta property="og:image" content="{{ base_url }}{{ i18n.cover_url }}" />
   <meta property="og:locale" content="{{ i18n.og_locale }}" />
   <meta property="og:site_name" content="{{ i18n.brand }}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{{ title }}" />
   <meta name="twitter:description" content="{{ description }}" />
-  <meta name="twitter:image" content="{{ base_url }}/capa.png" />
+  <meta name="twitter:image" content="{{ base_url }}{{ i18n.cover_url }}" />
   <link rel="stylesheet" href="/style.css?v={{ css_version }}" />
   {% block extra_head %}{% endblock %}
   {% if ga_measurement_id %}
-  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
+    const _consent = localStorage.getItem('cookieConsent');
+    const _granted = _consent === 'accepted' ? 'granted' : 'denied';
+    gtag('consent', 'default', {
+      analytics_storage:    _granted,
+      ad_storage:           'denied',
+      ad_user_data:         'denied',
+      ad_personalization:   'denied',
+      wait_for_update:      500,
+    });
     gtag('js', new Date());
     gtag('config', '{{ ga_measurement_id }}');
   </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   {% endif %}
 </head>
 <body class="seo-page">
@@ -50,5 +59,29 @@
   </footer>
 
   {% block schema %}{% endblock %}
+
+  <!-- Cookie consent banner -->
+  <div id="cookie-banner" class="cookie-banner" style="display:none">
+    <p class="cookie-msg">
+      {{ i18n.consent_message }}
+      <a href="{{ i18n.footer_faq_href }}" class="cookie-policy">{{ i18n.consent_policy }}</a>
+    </p>
+    <div class="cookie-actions">
+      <button class="cookie-btn cookie-decline" onclick="setConsent('declined')">{{ i18n.consent_decline }}</button>
+      <button class="cookie-btn cookie-accept" onclick="setConsent('accepted')">{{ i18n.consent_accept }}</button>
+    </div>
+  </div>
+  <script>
+    function setConsent(val) {
+      localStorage.setItem('cookieConsent', val);
+      document.getElementById('cookie-banner').style.display = 'none';
+      if (typeof gtag !== 'undefined') {
+        gtag('consent', 'update', { analytics_storage: val === 'accepted' ? 'granted' : 'denied' });
+      }
+    }
+    if (!localStorage.getItem('cookieConsent')) {
+      document.getElementById('cookie-banner').style.display = 'flex';
+    }
+  </script>
 </body>
 </html>

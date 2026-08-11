@@ -12,6 +12,7 @@ API REST de roteirização de endereços com frontend web completo. Recebe uma l
 - **Alpine.js v3** — frontend reativo (CDN, sem build step)
 - **Geocoding:** Google Maps API quando `GOOGLE_MAPS_API_KEY` estiver no `.env`; fallback para Nominatim (OSM)
 - **Distâncias:** OSRM Table API quando `OSRM_BASE_URL` configurado; fallback para Haversine
+- **i18n:** `app/i18n.py` — dicionário PT/EN; injetado via Jinja2 como `{{ i18n.* }}` e `window.I18N` no JS
 
 ## Comandos
 
@@ -32,6 +33,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 app/
 ├── main.py               # FastAPI app; monta static, templates Jinja2, GET /r/{code}, /s/{code}
 ├── config.py             # Settings via .env (pydantic-settings)
+├── i18n.py               # Dicionários de strings PT/EN por locale
 ├── limiter.py            # Instância do slowapi Limiter (separado para evitar circular import)
 ├── storage.py            # Turso (libSQL) via HTTP + fallback em memória; short links, rotas salvas, users, sessions
 ├── models.py             # RouteRequest, RouteResponse, RouteStop, SaveRouteRequest, etc.
@@ -47,8 +49,6 @@ static/
     ├── index.html        # Frontend Alpine.js completo (~940 linhas)
     ├── app.js            # Lógica Alpine.js (~700 linhas)
     ├── style.css         # Estilos (~840 linhas)
-    ├── robots.txt        # Bloqueia /api/, /r/, /s/; aponta para sitemap
-    ├── sitemap.xml       # Homepage canônica (rotaotimizada.com.br)
     ├── capa.png          # Imagem OG/WhatsApp (og:image, twitter:image)
     ├── logo-find-my-route.png
     ├── icon-find-my-route.png
@@ -59,6 +59,13 @@ tests/
 ├── test_distance.py      # Testes Haversine + OSRM mock
 └── test_optimizer.py     # Testes OR-Tools
 ```
+
+### Páginas SEO
+
+Servidas por rotas FastAPI usando templates Jinja2 com strings i18n. Os slugs diferem por locale:
+
+- PT (`rotaotimizada.com.br`): `/como-funciona`, `/importar-enderecos-csv`, `/otimizar-rota-entregas`, `/roteirizador-gratuito`, `/google-maps-multiplos-enderecos`, `/waze-multiplos-destinos`, `/perguntas-frequentes`
+- EN (`findmyroute.com.br`): `/how-it-works`, `/import-addresses-csv`, `/optimize-delivery-route`, `/free-route-planner`, `/google-maps-multiple-addresses`, `/waze-multiple-destinations`, `/faq`
 
 ## Endpoints
 
@@ -135,10 +142,12 @@ Alpine.js v3, sem build step, single-page. Lógica em `app.js`, markup em `index
 
 ## Deploy
 
-- **Railway** (Python) — auto-deploy via GitHub push
+- **Railway** (Python) — dois serviços apontando para o mesmo repo `bcezar/rota-otimizada`
+  - `rotaotimizada.com.br` — `LOCALE=pt-BR`, `BRAND_NAME=Rota Otimizada`
+  - `findmyroute.com.br` — `LOCALE=en-US`, `BRAND_NAME=Find My Route`, `GEOCODING_COUNTRY=` (vazio)
 - `Procfile`: `web: uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Cloudflare** — DNS proxy + Rate Limiting; domínio `rotaotimizada.com.br` já apontando via Cloudflare
-- **Domínio:** `rotaotimizada.com.br` (SEO, meta tags e CORS atualizados)
+- **Cloudflare** — DNS proxy + Rate Limiting para ambos os domínios
+- **Domínios:** `rotaotimizada.com.br` (PT) e `findmyroute.com.br` (EN)
 
 ## Variáveis de ambiente (`.env`)
 
@@ -151,9 +160,15 @@ MAX_ADDRESSES=50
 OSRM_BASE_URL=           # opcional; sem isso usa Haversine
 TURSO_DATABASE_URL=      # libsql://... — persistência de rotas salvas, users, sessions
 TURSO_AUTH_TOKEN=        # token de autenticação do Turso
+LOCALE=pt-BR              # pt-BR ou en-US — controla idioma, marca e geocoding
+BRAND_NAME=Rota Otimizada # nome da marca exibido
+GEOCODING_COUNTRY=br      # código ISO do país para restringir geocoding (vazio = global)
+GEOCODING_LANGUAGE=pt-BR  # idioma das respostas do Google Maps / Nominatim
 ```
 
 > **Nunca commitar o `.env`** — contém a API key do Google Maps e credenciais do Turso.
+
+As variáveis `LOCALE`, `BRAND_NAME`, `GEOCODING_COUNTRY`, `GEOCODING_LANGUAGE`, `GA_MEASUREMENT_ID`, `APP_BASE_URL`, `RESEND_FROM_EMAIL` e `APP_NAME` diferem entre os dois deploys. As demais são compartilhadas.
 
 ## Decisões técnicas relevantes
 
@@ -167,6 +182,9 @@ TURSO_AUTH_TOKEN=        # token de autenticação do Turso
 - **Geolocalização mobile:** Texto do botão oculto em telas ≤480px (`.btn-geo-text { display: none }`).
 - **Import CSV/XLSX no frontend:** Parser CSV vanilla com detecção de delimitador (`,` vs `;`) e suporte RFC 4180. XLSX via SheetJS injetado lazily do CDN (`cdn.sheetjs.com`) apenas quando necessário.
 - **Accordion de paradas:** `x-show` com `x-transition` hooks de classe (`addr-enter/leave`) usando `max-height` para animação natural.
+- **i18n via env var:** `LOCALE` em `config.py` seleciona o dicionário em `app/i18n.py`. Templates recebem `i18n` dict via contexto Jinja2; JS recebe `window.I18N`. Slugs das páginas SEO diferem por locale (`_SEO_PAGES_PT` vs `_SEO_PAGES_EN` em `main.py`).
+- **Geocoding locale-aware:** `GEOCODING_COUNTRY` (padrão `br`) e `GEOCODING_LANGUAGE` (padrão `pt-BR`) controlam restrições nas APIs Google Maps e Nominatim. Deploy EN usa `GEOCODING_COUNTRY=` (vazio) para busca global.
+- **Sitemap e robots.txt dinâmicos:** servidos por rotas FastAPI (`/sitemap.xml`, `/robots.txt`) usando `_BASE_URL` e `_SEO_PAGES` — sem arquivo estático.
 
 ## Próximos passos
 
@@ -183,8 +201,12 @@ TURSO_AUTH_TOKEN=        # token de autenticação do Turso
 - [x] SEO — canonical, robots.txt, sitemap.xml, Open Graph, Twitter Cards, JSON-LD, novo título
 - [x] Google Search Console — verificado via Cloudflare DNS; sitemap enviado
 - [x] **Migração de domínio (CORS)** — `allow_origins` em `main.py` atualizado para `rotaotimizada.com.br`
+- [x] **i18n dual-deploy** — PT (rotaotimizada.com.br) e EN (findmyroute.com.br)
+- [x] **Geocoding locale-aware** — restrição BR apenas no deploy PT
+- [x] **Search Console verificado para ambos os domínios; sitemaps enviados**
 - [ ] Cache persistente de geocoding (Redis ou SQLite)
 - [ ] Exportar rota otimizada como CSV/PDF
+- [ ] **Gateway de pagamento EN (Stripe)** — Asaas é BR-only
 - [ ] **Upgrade de plano (freemium)** — modelo: 5 paradas grátis, 50 no plano Pro:
   - Backend: validar `len(addresses) <= 5` para usuários sem plano Pro em `routes.py` (retornar 402 com mensagem de upgrade)
   - Frontend: bloquear botão "Otimizar" com CTA de upgrade quando `addresses.length > 5 && !user?.isPro` — ver `app/static/app.js` linha ~937 (TODO marcado)

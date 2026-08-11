@@ -7,6 +7,7 @@ _STRINGS: dict[str, dict] = {
         "brand_slug":       "rota-otimizada",
         "icon":             "/icon-rota-otimizada.png",
         "logo":             "/logo-rota-otimizada.png",
+        "cover_url":        "/capa.png",
 
         # <head>
         "page_title":       "Rota Otimizada | Otimize Rotas com Múltiplos Endereços Gratuitamente",
@@ -101,6 +102,12 @@ _STRINGS: dict[str, dict] = {
         "daily_limit_signup": "Cadastre-se grátis para ilimitadas",
         "err_stop_limit_pro": "Seu plano suporta até {limit} paradas. Faça upgrade para o Plano Pro.",
         "err_stop_limit_anon": "Limite de {limit} paradas para uso gratuito. Cadastre-se para ilimitadas.",
+
+        # Cookie consent banner
+        "consent_message":  "Usamos cookies para melhorar sua experiência e analisar o uso do site.",
+        "consent_accept":   "Aceitar",
+        "consent_decline":  "Recusar",
+        "consent_policy":   "Política de privacidade",
 
         # Result section
         "result_title":     "Rota Otimizada",
@@ -324,6 +331,7 @@ _STRINGS: dict[str, dict] = {
         "brand_slug":       "find-my-route",
         "icon":             "/icon-find-my-route.png",
         "logo":             "/logo-find-my-route.png",
+        "cover_url":        "/cover.png",
 
         # <head>
         "page_title":       "Find My Route | Optimize Routes with Multiple Addresses for Free",
@@ -418,6 +426,12 @@ _STRINGS: dict[str, dict] = {
         "daily_limit_signup": "Sign up for free for unlimited",
         "err_stop_limit_pro": "Your plan supports up to {limit} stops. Upgrade to the Pro Plan.",
         "err_stop_limit_anon": "Limit of {limit} stops for free use. Sign up for unlimited.",
+
+        # Cookie consent banner
+        "consent_message":  "We use cookies to improve your experience and analyze site usage.",
+        "consent_accept":   "Accept",
+        "consent_decline":  "Decline",
+        "consent_policy":   "Privacy policy",
 
         # Result section
         "result_title":     "Optimized Route",
