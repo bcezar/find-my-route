@@ -1081,6 +1081,84 @@ function routeApp() {
       this._triggerDownload(lines.join('\r\n'), 'enderecos.csv', 'text/csv;charset=utf-8;');
     },
 
+    exportRouteCSV() {
+      if (!this.result) return;
+      const I = window.I18N;
+      const header = [I.export_col_order, I.export_col_address, I.export_col_lat, I.export_col_lng, I.export_col_distance, I.export_col_duration];
+      const rows = [header.map(c => this._csvEscape(c)).join(',')];
+
+      if (this.result.origin) {
+        rows.push([this._csvEscape(I.timeline_start), this._csvEscape(this.result.origin.address),
+          this.result.origin.coordinates.lat, this.result.origin.coordinates.lng, '', ''].join(','));
+      }
+      for (const s of this.result.optimized_route) {
+        rows.push([s.order, this._csvEscape(s.original_address), s.coordinates.lat, s.coordinates.lng,
+          s.leg_distance_km != null ? s.leg_distance_km.toFixed(2) : '',
+          s.leg_duration_min != null ? Math.round(s.leg_duration_min) : ''].join(','));
+      }
+      if (this.result.destination) {
+        rows.push([this._csvEscape(I.timeline_end), this._csvEscape(this.result.destination.address),
+          this.result.destination.coordinates.lat, this.result.destination.coordinates.lng, '', ''].join(','));
+      }
+
+      this._triggerDownload('﻿' + rows.join('\r\n'), I.export_csv_filename, 'text/csv;charset=utf-8;');
+      this._track('route_exported_csv', { stops: this.result.optimized_route.length });
+    },
+
+    exportRoutePDF() {
+      if (!this.result) return;
+      const I = window.I18N;
+      const brand = document.querySelector('title')?.textContent?.split('–')[0]?.trim() || 'Rota Otimizada';
+      const date = new Date().toLocaleDateString();
+      const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      let rows = '';
+      const addRow = (label, address, dist, dur, special) => {
+        const distCell = dist != null ? dist.toFixed(2) + ' km' : '—';
+        const durCell  = dur  != null ? Math.round(dur) + ' min' : '—';
+        rows += `<tr${special ? ' class="sp"' : ''}><td>${esc(String(label))}</td><td>${esc(address)}</td><td>${distCell}</td><td>${durCell}</td></tr>`;
+      };
+
+      if (this.result.origin) addRow('●', this.result.origin.address, null, null, true);
+      for (const s of this.result.optimized_route) addRow(s.order, s.original_address, s.leg_distance_km, s.leg_duration_min, false);
+      if (this.result.destination) addRow('○', this.result.destination.address, null, null, true);
+
+      const totalDist = this.result.total_distance_km ? this.result.total_distance_km.toFixed(1) + ' km' : '';
+      const totalTime = this.result.total_duration_min ? Math.round(this.result.total_duration_min) + ' min' : '';
+      const statLine = [
+        totalDist ? `${esc(I.export_pdf_total_dist)}: <strong>${totalDist}</strong>` : '',
+        totalTime ? `${esc(I.export_pdf_total_time)}: <strong>${totalTime}</strong>` : ''
+      ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(brand)}</title>
+<style>
+body{font-family:Arial,sans-serif;font-size:12px;margin:15mm 12mm;color:#1a1a2e}
+h1{font-size:16px;margin:0 0 4px}
+.meta{color:#555;font-size:11px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse}
+th{background:#1a1a2e;color:#fff;text-align:left;padding:5px 8px;font-size:11px}
+td{padding:4px 8px;border-bottom:1px solid #eee}
+tr:nth-child(even) td{background:#f9f9f9}
+tr.sp td{font-weight:bold;background:#eef2ff}
+.footer{margin-top:14px;font-size:10px;color:#999;text-align:right}
+@media print{body{margin:8mm 8mm}}
+</style></head>
+<body>
+<h1>${esc(brand)}</h1>
+<div class="meta">${statLine}${statLine ? ' &nbsp;&nbsp; ' : ''}${date}</div>
+<table>
+<thead><tr><th>#</th><th>${esc(I.export_col_address)}</th><th>${esc(I.export_col_distance)}</th><th>${esc(I.export_col_duration)}</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<div class="footer">${esc(I.export_pdf_generated)} ${esc(brand)}</div>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`;
+
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); }
+      this._track('route_exported_pdf', { stops: this.result.optimized_route.length });
+    },
+
     async optimize() {
       this.error  = '';
       this.result = null;
