@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from typing import Optional
 
 import stripe
@@ -32,6 +33,46 @@ async def create_checkout_session(
 
     session = await asyncio.to_thread(_create)
     return {"payment_url": session.url, "session_id": session.id}
+
+
+async def get_active_subscription(customer_id: str) -> Optional[dict]:
+    def _fetch():
+        stripe.api_key = _api_key()
+        subs = stripe.Subscription.list(customer=customer_id, status="active", limit=1)
+        if not subs.data:
+            return None
+        sub = subs.data[0]
+        item = sub["items"]["data"][0] if sub["items"]["data"] else None
+        amount = (item["price"]["unit_amount"] or 0) / 100 if item else 0
+        currency = (item["price"]["currency"] or "usd").upper() if item else "USD"
+        next_date = None
+        if sub.get("current_period_end"):
+            next_date = datetime.fromtimestamp(
+                sub["current_period_end"], tz=timezone.utc
+            ).strftime("%Y-%m-%d")
+        return {
+            "id": sub["id"],
+            "status": "ACTIVE",
+            "value": amount,
+            "currency": currency,
+            "nextDueDate": next_date,
+            "billingType": "STRIPE",
+            "provider": "stripe",
+        }
+
+    return await asyncio.to_thread(_fetch)
+
+
+async def cancel_subscription(subscription_id: str) -> str:
+    """Cancel at period end. Returns the period-end datetime string."""
+    def _cancel():
+        stripe.api_key = _api_key()
+        sub = stripe.Subscription.modify(subscription_id, cancel_at_period_end=True)
+        return datetime.fromtimestamp(
+            sub["current_period_end"], tz=timezone.utc
+        ).strftime("%Y-%m-%d %H:%M:%S")
+
+    return await asyncio.to_thread(_cancel)
 
 
 def verify_webhook(payload: bytes, sig_header: str) -> Optional[dict]:

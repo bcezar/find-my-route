@@ -70,11 +70,12 @@
                 <span class="conta-sub-label">Status</span>
                 <span class="conta-sub-value">
                   <span class="payment-status-received">{{ i18n.account_status_active }}</span>
+                  <span class="pill-auto-renew">{{ i18n.account_auto_renew }}</span>
                 </span>
               </div>
               <div class="conta-sub-row">
                 <span class="conta-sub-label">{{ i18n.account_plan_label }}</span>
-                <span class="conta-sub-value">Pro — R$ <span x-text="subscription.value?.toFixed(2).replace('.',',')"></span>/mês</span>
+                <span class="conta-sub-value" x-text="subscription.currency === 'USD' ? 'Pro — $' + subscription.value?.toFixed(2) + '/mo' : 'Pro — R$ ' + subscription.value?.toFixed(2).replace('.',',') + '/mês'"></span>
               </div>
               <div class="conta-sub-row">
                 <span class="conta-sub-label">{{ i18n.account_next_due }}</span>
@@ -171,7 +172,7 @@
         </svg>
       </div>
       <h2 class="clear-confirm-title">{{ i18n.account_cancel_modal_title }}</h2>
-      <p class="clear-confirm-sub">{{ i18n.account_cancel_modal_body }}</p>
+      <p class="clear-confirm-sub" x-text="window.I18N.account_cancel_modal_body.replace('{date}', formatDate(subscription?.nextDueDate))"></p>
       <div class="clear-confirm-actions">
         <button class="btn-clear-confirm" @click="cancelSubscription()" :disabled="cancelLoading">
           <span x-show="!cancelLoading">{{ i18n.account_cancel_confirm_btn }}</span>
@@ -256,6 +257,7 @@
           PIX:         window.I18N.account_billing_pix,
           CREDIT_CARD: window.I18N.account_billing_card,
           BOLETO:      window.I18N.account_billing_boleto,
+          STRIPE:      window.I18N.account_billing_stripe,
         }[type] || type || '—';
       },
 

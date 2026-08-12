@@ -87,6 +87,12 @@ async def account(request: Request):
         except Exception:
             pass
 
+    if subscription is None and settings.stripe_secret_key and user.get("stripe_customer_id"):
+        try:
+            subscription = await stripe_billing.get_active_subscription(user["stripe_customer_id"])
+        except Exception:
+            pass
+
     return {
         "user": {
             "id":             user["id"],
@@ -102,10 +108,31 @@ async def account(request: Request):
 @router.delete("/billing/subscription")
 @limiter.limit("5/minute")
 async def cancel_subscription(request: Request):
+    user = await _require_auth(request)
+
+    # Stripe cancellation (EN deploy)
+    stripe_customer_id = user.get("stripe_customer_id")
+    if settings.stripe_secret_key and stripe_customer_id:
+        try:
+            sub = await stripe_billing.get_active_subscription(stripe_customer_id)
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Error fetching subscription: {exc}") from exc
+
+        if not sub:
+            raise HTTPException(status_code=404, detail="No active subscription found.")
+
+        try:
+            expires_at = await stripe_billing.cancel_subscription(sub["id"])
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Error cancelling subscription: {exc}") from exc
+
+        await storage.set_pro_expires_at(user["id"], expires_at)
+        return {"ok": True, "pro_expires_at": expires_at[:10]}
+
+    # Asaas cancellation (PT deploy)
     if not settings.asaas_api_key:
         raise HTTPException(status_code=501, detail="Pagamentos não configurados.")
 
-    user = await _require_auth(request)
     customer_id = user.get("asaas_customer_id")
     if not customer_id:
         raise HTTPException(status_code=404, detail="Nenhuma assinatura encontrada.")
@@ -123,7 +150,6 @@ async def cancel_subscription(request: Request):
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Erro ao cancelar assinatura: {exc}") from exc
 
-    # Keep Pro active for 30 days from today (last paid period)
     expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
     await storage.set_pro_expires_at(user["id"], expires_at)
 
