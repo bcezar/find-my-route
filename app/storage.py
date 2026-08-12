@@ -207,7 +207,9 @@ def _row_to_user(row: list) -> dict:
         "is_pro":         bool(_int(_cell(row[2]))),
         "email_verified": bool(_int(_cell(row[3]))),
         "name":           _cell(row[4]) if len(row) > 4 else None,
-        "picture_url":    _cell(row[5]) if len(row) > 5 else None,
+        "picture_url":      _cell(row[5]) if len(row) > 5 else None,
+        "asaas_customer_id": _cell(row[6]) if len(row) > 6 else None,
+        "stripe_customer_id": _cell(row[7]) if len(row) > 7 else None,
     }
 
 
@@ -306,7 +308,7 @@ async def get_user_by_token(token: str) -> dict | None:
         r = await _execute(
             "SELECT u.id, u.email, "
             "CASE WHEN u.is_pro = 1 AND (u.pro_expires_at IS NULL OR u.pro_expires_at > datetime('now')) THEN 1 ELSE 0 END AS is_pro, "
-            "u.email_verified, u.name, u.picture_url "
+            "u.email_verified, u.name, u.picture_url, u.asaas_customer_id, u.stripe_customer_id "
             "FROM sessions s JOIN users u ON s.user_id = u.id "
             "WHERE s.token = ? AND (s.expires_at IS NULL OR s.expires_at > datetime('now'))",
             [token],
