@@ -94,6 +94,7 @@ async def init_db() -> None:
     await _execute("ALTER TABLE sessions ADD COLUMN expires_at TEXT", ignore_error=True)
     await _execute("ALTER TABLE users ADD COLUMN asaas_customer_id TEXT", ignore_error=True)
     await _execute("ALTER TABLE users ADD COLUMN pro_expires_at TEXT", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT", ignore_error=True)
 
 
 # ── Short links ─────────────────────────────────────────────────────────────
@@ -441,5 +442,30 @@ async def get_user_by_asaas_customer(customer_id: str) -> Optional[dict]:
         return _row_to_user(rows[0]) if rows else None
     for user in _users.values():
         if user.get("asaas_customer_id") == customer_id:
+            return user
+    return None
+
+
+async def set_stripe_customer_id(user_id: str, customer_id: str) -> None:
+    if _turso_configured():
+        await _execute(
+            "UPDATE users SET stripe_customer_id = ? WHERE id = ?",
+            [customer_id, user_id],
+        )
+    elif user_id in _users:
+        _users[user_id]["stripe_customer_id"] = customer_id
+
+
+async def get_user_by_stripe_customer(customer_id: str) -> Optional[dict]:
+    if _turso_configured():
+        r = await _execute(
+            "SELECT id, email, is_pro, email_verified, name, picture_url "
+            "FROM users WHERE stripe_customer_id = ?",
+            [customer_id],
+        )
+        rows = r.get("rows", [])
+        return _row_to_user(rows[0]) if rows else None
+    for user in _users.values():
+        if user.get("stripe_customer_id") == customer_id:
             return user
     return None

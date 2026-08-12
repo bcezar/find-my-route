@@ -687,7 +687,7 @@ _STRINGS: dict[str, dict] = {
 
         # Upgrade modal
         "upgrade_modal_title": "Pro Plan",
-        "pro_price_label":  "$9.90/mo",
+        "pro_price_label":  "$6/month",
         "upgrade_feature1": "Up to 50 stops per route",
         "upgrade_feature2": "Unlimited optimizations",
         "upgrade_feature3": "Unlimited saved routes",
@@ -695,9 +695,9 @@ _STRINGS: dict[str, dict] = {
         "upgrade_cpf_placeholder": "000-00-0000",
         "upgrade_pix_label": "Pix",
         "upgrade_card_label": "Card",
-        "upgrade_continue_btn": "Continue to payment",
+        "upgrade_continue_btn": "Subscribe – $6/month",
         "upgrade_processing_btn": "Please wait…",
-        "upgrade_footer_note": "Payment processed securely. Cancel anytime.",
+        "upgrade_footer_note": "Secure payment via Stripe. Cancel anytime.",
         "show_cpf_field":   False,
         "show_pix":         False,
 

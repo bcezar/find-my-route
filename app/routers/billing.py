@@ -8,6 +8,7 @@ from app import storage
 from app.config import settings
 from app.limiter import limiter
 from app.services import billing
+from app.services import stripe_billing
 
 router = APIRouter()
 
@@ -127,6 +128,70 @@ async def cancel_subscription(request: Request):
     await storage.set_pro_expires_at(user["id"], expires_at)
 
     return {"ok": True, "pro_expires_at": expires_at[:10]}
+
+
+@router.post("/billing/stripe/checkout")
+@limiter.limit("5/minute")
+async def stripe_checkout(request: Request):
+    if not settings.stripe_secret_key or not settings.stripe_price_id:
+        raise HTTPException(status_code=501, detail="Stripe payments not configured.")
+
+    user = await _require_auth(request)
+
+    if user.get("is_pro"):
+        raise HTTPException(status_code=400, detail="You are already on the Pro plan.")
+
+    success_url = f"{settings.app_base_url}/?upgraded=1"
+    cancel_url = f"{settings.app_base_url}/"
+
+    try:
+        result = await stripe_billing.create_checkout_session(
+            user_id=user["id"],
+            email=user["email"],
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Error creating checkout: {exc}") from exc
+
+    if not result.get("payment_url"):
+        raise HTTPException(status_code=502, detail="Could not obtain payment link.")
+
+    return {"payment_url": result["payment_url"]}
+
+
+@router.post("/billing/stripe/webhook")
+async def stripe_webhook(request: Request):
+    sig_header = request.headers.get("stripe-signature", "")
+    payload = await request.body()
+
+    event = stripe_billing.verify_webhook(payload, sig_header)
+    if event is None:
+        raise HTTPException(status_code=400, detail="Invalid Stripe webhook signature.")
+
+    event_type = event.get("type", "")
+    data_obj = event.get("data", {}).get("object", {})
+
+    if event_type == "checkout.session.completed":
+        user_id = (data_obj.get("metadata") or {}).get("user_id")
+        stripe_customer = data_obj.get("customer")
+        if user_id:
+            await storage.set_user_pro(user_id, True)
+            await storage.set_pro_expires_at(user_id, None)
+            if stripe_customer:
+                await storage.set_stripe_customer_id(user_id, stripe_customer)
+
+    elif event_type == "customer.subscription.deleted":
+        stripe_customer = data_obj.get("customer")
+        if stripe_customer:
+            user = await storage.get_user_by_stripe_customer(stripe_customer)
+            if user:
+                expires_at = (
+                    datetime.now(timezone.utc) + timedelta(days=30)
+                ).strftime("%Y-%m-%d %H:%M:%S")
+                await storage.set_pro_expires_at(user["id"], expires_at)
+
+    return {"ok": True}
 
 
 @router.post("/billing/webhook")

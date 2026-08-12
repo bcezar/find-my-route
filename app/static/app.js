@@ -1259,24 +1259,47 @@ tr.sp td{font-weight:bold;background:#eef2ff}
       if (!this.user) { this.loginOpen = true; return; }
       this.upgradeLoading = true;
       this.error = '';
-      const cpf = this.upgradeCpf.replace(/\D/g, '');
-      if (cpf.length !== 11 && cpf.length !== 14) {
-        this.error = 'Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.';
-        this.upgradeLoading = false;
+
+      if (window.I18N.show_cpf_field) {
+        // PT: Asaas flow — CPF/CNPJ required
+        const cpf = this.upgradeCpf.replace(/\D/g, '');
+        if (cpf.length !== 11 && cpf.length !== 14) {
+          this.error = 'Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.';
+          this.upgradeLoading = false;
+          return;
+        }
+        try {
+          const res = await fetch('/api/v1/billing/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this._authToken}` },
+            body: JSON.stringify({ cpf_cnpj: cpf, billing_type: this.upgradeBillingType }),
+          });
+          const data = await res.json();
+          if (res.ok && data.payment_url) {
+            this.upgradeOpen = false;
+            window.open(data.payment_url, '_blank');
+          } else {
+            this.error = typeof data.detail === 'string' ? data.detail : 'Erro ao iniciar pagamento.';
+          }
+        } catch (e) {
+          this.error = window.I18N.err_connection;
+        } finally {
+          this.upgradeLoading = false;
+        }
         return;
       }
+
+      // EN: Stripe Checkout — redirect to hosted Stripe page
       try {
-        const res = await fetch('/api/v1/billing/checkout', {
+        const res = await fetch('/api/v1/billing/stripe/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this._authToken}` },
-          body: JSON.stringify({ cpf_cnpj: cpf, billing_type: this.upgradeBillingType }),
         });
         const data = await res.json();
         if (res.ok && data.payment_url) {
-          this.upgradeOpen = false;
-          window.open(data.payment_url, '_blank');
+          window.location.href = data.payment_url;
         } else {
-          this.error = typeof data.detail === 'string' ? data.detail : 'Erro ao iniciar pagamento.';
+          this.error = typeof data.detail === 'string' ? data.detail : window.I18N.err_connection;
         }
       } catch (e) {
         this.error = window.I18N.err_connection;
