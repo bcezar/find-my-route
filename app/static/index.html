@@ -980,8 +980,18 @@
           <!-- edit mode -->
           <template x-if="editingIndex === i">
             <div class="addr-item-edit">
-              <input type="text" class="addr-edit-input" x-model="editAddress"
-                     @keydown.enter="saveEdit(i)" @keydown.escape="cancelEdit()" />
+              <div style="position:relative">
+                <input type="text" class="addr-edit-input" x-model="editAddress"
+                       @input.debounce.400ms="fetchSuggestions('editAddress', editAddress)"
+                       @keydown.enter.prevent="saveEdit(i)"
+                       @keydown.escape="editAddressSuggestions = []; cancelEdit()" />
+                <ul class="suggestions" x-show="editAddressSuggestions.length > 0"
+                    @click.outside="editAddressSuggestions = []">
+                  <template x-for="s in editAddressSuggestions" :key="s">
+                    <li @mousedown.prevent="editAddress = s; editAddressSuggestions = []" x-text="s"></li>
+                  </template>
+                </ul>
+              </div>
               <input type="text" class="description-input addr-edit-desc" x-model="editDescription"
                      :placeholder="window.I18N.edit_desc_placeholder"
                      @keydown.enter="saveEdit(i)" @keydown.escape="cancelEdit()" />

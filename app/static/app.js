@@ -21,9 +21,10 @@ function routeApp() {
     importedSkipped: 0,
     importError:     '',
     newDescription:  '',
-    editingIndex:    null,
-    editAddress:     '',
-    editDescription: '',
+    editingIndex:         null,
+    editAddress:          '',
+    editDescription:      '',
+    editAddressSuggestions: [],
     openMenuIndex:      null,
     addressesExpanded:  false,
     showSearch:         false,
@@ -317,8 +318,9 @@ function routeApp() {
       if (this.fixedLast  === this.addresses[i].address) this.fixedLast  = v;
       this.addresses[i] = { address: v, description: this.editDescription.trim() };
       this.editingIndex = null;
+      this.editAddressSuggestions = [];
     },
-    cancelEdit() { this.editingIndex = null; },
+    cancelEdit() { this.editingIndex = null; this.editAddressSuggestions = []; },
 
     _track(eventName, params = {}) {
       if (typeof gtag === 'function') gtag('event', eventName, params);
