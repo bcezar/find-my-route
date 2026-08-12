@@ -10,6 +10,8 @@ import httpx
 
 from app.config import settings
 
+_SIGNUP_SOURCE = "findmyroute" if settings.locale == "en-US" else "rotaotimizada"
+
 _routes: dict[str, dict] = {}
 _saved:  dict[str, dict] = {}
 _users:  dict[str, dict] = {}   # email → user dict
@@ -24,10 +26,16 @@ def _turso_http_url() -> str:
     return (settings.turso_database_url or "").replace("libsql://", "https://")
 
 
+def _turso_arg(value) -> dict:
+    if value is None:
+        return {"type": "null", "value": None}
+    return {"type": "text", "value": str(value)}
+
+
 async def _execute(sql: str, args: list | None = None, *, ignore_error: bool = False) -> dict:
     stmt: dict = {"sql": sql}
     if args:
-        stmt["args"] = [{"type": "text", "value": str(a)} for a in args]
+        stmt["args"] = [_turso_arg(a) for a in args]
     try:
         async with httpx.AsyncClient() as client:
             r = await client.post(
@@ -47,8 +55,8 @@ async def _execute(sql: str, args: list | None = None, *, ignore_error: bool = F
 def _cell(cell):
     if isinstance(cell, dict):
         v = cell.get("value")
-        return None if v in (None, "null") else v
-    return None if cell in (None, "null") else cell
+        return None if v in (None, "null", "None") else v
+    return None if cell in (None, "null", "None") else cell
 
 
 def _now_iso() -> str:
@@ -95,6 +103,7 @@ async def init_db() -> None:
     await _execute("ALTER TABLE users ADD COLUMN asaas_customer_id TEXT", ignore_error=True)
     await _execute("ALTER TABLE users ADD COLUMN pro_expires_at TEXT", ignore_error=True)
     await _execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT", ignore_error=True)
+    await _execute("ALTER TABLE users ADD COLUMN signup_source TEXT", ignore_error=True)
 
 
 # ── Short links ─────────────────────────────────────────────────────────────
@@ -213,8 +222,8 @@ async def find_or_create_user(email: str) -> dict:
             return _row_to_user(rows[0])
         user_id = str(uuid.uuid4())
         await _execute(
-            "INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)",
-            [user_id, email, _now_iso()],
+            "INSERT INTO users (id, email, created_at, signup_source) VALUES (?, ?, ?, ?)",
+            [user_id, email, _now_iso(), _SIGNUP_SOURCE],
         )
         return {"id": user_id, "email": email, "is_pro": False, "email_verified": False,
                 "name": None, "picture_url": None}
@@ -259,9 +268,9 @@ async def find_or_create_user_google(email: str, google_sub: str,
         # New user
         user_id = str(uuid.uuid4())
         await _execute(
-            "INSERT INTO users (id, email, google_sub, name, picture_url, email_verified, created_at) "
-            "VALUES (?, ?, ?, ?, ?, 1, ?)",
-            [user_id, email, google_sub, name, picture_url, _now_iso()],
+            "INSERT INTO users (id, email, google_sub, name, picture_url, email_verified, created_at, signup_source) "
+            "VALUES (?, ?, ?, ?, ?, 1, ?, ?)",
+            [user_id, email, google_sub, name, picture_url, _now_iso(), _SIGNUP_SOURCE],
         )
         return {"id": user_id, "email": email, "is_pro": False, "email_verified": True,
                 "name": name, "picture_url": picture_url}

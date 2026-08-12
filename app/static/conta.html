@@ -70,7 +70,7 @@
                 <span class="conta-sub-label">Status</span>
                 <span class="conta-sub-value">
                   <span class="payment-status-received">{{ i18n.account_status_active }}</span>
-                  <span class="pill-auto-renew">{{ i18n.account_auto_renew }}</span>
+                  <span class="pill-auto-renew" x-text="window.I18N.account_renews_pill + ' ' + formatShortDate(subscription.nextDueDate)"></span>
                 </span>
               </div>
               <div class="conta-sub-row">
@@ -250,6 +250,12 @@
         if (!iso) return '—';
         const [y, m, d] = iso.slice(0, 10).split('-');
         return `${d}/${m}/${y}`;
+      },
+
+      formatShortDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso.slice(0, 10) + 'T00:00:00');
+        return d.toLocaleDateString(window.I18N.locale, { day: 'numeric', month: 'short' });
       },
 
       formatBillingType(type) {
