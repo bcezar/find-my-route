@@ -1,6 +1,9 @@
+import logging
 from typing import Optional
 
 import httpx
+
+logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Body, HTTPException, Query as QueryParam, Request
 from fastapi.responses import RedirectResponse, Response
 
@@ -68,12 +71,14 @@ async def me(request: Request):
 
 async def _send_magic_email(to_email: str, magic_token: str) -> None:
     if not settings.resend_api_key:
+        logger.warning("RESEND_API_KEY not set — magic link email skipped for %s", to_email)
         return
     s = get_strings(settings.locale)
     link = f"{settings.app_base_url}/api/v1/auth/verify?token={magic_token}"
-    import resend
-    resend.api_key = settings.resend_api_key
-    resend.Emails.send({
+    try:
+        import resend
+        resend.api_key = settings.resend_api_key
+        resend.Emails.send({
         "from": f"{s['email_from_name']} <{settings.resend_from_email}>",
         "to": [to_email],
         "subject": s["email_subject"],
@@ -96,7 +101,10 @@ async def _send_magic_email(to_email: str, magic_token: str) -> None:
           </p>
         </div>
         """,
-    })
+        })
+        logger.info("magic link email sent to %s", to_email)
+    except Exception as exc:
+        logger.error("failed to send magic link email to %s: %s", to_email, exc)
 
 
 @router.post("/auth/magic-request", response_model=MagicRequestResponse)

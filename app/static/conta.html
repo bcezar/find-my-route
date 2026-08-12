@@ -50,7 +50,7 @@
         <div class="conta-card">
           <div class="conta-card-header">
             <div class="conta-avatar" x-text="(user?.name || user?.email || '?')[0].toUpperCase()"></div>
-            <div>
+            <div class="conta-user-info">
               <div class="conta-user-name" x-text="user?.name || user?.email"></div>
               <div class="conta-user-email" x-show="user?.name" x-text="user?.email"></div>
             </div>
@@ -69,7 +69,7 @@
               <div class="conta-sub-row">
                 <span class="conta-sub-label">Status</span>
                 <span class="conta-sub-value">
-                  <span class="payment-status-received">{{ i18n.account_status_active }}</span>
+                  <span class="payment-status payment-status-received">{{ i18n.account_status_active }}</span>
                   <span class="pill-auto-renew" x-text="window.I18N.account_renews_pill + ' ' + formatShortDate(subscription.nextDueDate)"></span>
                 </span>
               </div>
@@ -97,7 +97,7 @@
               <div class="conta-sub-row">
                 <span class="conta-sub-label">Status</span>
                 <span class="conta-sub-value">
-                  <span class="payment-status-pending">{{ i18n.account_status_cancelled }}</span>
+                  <span class="payment-status payment-status-pending">{{ i18n.account_status_cancelled }}</span>
                 </span>
               </div>
               <div class="conta-sub-row">
@@ -115,7 +115,7 @@
             <div>
               <div class="conta-sub-row">
                 <span class="conta-sub-label">Status</span>
-                <span class="conta-sub-value"><span class="payment-status-received">{{ i18n.account_status_active }}</span></span>
+                <span class="conta-sub-value"><span class="payment-status payment-status-received">{{ i18n.account_status_active }}</span></span>
               </div>
               <p class="conta-sub-hint">{{ i18n.account_managed_externally }}</p>
             </div>

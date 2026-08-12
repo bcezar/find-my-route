@@ -1398,8 +1398,9 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.conta-user-name  { font-weight: 700; font-size: 1rem; color: #111; }
-.conta-user-email { font-size: .8rem; color: #6b7280; margin-top: .1rem; }
+.conta-user-info  { min-width: 0; overflow: hidden; }
+.conta-user-name  { font-weight: 700; font-size: 1rem; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conta-user-email { font-size: .8rem; color: #6b7280; margin-top: .1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conta-badge {
   margin-left: auto; padding: .25rem .7rem;
   border-radius: 999px; font-size: .75rem; font-weight: 800; letter-spacing: .02em;
@@ -1413,6 +1414,7 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 }
 .conta-sub-row:last-of-type { border-bottom: none; }
 .conta-sub-label { color: #6b7280; }
+.conta-sub-value { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }
 .conta-sub-value { font-weight: 600; color: #111; }
 .conta-sub-hint  { font-size: .82rem; color: #9ca3af; margin-top: .5rem; }
 .conta-btn-cancel {
