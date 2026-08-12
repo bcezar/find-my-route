@@ -225,6 +225,39 @@ _STRINGS: dict[str, dict] = {
         "template_modal_subtitle": "Selecione um template para pré-preencher os endereços.",
         "template_addresses_suffix": " endereços",
         "template_use_btn": "Usar",
+        "notice_template_loaded": "Template '{name}' carregado.",
+        "confirm_template_replace": "Substituir as paradas atuais pelo template?",
+        "templates": [
+            {
+                "name": "Entregas Campinas",
+                "addresses": [
+                    "Av. Brasil, 100, Campinas, SP",
+                    "Rua Barão de Jaguara, 901, Campinas, SP",
+                    "Av. Anchieta, 200, Campinas, SP",
+                    "Rua Dr. Quirino, 1200, Campinas, SP",
+                    "Praça Carlos Gomes, Campinas, SP",
+                ]
+            },
+            {
+                "name": "Clientes São Paulo Centro",
+                "addresses": [
+                    "Av. Paulista, 1000, São Paulo, SP",
+                    "Rua da Consolação, 200, São Paulo, SP",
+                    "Praça da República, São Paulo, SP",
+                    "Rua Barão de Itapetininga, 188, São Paulo, SP",
+                    "Av. São João, 473, São Paulo, SP",
+                ]
+            },
+            {
+                "name": "Coleta Semanal",
+                "addresses": [
+                    "Rua das Flores, 123, São Paulo, SP",
+                    "Av. Brigadeiro Faria Lima, 2000, São Paulo, SP",
+                    "Rua Oscar Freire, 800, São Paulo, SP",
+                    "Shopping Ibirapuera, Av. Ibirapuera, 3103, São Paulo, SP",
+                ]
+            },
+        ],
 
         # Upgrade modal
         "upgrade_modal_title": "Plano Pro",
@@ -559,6 +592,38 @@ _STRINGS: dict[str, dict] = {
         "template_modal_subtitle": "Select a template to pre-fill addresses.",
         "template_addresses_suffix": " addresses",
         "template_use_btn": "Use",
+        "notice_template_loaded": "Template '{name}' loaded.",
+        "confirm_template_replace": "Replace current stops with this template?",
+        "templates": [
+            {
+                "name": "NYC Delivery Route",
+                "addresses": [
+                    "1000 Fifth Avenue, New York, NY",
+                    "350 Fifth Ave, New York, NY",
+                    "Grand Central Terminal, 89 E 42nd St, New York, NY",
+                    "Times Square, New York, NY",
+                    "One World Trade Center, New York, NY",
+                ]
+            },
+            {
+                "name": "Client Visits – Downtown",
+                "addresses": [
+                    "Willis Tower, 233 S Wacker Dr, Chicago, IL",
+                    "Millennium Park, 201 E Randolph St, Chicago, IL",
+                    "Navy Pier, 600 E Grand Ave, Chicago, IL",
+                    "The Art Institute of Chicago, 111 S Michigan Ave, Chicago, IL",
+                ]
+            },
+            {
+                "name": "Weekly Pickup Route",
+                "addresses": [
+                    "Union Station, 225 S Canal St, Chicago, IL",
+                    "Wrigley Field, 1060 W Addison St, Chicago, IL",
+                    "Lincoln Park Zoo, 2001 N Clark St, Chicago, IL",
+                    "O'Hare International Airport, Chicago, IL",
+                ]
+            },
+        ],
 
         # Upgrade modal
         "upgrade_modal_title": "Pro Plan",

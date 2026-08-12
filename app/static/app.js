@@ -95,13 +95,12 @@ function routeApp() {
     get execStop() { return this.result?.optimized_route?.[this.execStopIndex] ?? null; },
     get execTotal() { return this.result?.optimized_route?.length ?? 0; },
 
-    templates: [
-      { name: 'Entrega Campinas',      count: 20 },
-      { name: 'Clientes Região Norte', count: 15 },
-      { name: 'Coleta Semanal',        count: 8  },
-    ],
+    templates: [],
+    templateConfirmOpen: false,
+    _pendingTemplate: null,
 
     init() {
+      this.templates = (window.I18N.templates || []).map(t => ({ ...t, count: t.addresses.length }));
       const session = localStorage.getItem('routeSession');
       if (session) {
         try {
@@ -780,6 +779,34 @@ function routeApp() {
       this.myRoutesOpen = false;
       this._track('route_loaded', { stop_count: this.addresses.length });
       this.notice = `Rota "${route.name}" carregada.`;
+      setTimeout(() => { this.notice = ''; }, 3000);
+    },
+
+    requestLoadTemplate(t) {
+      const hasContent = this.addresses.length > 0 || this.origin || this.dest;
+      if (hasContent) {
+        this._pendingTemplate = t;
+        this.templateConfirmOpen = true;
+      } else {
+        this._applyTemplate(t);
+      }
+    },
+
+    _applyTemplate(t) {
+      this.addresses    = t.addresses.map(a => ({ address: a, description: '' }));
+      this.origin       = ''; this.originInput = '';
+      this.dest         = ''; this.destInput   = '';
+      this.result       = null;
+      this.fixedFirst   = null; this.fixedLast = null;
+      this.selectedStop = null;
+      this.visitedStops = {}; this.skippedStops = {}; this.stopObservations = {};
+      this.execMode     = false; this.execStopIndex = 0;
+      this.templatesOpen       = false;
+      this.templateConfirmOpen = false;
+      this._pendingTemplate    = null;
+      this._saveState();
+      this._track('template_loaded', { name: t.name, stop_count: t.addresses.length });
+      this.notice = window.I18N.notice_template_loaded.replace('{name}', t.name);
       setTimeout(() => { this.notice = ''; }, 3000);
     },
 
