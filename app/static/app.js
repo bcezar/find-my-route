@@ -87,9 +87,8 @@ function routeApp() {
       return true;
     },
     get saveRoutePlaceholder() {
-      const days = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-      const idx = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getDay();
-      return `Ex: Entregas ${days[idx]}`;
+      const I = window.I18N;
+      return `${I.save_route_prefix}${I.days_of_week[new Date().getDay()]}`;
     },
     get visitedCount() { return Object.keys(this.visitedStops).length; },
     get execStop() { return this.result?.optimized_route?.[this.execStopIndex] ?? null; },
@@ -157,11 +156,11 @@ function routeApp() {
             console.error('[auth] session callback error:', err);
           });
       } else if (authError === 'expired') {
-        this.notice = 'Link expirado. Solicite um novo acesso.';
+        this.notice = window.I18N.notice_auth_link_expired;
         setTimeout(() => { this.notice = ''; }, 5000);
         history.replaceState(null, '', location.pathname);
       } else if (authError) {
-        this.notice = 'Não foi possível autenticar. Tente novamente.';
+        this.notice = window.I18N.notice_auth_failed;
         setTimeout(() => { this.notice = ''; }, 5000);
         history.replaceState(null, '', location.pathname);
       }
@@ -179,7 +178,7 @@ function routeApp() {
               }
             });
         }
-        this.notice = 'Bem-vindo ao Plano Pro! Agora você tem até 50 paradas.';
+        this.notice = window.I18N.notice_welcome_pro;
         setTimeout(() => { this.notice = ''; }, 6000);
       }
 
@@ -189,7 +188,7 @@ function routeApp() {
           .then(data => { if (data) this.result = data; });
         history.replaceState(null, '', location.pathname);
       } else if (params.get('expired') === '1') {
-        this.notice = 'Este link expirou. Os roteiros compartilhados ficam disponíveis apenas enquanto o servidor estiver ativo. Crie uma nova rota abaixo.';
+        this.notice = window.I18N.notice_link_expired;
         setTimeout(() => { this.notice = ''; }, 5000);
         history.replaceState(null, '', location.pathname);
       } else if (urlOrigin || urlDest || urlAddrs.length) {
@@ -649,7 +648,7 @@ function routeApp() {
       const stop = this.execStop;
       if (!stop) return;
       navigator.clipboard.writeText(stop.original_address).then(() => {
-        this.notice = 'Endereço copiado!';
+        this.notice = window.I18N.notice_addr_copied;
         setTimeout(() => { this.notice = ''; }, 2000);
       });
       this.execMoreOpen = false;
@@ -681,11 +680,11 @@ function routeApp() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: this.loginEmail.trim() }),
         });
-        if (!res.ok) { this.error = 'Erro ao enviar link. Tente novamente.'; return; }
+        if (!res.ok) { this.error = window.I18N.err_send_link; return; }
         this.loginMode = 'sent';
         this._startResendCooldown();
       } catch (_) {
-        this.error = 'Erro de conexão. Tente novamente.';
+        this.error = window.I18N.err_connection;
       } finally {
         this.loginLoading = false;
       }
@@ -702,11 +701,11 @@ function routeApp() {
     async loginWithGoogle() {
       try {
         const res = await fetch('/api/v1/auth/google/init');
-        if (!res.ok) { this.error = 'Google OAuth não disponível.'; return; }
+        if (!res.ok) { this.error = window.I18N.err_google_oauth; return; }
         const data = await res.json();
         window.location.href = data.redirect_url;
       } catch (_) {
-        this.error = 'Erro ao iniciar login com Google.';
+        this.error = window.I18N.err_google_login;
       }
     },
 
@@ -760,7 +759,7 @@ function routeApp() {
         });
         if (!res.ok) return;
         this.myRoutes = this.myRoutes.filter(r => r.code !== code);
-        this.notice = 'Rota excluída.';
+        this.notice = window.I18N.notice_route_deleted;
         setTimeout(() => { this.notice = ''; }, 2500);
       } catch (_) {}
     },
@@ -778,7 +777,7 @@ function routeApp() {
       this.execMode     = false; this.execStopIndex = 0; this.stopObservations = {};
       this.myRoutesOpen = false;
       this._track('route_loaded', { stop_count: this.addresses.length });
-      this.notice = `Rota "${route.name}" carregada.`;
+      this.notice = window.I18N.notice_route_loaded.replace('{name}', route.name);
       setTimeout(() => { this.notice = ''; }, 3000);
     },
 
@@ -845,7 +844,7 @@ function routeApp() {
 
     async geolocate() {
       if (!navigator.geolocation) {
-        this.error = 'Geolocalização não suportada pelo navegador.';
+        this.error = window.I18N.err_geo_unsupported;
         return;
       }
       this.geolocating = true;
@@ -862,13 +861,13 @@ function routeApp() {
             this.origin = data.address;
             this.originSuggestions = [];
           } catch (_) {
-            this.error = 'Não foi possível obter o endereço da sua localização.';
+            this.error = window.I18N.err_geo_address;
           } finally {
             this.geolocating = false;
           }
         },
         () => {
-          this.error = 'Permissão de localização negada ou não disponível.';
+          this.error = window.I18N.err_geo_denied;
           this.geolocating = false;
         }
       );
@@ -906,14 +905,15 @@ function routeApp() {
 
     copyRoute() {
       if (!this.result) return;
-      const lines = [`Rota otimizada — ${this.result.total_distance_km} km`, ''];
-      if (this.result.origin) lines.push(`0. ${this.result.origin.address} (origem)`);
+      const I = window.I18N;
+      const lines = [I.copy_route_header.replace('{distance}', this.result.total_distance_km), ''];
+      if (this.result.origin) lines.push(`0. ${this.result.origin.address} ${I.copy_route_origin_label}`);
       for (const stop of this.result.optimized_route) {
         const item = this.addresses.find(a => a.address === stop.original_address);
         const label = item?.description ? `${item.description} — ` : '';
         lines.push(`${stop.order}. ${label}${stop.original_address}`);
       }
-      if (this.result.destination) lines.push(`F. ${this.result.destination.address} (destino)`);
+      if (this.result.destination) lines.push(`F. ${this.result.destination.address} ${I.copy_route_dest_label}`);
       lines.push('', window.I18N?.copy_signature || 'Rota otimizada com rotaotimizada.com.br');
       navigator.clipboard.writeText(lines.join('\n')).then(() => {
         this.copied = true;
@@ -971,7 +971,7 @@ function routeApp() {
     _parseCSVText(text) {
       const clean = text.replace(/^﻿/, '');
       const lines = clean.split(/\r?\n/);
-      if (!lines.length || !lines[0].trim()) return { error: 'Arquivo vazio.' };
+      if (!lines.length || !lines[0].trim()) return { error: window.I18N.err_empty_file };
 
       const first = lines[0];
       const semi  = (first.match(/;/g) || []).length;
@@ -998,10 +998,15 @@ function routeApp() {
       };
 
       const headers = parseRow(lines[0]).map(h => h.toLowerCase().replace(/\s+/g, ''));
-      const endIdx  = headers.indexOf('endereco');
-      const descIdx = headers.indexOf('descricao');
+      const I = window.I18N;
+      const _findCol = (primary, fallback) => {
+        const i = headers.indexOf(primary);
+        return i !== -1 ? i : headers.indexOf(fallback);
+      };
+      const endIdx  = _findCol(I.import_col_address, I.import_col_address === 'address' ? 'endereco' : 'address');
+      const descIdx = _findCol(I.import_col_desc, I.import_col_desc === 'description' ? 'descricao' : 'description');
 
-      if (endIdx === -1) return { error: "A coluna 'endereco' não foi encontrada. Verifique o arquivo." };
+      if (endIdx === -1) return { error: I.err_col_not_found };
 
       let rows = [], skipped = 0;
       for (let i = 1; i < lines.length; i++) {
@@ -1028,14 +1033,17 @@ function routeApp() {
       const wb  = window.XLSX.read(buf, { type: 'array' });
       const ws  = wb.Sheets[wb.SheetNames[0]];
       const raw = window.XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
-      if (!raw.length) return { error: 'Planilha vazia.' };
+      if (!raw.length) return { error: window.I18N.err_empty_file };
 
       const normalize = (k) => k.toLowerCase().replace(/\s+/g, '');
-      const keys = Object.keys(raw[0]).map(normalize);
-      const endKey  = Object.keys(raw[0]).find(k => normalize(k) === 'endereco');
-      const descKey = Object.keys(raw[0]).find(k => normalize(k) === 'descricao');
+      const I = window.I18N;
+      const _findKey = (primary, fallback) =>
+        Object.keys(raw[0]).find(k => normalize(k) === primary) ||
+        Object.keys(raw[0]).find(k => normalize(k) === fallback);
+      const endKey  = _findKey(I.import_col_address, I.import_col_address === 'address' ? 'endereco' : 'address');
+      const descKey = _findKey(I.import_col_desc, I.import_col_desc === 'description' ? 'descricao' : 'description');
 
-      if (!endKey) return { error: "A coluna 'endereco' não foi encontrada. Verifique o arquivo." };
+      if (!endKey) return { error: I.err_col_not_found };
 
       let rows = [], skipped = 0;
       for (const obj of raw) {
@@ -1058,11 +1066,11 @@ function routeApp() {
           parsed = await this._parseXLSXFile(this.importFile);
         }
       } catch (_) {
-        this.importError = 'Erro ao ler o arquivo. Tente novamente.';
+        this.importError = window.I18N.err_read_file;
         return;
       }
       if (parsed.error) { this.importError = parsed.error; return; }
-      if (!parsed.rows.length) { this.importError = 'Nenhum endereço válido encontrado no arquivo.'; return; }
+      if (!parsed.rows.length) { this.importError = window.I18N.err_no_valid_address; return; }
       this.importedRows    = parsed.rows;
       this.importedSkipped = parsed.skipped;
       this.importStep      = 'preview';
@@ -1074,14 +1082,16 @@ function routeApp() {
       const combined = [...current, ...incoming];
       // TODO: enforce free plan limit (5 stops) — block here when user.isPro is false
       if (combined.length > 50) {
-        this.importError = `Limite de 50 paradas excedido (${combined.length} no total). Reduza a quantidade e tente novamente.`;
+        const I = window.I18N;
+        this.importError = I.import_limit_exceeded.replace('{limit}', 50).replace('{total}', combined.length);
         return;
       }
       this.addresses   = combined;
       this._track('csv_imported', { count: incoming.length, mode });
       const count      = incoming.length;
-      const action     = mode === 'replace' ? 'Substituídas' : 'Adicionadas';
-      this.notice      = `${action} ${count} parada${count !== 1 ? 's' : ''}.`;
+      const I          = window.I18N;
+      const tpl        = mode === 'replace' ? I.notice_import_replaced : I.notice_import_added;
+      this.notice      = tpl.replace('{count}', count);
       setTimeout(() => { this.notice = ''; }, 3000);
       this.importOpen    = false;
       this.importFile    = null;
@@ -1092,20 +1102,23 @@ function routeApp() {
     },
 
     downloadTemplate() {
+      const I = window.I18N;
+      const colAddr = I.import_col_address, colDesc = I.import_col_desc;
       const content = [
-        'endereco,descricao',
-        '"Rua das Flores, 123, São Paulo/SP","Farmácia João"',
-        '"Av. Paulista, 1000, São Paulo/SP",""',
+        `${colAddr},${colDesc}`,
+        `${this._csvEscape(I.import_template_ex1_addr)},${this._csvEscape(I.import_template_ex1_desc)}`,
+        `${this._csvEscape(I.import_template_ex2_addr)},""`,
       ].join('\r\n');
-      this._triggerDownload(content, 'template-enderecos.csv', 'text/csv;charset=utf-8;');
+      this._triggerDownload('﻿' + content, I.import_template_filename, 'text/csv;charset=utf-8;');
     },
 
     exportAddresses() {
-      if (!this.addresses.length) { this.notice = 'Nenhuma parada para exportar.'; setTimeout(() => { this.notice = ''; }, 2500); return; }
-      const lines = ['endereco,descricao'];
+      const I = window.I18N;
+      if (!this.addresses.length) { this.notice = I.export_no_stops; setTimeout(() => { this.notice = ''; }, 2500); return; }
+      const lines = [`${I.import_col_address},${I.import_col_desc}`];
       for (const a of this.addresses) lines.push(`${this._csvEscape(a.address)},${this._csvEscape(a.description)}`);
       this._track('csv_exported', { stop_count: this.addresses.length });
-      this._triggerDownload(lines.join('\r\n'), 'enderecos.csv', 'text/csv;charset=utf-8;');
+      this._triggerDownload('﻿' + lines.join('\r\n'), I.export_addresses_filename, 'text/csv;charset=utf-8;');
     },
 
     exportRouteCSV() {
@@ -1234,7 +1247,7 @@ tr.sp td{font-weight:bold;background:#eef2ff}
           });
         }
       } catch (e) {
-        this.error = 'Erro de conexão com a API.';
+        this.error = window.I18N.err_api_connection;
       } finally {
         this.loading = false;
       }
@@ -1264,7 +1277,7 @@ tr.sp td{font-weight:bold;background:#eef2ff}
           this.error = typeof data.detail === 'string' ? data.detail : 'Erro ao iniciar pagamento.';
         }
       } catch (e) {
-        this.error = 'Erro de conexão. Tente novamente.';
+        this.error = window.I18N.err_connection;
       } finally {
         this.upgradeLoading = false;
       }

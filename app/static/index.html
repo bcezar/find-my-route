@@ -322,7 +322,7 @@
               </svg>
               <p class="import-dropzone-title">{{ i18n.import_drag_text }}</p>
               <p class="import-dropzone-sub">{{ i18n.import_click_text }}</p>
-              <span class="import-dropzone-hint" x-text="'Formato aceito: .' + importType"></span>
+              <span class="import-dropzone-hint" x-text="window.I18N.import_format_hint + importType"></span>
             </div>
           </template>
           <template x-if="importFile">
@@ -339,7 +339,7 @@
         </template>
 
         <div class="import-template-hint">
-          <span>Não possui um arquivo?</span>
+          <span>{{ i18n.import_no_file }}</span>
           <button class="import-template-btn" @click="downloadTemplate()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             {{ i18n.import_csv_template_btn }}

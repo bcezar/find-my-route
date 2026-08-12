@@ -63,6 +63,7 @@ async def test_build_matrix_uses_osrm_when_available():
 async def test_build_matrix_falls_back_to_haversine_when_osrm_unavailable():
     with patch("app.services.distance.settings") as mock_settings:
         mock_settings.osrm_base_url = None
+        mock_settings.google_maps_api_key = None
 
         coords = [SP_PAULISTA, SP_SE]
         matrix, dur_matrix = await build_distance_matrix(coords)
@@ -79,6 +80,7 @@ async def test_build_matrix_falls_back_to_haversine_on_osrm_error():
     with patch("app.services.distance.settings") as mock_settings, \
          patch("app.services.distance._osrm_matrix", new_callable=AsyncMock) as mock_osrm:
         mock_settings.osrm_base_url = "http://fake-osrm"
+        mock_settings.google_maps_api_key = None
         mock_osrm.return_value = None  # OSRM failed
 
         coords = [SP_PAULISTA, SP_SE]
@@ -92,6 +94,7 @@ async def test_build_matrix_falls_back_to_haversine_on_osrm_error():
 async def test_build_matrix_shape():
     with patch("app.services.distance.settings") as mock_settings:
         mock_settings.osrm_base_url = None
+        mock_settings.google_maps_api_key = None
         coords = [SP_PAULISTA, SP_SE, (-23.548, -46.638)]
         matrix, dur_matrix = await build_distance_matrix(coords)
 

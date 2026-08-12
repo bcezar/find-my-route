@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 
 import httpx
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 _CHUNK = 25  # Routes API limit per dimension (25×25 = 625 elements max per request)
 
@@ -130,8 +133,11 @@ async def build_distance_matrix(
     # Priority: OSRM (self-hosted, free) → Routes API (Google, paid) → Haversine (straight-line)
     result = await _osrm_matrix(coords)
     if result is not None:
+        logger.info("distance_provider=osrm n=%d", len(coords))
         return result
     result = await _routes_api_matrix(coords)
     if result is not None:
+        logger.info("distance_provider=routes_api n=%d", len(coords))
         return result
+    logger.info("distance_provider=haversine n=%d", len(coords))
     return _haversine_matrix(coords), None
