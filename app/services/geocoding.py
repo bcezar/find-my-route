@@ -5,8 +5,12 @@ import re
 
 import httpx
 
+import logging
+
 from app.config import settings
 from app import storage
+
+logger = logging.getLogger(__name__)
 
 _cache: dict[str, tuple[float, float] | None] = {}
 
@@ -239,13 +243,22 @@ async def geocode_all(
             remaining.append(addr)
         # addr in _cache with None value → known failure this session, skip
 
+    memory_hits = len(addresses) - len(remaining)
+
     # Tier 2: Turso batch lookup for remaining
+    turso_hit_count = 0
     if remaining:
         turso_hits = await storage.get_geocoding_cache_batch(remaining)
         for addr, coords in turso_hits.items():
             _cache[addr] = coords
             resolved[addr] = coords
+        turso_hit_count = len(turso_hits)
         remaining = [a for a in remaining if a not in turso_hits]
+
+    logger.info(
+        "geocode_all total=%d memory_hits=%d turso_hits=%d api_calls=%d",
+        len(addresses), memory_hits, turso_hit_count, len(remaining),
+    )
 
     if not remaining:
         return resolved, failures
