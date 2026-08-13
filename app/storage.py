@@ -92,6 +92,19 @@ async def init_db() -> None:
         "CREATE TABLE IF NOT EXISTS oauth_states "
         "(state TEXT PRIMARY KEY, expires_at TEXT NOT NULL)"
     )
+    await _execute(
+        "CREATE TABLE IF NOT EXISTS geocoding_cache "
+        "(address TEXT PRIMARY KEY, lat REAL NOT NULL, lng REAL NOT NULL, "
+        "cached_at TEXT NOT NULL DEFAULT (datetime('now')))"
+    )
+    # prune stale + excess geocoding cache entries on every startup
+    await _execute(
+        "DELETE FROM geocoding_cache WHERE cached_at < datetime('now', '-30 days')"
+    )
+    await _execute(
+        "DELETE FROM geocoding_cache WHERE address NOT IN "
+        "(SELECT address FROM geocoding_cache ORDER BY cached_at DESC LIMIT 10000)"
+    )
     # migrations (idempotent)
     await _execute("ALTER TABLE saved_routes ADD COLUMN user_id TEXT", ignore_error=True)
     await _execute("ALTER TABLE users ADD COLUMN is_pro INTEGER DEFAULT 0", ignore_error=True)
@@ -480,3 +493,45 @@ async def get_user_by_stripe_customer(customer_id: str) -> Optional[dict]:
         if user.get("stripe_customer_id") == customer_id:
             return user
     return None
+
+
+# ── Geocoding cache ──────────────────────────────────────────────────────────
+
+async def get_geocoding_cache_batch(
+    addresses: list[str],
+) -> dict[str, tuple[float, float]]:
+    """Return {address: (lat, lng)} for all addresses found in Turso cache."""
+    if not _turso_configured() or not addresses:
+        return {}
+    placeholders = ",".join(["?"] * len(addresses))
+    r = await _execute(
+        f"SELECT address, lat, lng FROM geocoding_cache "
+        f"WHERE address IN ({placeholders}) "
+        f"AND cached_at > datetime('now', '-30 days')",
+        addresses,
+    )
+    result: dict[str, tuple[float, float]] = {}
+    for row in r.get("rows", []):
+        addr = _cell(row[0])
+        lat  = _cell(row[1])
+        lng  = _cell(row[2])
+        if addr and lat is not None and lng is not None:
+            try:
+                result[addr] = (float(lat), float(lng))
+            except (TypeError, ValueError):
+                pass
+    return result
+
+
+async def set_geocoding_cache(address: str, lat: float, lng: float) -> None:
+    """Upsert a geocoding result. Fire-and-forget safe."""
+    if not _turso_configured():
+        return
+    try:
+        await _execute(
+            "INSERT OR REPLACE INTO geocoding_cache (address, lat, lng, cached_at) "
+            "VALUES (?, ?, ?, datetime('now'))",
+            [address, str(lat), str(lng)],
+        )
+    except Exception:
+        pass

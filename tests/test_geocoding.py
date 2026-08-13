@@ -67,7 +67,8 @@ async def test_geocode_uses_cache(use_nominatim):
 async def test_geocode_all_separates_failures():
     with patch("app.services.geocoding.geocode") as mock_geocode, \
          patch("asyncio.sleep", new_callable=AsyncMock), \
-         patch("httpx.AsyncClient") as mock_client_cls:
+         patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("app.storage.get_geocoding_cache_batch", new_callable=AsyncMock, return_value={}):
 
         mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=AsyncMock())
         mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)

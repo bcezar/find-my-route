@@ -6,6 +6,7 @@ import re
 import httpx
 
 from app.config import settings
+from app import storage
 
 _cache: dict[str, tuple[float, float] | None] = {}
 
@@ -160,6 +161,8 @@ async def geocode(
         coords = await _geocode_nominatim(address, client, lat=lat, lng=lng)
 
     _cache[address] = coords
+    if coords is not None:
+        asyncio.create_task(storage.set_geocoding_cache(address, coords[0], coords[1]))
     return coords
 
 
@@ -227,18 +230,39 @@ async def geocode_all(
     resolved: dict[str, tuple[float, float]] = {}
     failures: list[str] = []
 
+    # Tier 1: in-memory hits (instant)
+    remaining = []
+    for addr in addresses:
+        if addr in _cache and _cache[addr] is not None:
+            resolved[addr] = _cache[addr]
+        elif addr not in _cache:
+            remaining.append(addr)
+        # addr in _cache with None value → known failure this session, skip
+
+    # Tier 2: Turso batch lookup for remaining
+    if remaining:
+        turso_hits = await storage.get_geocoding_cache_batch(remaining)
+        for addr, coords in turso_hits.items():
+            _cache[addr] = coords
+            resolved[addr] = coords
+        remaining = [a for a in remaining if a not in turso_hits]
+
+    if not remaining:
+        return resolved, failures
+
+    # Tier 3: API calls for true cache misses
     async with httpx.AsyncClient() as client:
         if settings.google_maps_api_key:
-            # Google Maps has no strict rate limit: geocode all in parallel
-            results = await asyncio.gather(*(geocode(a, client) for a in addresses))
-            for address, result in zip(addresses, results):
+            # Google Maps: geocode all misses in parallel
+            results = await asyncio.gather(*(geocode(a, client) for a in remaining))
+            for address, result in zip(remaining, results):
                 if result is None:
                     failures.append(address)
                 else:
                     resolved[address] = result
         else:
             # Nominatim usage policy: max 1 request/second — must stay sequential
-            for address in addresses:
+            for address in remaining:
                 result = await geocode(address, client)
                 if result is None:
                     failures.append(address)
