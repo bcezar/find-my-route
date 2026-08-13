@@ -1,4 +1,12 @@
+import logging
+import sys
 from contextlib import asynccontextmanager
+
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stdout,
+    format="%(levelname)s:     %(name)s - %(message)s",
+)
 from hashlib import md5
 from pathlib import Path
 from urllib.parse import urlencode
