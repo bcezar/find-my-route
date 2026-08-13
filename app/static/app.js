@@ -31,6 +31,8 @@ function routeApp() {
     searchQuery:        '',
     locationHint:    null,
     loading:        false,
+    loadingStep:    0,
+    _loadingTimers: [],
     geolocating:    false,
     copied:         false,
     shared:         false,
@@ -1201,10 +1203,30 @@ tr.sp td{font-weight:bold;background:#eef2ff}
       this._track('route_exported_pdf', { stops: this.result.optimized_route.length });
     },
 
+    _startLoadingSteps() {
+      this.loadingStep = 1;
+      this._loadingTimers = [
+        setTimeout(() => { this.loadingStep = 2; }, 1500),
+        setTimeout(() => { this.loadingStep = 3; }, 3500),
+      ];
+    },
+
+    _stopLoadingSteps(done = false) {
+      this._loadingTimers.forEach(t => clearTimeout(t));
+      this._loadingTimers = [];
+      if (done) {
+        this.loadingStep = 4;
+        setTimeout(() => { this.loadingStep = 0; }, 1200);
+      } else {
+        this.loadingStep = 0;
+      }
+    },
+
     async optimize() {
       this.error  = '';
       this.result = null;
       this.loading = true;
+      this._startLoadingSteps();
 
       const body = { addresses: this.addresses.map(a => a.address) };
       if (this.origin)     body.origin      = this.origin;
@@ -1252,6 +1274,7 @@ tr.sp td{font-weight:bold;background:#eef2ff}
         this.error = window.I18N.err_api_connection;
       } finally {
         this.loading = false;
+        this._stopLoadingSteps(!!this.result);
       }
     },
 

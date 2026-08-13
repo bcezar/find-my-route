@@ -1156,9 +1156,34 @@
       <circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/>
       <path d="M6 17V7a2 2 0 0 1 2-2h5m3 10v-4"/>
     </svg>
+    <svg x-show="loading" class="btn-spinner" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
     <span x-show="!loading">{{ i18n.optimize_btn }}</span>
     <span x-show="loading">{{ i18n.optimizing_btn }}</span>
   </button>
+
+  <!-- Loading progress steps -->
+  <div class="optimize-progress" x-show="loadingStep > 0" x-cloak>
+    <template x-if="loadingStep < 4">
+      <div>
+        <div class="optimize-progress-step" :class="{'step-active': loadingStep === 1, 'step-done': loadingStep >= 2}">
+          <span class="step-icon" x-text="loadingStep >= 2 ? '✓' : '📍'"></span>
+          <span x-text="window.I18N.loading_step1"></span>
+        </div>
+        <div class="optimize-progress-step" :class="{'step-active': loadingStep === 2, 'step-done': loadingStep >= 3, 'step-pending': loadingStep < 2}">
+          <span class="step-icon" x-text="loadingStep >= 3 ? '✓' : '📐'"></span>
+          <span x-text="window.I18N.loading_step2"></span>
+        </div>
+        <div class="optimize-progress-step" :class="{'step-active': loadingStep === 3, 'step-pending': loadingStep < 3}">
+          <span class="step-icon">🧩</span>
+          <span x-text="window.I18N.loading_step3"></span>
+        </div>
+      </div>
+    </template>
+    <div class="optimize-progress-step step-success" x-show="loadingStep === 4">
+      <span class="step-icon">✅</span>
+      <span x-text="window.I18N.loading_done"></span>
+    </div>
+  </div>
 
   <!-- Plan limit hints -->
   <div class="limit-hint" x-show="addresses.length > stopLimit">

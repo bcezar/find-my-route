@@ -467,6 +467,47 @@ input[type="text"]:disabled { background: #f9fafb; color: #9ca3af; cursor: defau
 .btn-optimize-blocked { background: #6b7280 !important; cursor: not-allowed !important; }
 .btn-optimize-blocked:hover { background: #4b5563 !important; }
 
+.btn-spinner {
+  animation: spin .8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.optimize-progress {
+  margin-top: .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+.optimize-progress-step {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .85rem;
+  color: #9ca3af;
+  transition: color .2s;
+}
+.optimize-progress-step .step-icon {
+  font-size: .8rem;
+  width: 1.2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.optimize-progress-step.step-active {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+.optimize-progress-step.step-done {
+  color: #16a34a;
+}
+.optimize-progress-step.step-pending {
+  opacity: .45;
+}
+.optimize-progress-step.step-success {
+  color: #16a34a;
+  font-weight: 600;
+}
+
 .limit-hint {
   display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
   margin-top: .5rem;

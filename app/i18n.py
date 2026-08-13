@@ -86,6 +86,10 @@ _STRINGS: dict[str, dict] = {
         # Optimize button
         "optimize_btn":     "Otimizar rota",
         "optimizing_btn":   "Calculando…",
+        "loading_step1":    "Geocodificando endereços…",
+        "loading_step2":    "Calculando distâncias…",
+        "loading_step3":    "Otimizando a rota…",
+        "loading_done":     "Pronto!",
 
         # Ready card
         "ready_title":      "Pronto para otimizar",
@@ -496,6 +500,10 @@ _STRINGS: dict[str, dict] = {
         # Optimize button
         "optimize_btn":     "Optimize route",
         "optimizing_btn":   "Calculating…",
+        "loading_step1":    "Geocoding addresses…",
+        "loading_step2":    "Calculating distances…",
+        "loading_step3":    "Optimizing route…",
+        "loading_done":     "Done!",
 
         # Ready card
         "ready_title":      "Ready to optimize",
